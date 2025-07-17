@@ -7,8 +7,6 @@
 
 **Turn your financial dreams into reality with friends, family, and community** 🚀
 
-> 🏆 **Hackathon Project** - Built during a blockchain hackathon to showcase the future of collaborative savings
-
 [![Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Solidity%20^0.8.24-blue?style=flat-square&logo=solidity)](./goalpay-contract)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20+%20TypeScript-61dafb?style=flat-square&logo=react)](./goalpay-vault)
 [![Web3](https://img.shields.io/badge/Web3-wagmi%20+%20viem-ff6b35?style=flat-square&logo=web3dotjs)](https://wagmi.sh/)
