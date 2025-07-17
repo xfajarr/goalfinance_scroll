@@ -1,0 +1,261 @@
+# GoalFi Project .gitignore
+# Covers both smart contracts (Foundry) and frontend (React/Node.js)
+
+# ================================
+# ENVIRONMENT & SECRETS
+# ================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Private keys and sensitive data
+private_keys/
+secrets/
+*.key
+*.pem
+
+# ================================
+# NODE.JS / FRONTEND
+# ================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# ================================
+# FOUNDRY / SMART CONTRACTS
+# ================================
+# Foundry cache and artifacts
+cache/
+out/
+broadcast/
+deployments/*/run-latest.json
+
+# Foundry logs
+logs/
+
+# Foundry artifacts that shouldn't be committed
+*.s.sol.json
+*.t.sol.json
+
+# Local deployment artifacts (keep network configs)
+broadcast/**/31337/
+broadcast/**/run-latest.json
+
+# ================================
+# DEVELOPMENT TOOLS
+# ================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ================================
+# OPERATING SYSTEM
+# ================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================================
+# TESTING & COVERAGE
+# ================================
+# Test results
+test-results/
+coverage/
+*.lcov
+.nyc_output
+
+# Jest
+jest_*
+
+# ================================
+# LOGS & DEBUGGING
+# ================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ================================
+# MISC
+# ================================
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Temporary files
+*.tmp
+*.temp
+
+# Lock files (keep package-lock.json and yarn.lock)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ================================
+# PROJECT SPECIFIC
+# ================================
+# Deployment artifacts (keep configs, ignore runs)
+goalpay-contract/broadcast/*/run-*.json
+goalpay-contract/cache/
+goalpay-contract/out/
+
+# Frontend build artifacts
+goalpay-vault/dist/
+goalpay-vault/build/
+
+# Local development files
+*.local
+.local/
+
+# Documentation builds
+docs/build/

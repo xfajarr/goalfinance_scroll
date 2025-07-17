@@ -1,0 +1,8 @@
+{
+  "network": "Mantle Sepolia",
+  "chainId": 5003,
+  "MockUSDC": "",
+  "GoalVaultFactory": "",
+  "explorer": "https://sepolia.mantlescan.xyz",
+  "deployedAt": 1752546441
+}
