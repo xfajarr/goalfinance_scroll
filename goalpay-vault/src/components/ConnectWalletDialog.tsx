@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useAccount, useDisconnect } from 'wagmi';
 import {
   Dialog,
   DialogContent,
@@ -8,17 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Wallet, Check, AlertCircle, X } from 'lucide-react';
+import { Wallet, Check, AlertCircle, X, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ConnectWalletDialogProps {
@@ -27,141 +20,142 @@ interface ConnectWalletDialogProps {
 
 export const ConnectWalletDialog = ({ children }: ConnectWalletDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [alertState, setAlertState] = useState<{
-    open: boolean;
-    type: 'success' | 'error';
-    title: string;
-    description: string;
-  }>({
-    open: false,
-    type: 'success',
-    title: '',
-    description: ''
-  });
+  const { login, logout, ready, authenticated, user } = usePrivy();
+  const { wallets } = useWallets();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const { toast } = useToast();
 
-  const connectWallet = async () => {
-    setIsConnecting(true);
+  // If user is authenticated and connected, show wallet info instead of connect button
+  if (authenticated && isConnected && address) {
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-sm border-goal-border/30 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-fredoka text-goal-text">
+              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+              Wallet Connected
+            </DialogTitle>
+            <DialogDescription className="font-inter text-goal-text">
+              Your wallet is connected and ready to use with goalpay.
+            </DialogDescription>
+          </DialogHeader>
 
+          <div className="space-y-4">
+            <div className="bg-goal-accent/20 p-4 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-inter text-sm font-medium text-goal-text">Connected Address</p>
+                  <p className="font-mono text-xs text-goal-text break-all">
+                    {address}
+                  </p>
+                  {user?.email && (
+                    <p className="font-inter text-xs text-goal-text/70 mt-1">
+                      {user.email.address}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setIsOpen(false)}
+                className="flex-1 bg-goal-primary hover:bg-goal-primary/90 text-goal-text rounded-xl"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  disconnect();
+                  logout();
+                  setIsOpen(false);
+                  toast({
+                    title: "Wallet Disconnected",
+                    description: "Your wallet has been disconnected.",
+                  });
+                }}
+                variant="outline"
+                className="flex-1 border-goal-border text-goal-text hover:bg-goal-accent rounded-xl"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Disconnect
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const handleConnect = async () => {
     try {
-      // Mock wallet connection - replace with actual Web3 logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulate random success/failure for demo
-      const success = Math.random() > 0.3;
-      
-      if (success) {
-        setAlertState({
-          open: true,
-          type: 'success',
-          title: 'Wallet Connected Successfully!',
-          description: 'Your wallet has been connected and you can now start saving with goalpay.'
-        });
-        toast({
-          title: "Wallet Connected",
-          description: "Your wallet is now connected to goalpay.",
-        });
-        setIsOpen(false);
-      } else {
-        throw new Error('Connection failed');
-      }
+      await login();
+      setIsOpen(false);
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      setAlertState({
-        open: true,
-        type: 'error',
-        title: 'Connection Failed',
-        description: 'Unable to connect to your wallet. Please try again or contact support if the issue persists.'
-      });
       toast({
         title: "Connection Failed",
         description: "Unable to connect wallet. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsConnecting(false);
     }
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-sm border-goal-border/30">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-fredoka text-goal-text">
-              <div className="w-8 h-8 bg-goal-primary rounded-full flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-goal-text" />
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-sm border-goal-border/30 rounded-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-fredoka text-goal-text">
+            <div className="w-8 h-8 bg-goal-primary rounded-full flex items-center justify-center">
+              <Wallet className="w-4 h-4 text-goal-text" />
+            </div>
+            Connect Your Wallet
+          </DialogTitle>
+          <DialogDescription className="font-inter text-goal-text">
+            Connect your wallet to start saving and achieving your goals with Goal Finance.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <Button
+            onClick={handleConnect}
+            disabled={!ready}
+            className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-inter rounded-xl py-3"
+          >
+            {!ready ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
+                <span>Loading...</span>
               </div>
-              Connect Your Wallet
-            </DialogTitle>
-            <DialogDescription className="font-inter text-goal-text/70">
-              Connect your Web3 wallet to start saving and earning yield on your goals with goalpay.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Button
-                onClick={connectWallet}
-                disabled={isConnecting}
-                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-inter rounded-xl"
-              >
-                {isConnecting ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
-                    <span>Connecting...</span>
-                  </div>
-                ) : (
-                  <>
-                    <Wallet className="w-4 h-4 mr-2" />
-                    MetaMask
-                  </>
-                )}
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="border-goal-border text-goal-text hover:bg-goal-accent rounded-xl"
-              >
+            ) : (
+              <>
                 <Wallet className="w-4 h-4 mr-2" />
-                WalletConnect
-              </Button>
-            </div>
-            
-            <div className="flex items-center justify-center space-x-2 text-xs font-inter text-goal-text/60">
-              <AlertCircle className="w-3 h-3" />
-              <span>Secure connection with industry-standard encryption</span>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+                Connect Wallet
+              </>
+            )}
+          </Button>
 
-      <AlertDialog open={alertState.open} onOpenChange={(open) => setAlertState(prev => ({ ...prev, open }))}>
-        <AlertDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 font-fredoka">
-              {alertState.type === 'success' ? (
-                <Check className="w-5 h-5 text-green-600" />
-              ) : (
-                <X className="w-5 h-5 text-red-600" />
-              )}
-              {alertState.title}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="font-inter text-goal-text/70">
-              {alertState.description}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text rounded-xl">
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+          <div className="flex items-center justify-center space-x-2 text-xs font-inter text-goal-text">
+            <AlertCircle className="w-3 h-3" />
+            <span>Secure connection with industry-standard encryption</span>
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs font-inter text-goal-text">
+              Supports MetaMask, WalletConnect, Coinbase Wallet, and more
+            </p>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

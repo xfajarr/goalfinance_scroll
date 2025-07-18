@@ -1,6 +1,11 @@
 import { Address } from 'viem';
 
-// Vault status enum
+// Enums from smart contracts
+export enum GoalType {
+  GROUP = 0,
+  PERSONAL = 1
+}
+
 export enum VaultStatus {
   ACTIVE = 0,
   COMPLETED = 1,
@@ -8,7 +13,64 @@ export enum VaultStatus {
   CANCELLED = 3,
 }
 
-// Vault data structure
+// Factory types
+export interface VaultInfo {
+  vaultAddress: Address;
+  creator: Address;
+  vaultName: string;
+  description: string;
+  targetAmount: bigint;
+  deadline: bigint;
+  createdAt: bigint;
+  isPublic: boolean;
+  isActive: boolean;
+  status: VaultStatus;
+  memberCount: bigint;
+  token: Address;
+  tokenSymbol: string;
+  goalType: GoalType;
+}
+
+export interface TokenInfo {
+  symbol: string;
+  name: string;
+  decimals: number;
+  isActive: boolean;
+  addedAt: bigint;
+}
+
+// Vault types
+export interface VaultDetails {
+  name: string;
+  description: string;
+  creator: Address;
+  targetAmount: bigint;
+  currentAmount: bigint;
+  deadline: bigint;
+  createdAt: bigint;
+  status: VaultStatus;
+  isPublic: boolean;
+  memberCount: bigint;
+  token: Address;
+  goalType: GoalType;
+}
+
+export interface MemberInfo {
+  member: Address;
+  contribution: bigint;
+  personalGoalAmount: bigint;
+  joinedAt: bigint;
+  isActive: boolean;
+  hasReachedPersonalGoal: boolean;
+}
+
+export interface PenaltyInfo {
+  amount: bigint;
+  releaseTime: bigint;
+  claimed: boolean;
+}
+
+// Legacy types for backward compatibility
 export interface VaultData {
   id: bigint;
   name: string;
@@ -24,7 +86,6 @@ export interface VaultData {
   createdAt: bigint;
 }
 
-// Member data structure
 export interface MemberData {
   member: Address;
   contribution: bigint;
@@ -39,6 +100,17 @@ export interface AddFundsParams {
 }
 
 export interface CreateVaultParams {
+  vaultName: string;
+  description: string;
+  targetAmount: bigint;
+  deadline: bigint;
+  isPublic: boolean;
+  goalType: GoalType;
+  token: Address;
+}
+
+// Legacy interface for backward compatibility
+export interface LegacyCreateVaultParams {
   name: string;
   description: string;
   goalAmount: bigint;

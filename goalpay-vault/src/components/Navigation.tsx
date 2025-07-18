@@ -1,14 +1,21 @@
 
 import { Link, useLocation } from 'react-router-dom';
+import { usePrivy } from '@privy-io/react-auth';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Wallet, Check } from 'lucide-react';
 import { DesktopNavigation } from './DesktopNavigation';
 import { ConnectWalletDialog } from './ConnectWalletDialog';
+import { ChainSwitcherCompact } from './ChainSwitcher';
 
 const Navigation = () => {
   const location = useLocation();
+  const { authenticated } = usePrivy();
+  const { isConnected, address } = useAccount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isWalletConnected = authenticated && isConnected;
   
   const navItems = [
     { label: 'Home', path: '/' },
@@ -38,17 +45,32 @@ const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
+            {/* Show compact chain switcher when wallet is connected */}
+            {isWalletConnected && (
+              <ChainSwitcherCompact className="text-goal-text" />
+            )}
+
             <ConnectWalletDialog>
-              <Button className="bg-goal-secondary hover:bg-goal-secondary/80 text-goal-text font-medium rounded-full px-3 py-2 text-sm">
-                Wallet
+              <Button className={`font-medium rounded-full px-3 py-2 text-sm ${
+                isWalletConnected
+                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                  : 'bg-goal-primary hover:bg-goal-secondary/80 text-goal-text'
+              }`}>
+                {isWalletConnected ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Wallet className="w-4 h-4" />
+                )}
               </Button>
             </ConnectWalletDialog>
-            
-            <Button 
+
+            <Button
               asChild
               className="bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full px-4 py-2 text-sm"
             >
-              <Link to="/dashboard">Start</Link>
+              <Link to="/dashboard">
+                {isWalletConnected ? 'Dashboard' : 'Start'}
+              </Link>
             </Button>
             
             <button
@@ -78,6 +100,37 @@ const Navigation = () => {
                   {item.label}
                 </Link>
               ))}
+
+              <div className="flex flex-col space-y-3 pt-4 border-t border-goal-border/30 mx-3">
+                <ConnectWalletDialog>
+                  <Button className={`w-full font-medium rounded-full py-3 ${
+                    isWalletConnected
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-goal-secondary hover:bg-goal-secondary/80 text-goal-text'
+                  }`}>
+                    {isWalletConnected ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connected'}
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 mr-2" />
+                        Connect Wallet
+                      </>
+                    )}
+                  </Button>
+                </ConnectWalletDialog>
+
+                <Button
+                  asChild
+                  className="w-full bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full py-3"
+                >
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                    {isWalletConnected ? 'Dashboard' : 'Start Saving'}
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         )}

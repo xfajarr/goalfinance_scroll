@@ -9,6 +9,8 @@ import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/BottomNavigation';
 import { ArrowLeft, Users, Target, Calendar, Plus, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import confetti from 'canvas-confetti';
 
 const JoinVault = () => {
@@ -18,6 +20,9 @@ const JoinVault = () => {
   const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
   const { toast } = useToast();
+
+  // Wallet guard for protecting vault joining
+  const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
 
   const inviteCode = searchParams.get('invite');
   
@@ -46,6 +51,13 @@ const JoinVault = () => {
   const handleJoinVault = async () => {
     if (!contributionAmount || parseFloat(contributionAmount) <= 0) return;
 
+    // Use wallet guard to check connection and show dialog if needed
+    requireWalletConnection(async () => {
+      await performVaultJoin();
+    });
+  };
+
+  const performVaultJoin = async () => {
     setIsJoining(true);
     try {
       // Mock joining vault - replace with actual Web3 logic
@@ -287,6 +299,15 @@ const JoinVault = () => {
       </main>
 
       <BottomNavigation />
+
+      {/* Wallet Guard Dialog */}
+      <WalletGuardDialog
+        isOpen={showConnectDialog}
+        onOpenChange={setShowConnectDialog}
+        title="Connect Wallet to Join Vault"
+        description="You need to connect your wallet to join this savings vault. Connect now to start contributing to your shared goal!"
+        actionText="Join Vault"
+      />
     </div>
   );
 };

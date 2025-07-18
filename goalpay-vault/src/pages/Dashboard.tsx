@@ -30,7 +30,7 @@ const Dashboard = () => {
       <main className="container-content py-8">
         {/* Welcome Section */}
         <SectionHeader
-          title="Welcome back, Alex! 👋"
+          title="Hi, Welcome back 👋"
           subtitle="You're making great progress on your savings goals!"
           className="mb-8"
         />

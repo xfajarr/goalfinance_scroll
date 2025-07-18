@@ -1,26 +1,81 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { parseUnits } from 'viem';
 import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Calendar, DollarSign, Users, Lock, Globe, Share2, TrendingUp, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, DollarSign, Users, Lock, Share2, TrendingUp, Sparkles, Target } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { useCreateVault, getGoalTypeFromString } from '@/hooks/useCreateVault';
+import { GoalType } from '@/contracts/types';
+import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { WalletGuardDialog } from '@/components/WalletGuardDialog';
+import { toast } from '@/components/ui/sonner';
 
 const CreateVault = () => {
   const navigate = useNavigate();
+  const { address, isConnected } = useAccount();
+  const {
+    createVault,
+    isLoading,
+    isConfirming,
+    error,
+    txHash,
+    vaultId,
+    reset
+  } = useCreateVault();
+
+  // Wallet guard for protecting vault creation
+  const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     goal: '',
     deadline: '',
-    isPublic: false,
+    isPublic: false, // Always private by default
     category: 'other',
-    apyTier: 'medium'
+    goalType: 'group' // Changed from apyTier to goalType
   });
-  const [isCreating, setIsCreating] = useState(false);
   const [vaultCreated, setVaultCreated] = useState(false);
   const [shareLink, setShareLink] = useState('');
+
+  // Watch for successful vault creation
+  useEffect(() => {
+    if (vaultId && txHash && !isLoading && !isConfirming) {
+      const link = `${window.location.origin}/join/${vaultId}`;
+      setShareLink(link);
+      setVaultCreated(true);
+
+      // Show success toast with transaction hash
+      toast('🎉 Vault Created Successfully!', {
+        description: (
+          <div className="space-y-2">
+            <p>Your vault has been created and is ready to use!</p>
+            <a
+              href={`https://sepolia.mantlescan.xyz/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline text-sm"
+            >
+              View transaction: {txHash.slice(0, 10)}...{txHash.slice(-8)}
+            </a>
+          </div>
+        ),
+        duration: 8000,
+      });
+
+      // Trigger confetti animation
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+      });
+    }
+  }, [vaultId, txHash, isLoading, isConfirming]);
 
   const categories = [
     { value: 'travel', label: 'Travel & Adventure', emoji: '✈️' },
@@ -33,33 +88,22 @@ const CreateVault = () => {
     { value: 'other', label: 'Other', emoji: '🎯' }
   ];
 
-  const apyTiers = [
-    { 
-      id: 'conservative', 
-      name: 'Stable', 
-      apy: 3.5, 
-      risk: 'Low Risk',
-      description: 'Safe & steady returns',
-      emoji: '🛡️',
-      color: 'border-green-200 hover:border-green-300 hover:bg-green-50/30'
+  const goalTypes = [
+    {
+      id: 'group',
+      name: 'Group Goal',
+      description: 'Save together with friends or family',
+      emoji: '👥',
+      color: 'border-purple-200 hover:border-purple-300 hover:bg-purple-50/30',
+      examples: 'Group dinner, vacation, events'
     },
-    { 
-      id: 'medium', 
-      name: 'Balanced', 
-      apy: 6.2, 
-      risk: 'Medium Risk',
-      description: 'Good growth potential',
-      emoji: '⚖️',
-      color: 'border-blue-200 hover:border-blue-300 hover:bg-blue-50/30'
-    },
-    { 
-      id: 'aggressive', 
-      name: 'Growth', 
-      apy: 12.8, 
-      risk: 'Higher Risk',
-      description: 'Maximum earnings',
-      emoji: '🚀',
-      color: 'border-purple-200 hover:border-purple-300 hover:bg-purple-50/30'
+    {
+      id: 'personal',
+      name: 'Personal Goal',
+      description: 'Save for your individual goals',
+      emoji: '🎯',
+      color: 'border-blue-200 hover:border-blue-300 hover:bg-blue-50/30',
+      examples: 'New laptop, solo trip, hobby'
     }
   ];
 
@@ -71,45 +115,50 @@ const CreateVault = () => {
     }));
   };
 
-  const calculateProjectedYield = () => {
-    const selectedTier = apyTiers.find(tier => tier.id === formData.apyTier);
-    const principal = parseFloat(formData.goal) || 0;
-    const apy = selectedTier?.apy || 0;
-    const months = formData.deadline ? 
-      Math.ceil((new Date(formData.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)) : 12;
-    
-    return (principal * (apy / 100) * (months / 12));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Creating vault:', formData);
-    
-    setIsCreating(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const mockVaultId = Math.floor(Math.random() * 1000);
-      const link = `${window.location.origin}/join/${mockVaultId}`;
-      setShareLink(link);
-      setVaultCreated(true);
 
-      // Trigger confetti animation
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+    // Use wallet guard to check connection and show dialog if needed
+    requireWalletConnection(async () => {
+      await performVaultCreation();
+    });
+  };
+
+  const performVaultCreation = async () => {
+    try {
+      const deadlineDate = new Date(formData.deadline);
+      const goalType = getGoalTypeFromString(formData.goalType);
+
+      // For GROUP goals, target amount is required. For PERSONAL goals, it can be optional
+      if (goalType === GoalType.GROUP && (!formData.goal || parseFloat(formData.goal) <= 0)) {
+        throw new Error('Target amount is required for group goals');
+      }
+
+      if (deadlineDate <= new Date()) {
+        throw new Error('Deadline must be in the future');
+      }
+
+      await createVault({
+        vaultName: formData.name,
+        description: formData.description,
+        targetAmount: formData.goal || '0',
+        deadline: deadlineDate,
+        isPublic: formData.isPublic,
+        goalType: goalType
       });
+
     } catch (error) {
       console.error('Failed to create vault:', error);
-    } finally {
-      setIsCreating(false);
+
+      // Show error toast
+      toast('❌ Vault Creation Failed', {
+        description: error instanceof Error ? error.message : 'Failed to create vault. Please try again.',
+        duration: 5000,
+      });
     }
   };
 
   if (vaultCreated) {
-    const projectedYield = calculateProjectedYield();
     
     return (
       <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
@@ -141,15 +190,10 @@ const CreateVault = () => {
                 <Button
                   onClick={async () => {
                     await navigator.clipboard.writeText(shareLink);
-                    // Show toast notification
-                    const event = new CustomEvent('toast', {
-                      detail: {
-                        title: '✅ Copied!',
-                        description: 'Share link copied to clipboard.',
-                        className: 'top-4 right-4 bg-goal-primary text-white border-goal-primary shadow-lg',
-                      }
+                    toast('✅ Copied!', {
+                      description: 'Share link copied to clipboard.',
+                      duration: 3000,
                     });
-                    window.dispatchEvent(event);
                   }}
                   size="sm"
                   className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-3 font-semibold"
@@ -177,8 +221,9 @@ const CreateVault = () => {
                     deadline: '',
                     isPublic: false,
                     category: 'other',
-                    apyTier: 'medium'
+                    goalType: 'group'
                   });
+                  reset(); // Reset the contract hook state
                 }}
                 variant="outline"
                 className="flex-1 border-goal-border text-goal-text hover:bg-goal-accent rounded-2xl px-6 py-3"
@@ -194,9 +239,6 @@ const CreateVault = () => {
     );
   }
 
-  const projectedYield = calculateProjectedYield();
-  const selectedTier = apyTiers.find(tier => tier.id === formData.apyTier);
-
   return (
     <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
       <Navigation />
@@ -210,88 +252,153 @@ const CreateVault = () => {
           <span className="font-inter">Back to Dashboard</span>
         </Link>
 
+        {/* Kawaii Header Section */}
         <div className="text-center space-component mb-8">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-fredoka font-bold text-goal-heading leading-tight">
-            Create Your Dream Vault ✨
+         
+
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-fredoka font-bold text-goal-text leading-tight mb-4">
+            Create Your Dream Vault
           </h1>
-          <p className="font-inter text-base md:text-lg text-goal-text-secondary max-w-2xl mx-auto leading-relaxed">
-            Set your goal, choose your yield strategy, and watch your savings grow!
+          <p className="font-inter text-base md:text-lg text-goal-text/70 max-w-2xl mx-auto leading-relaxed">
+            Turn your dreams into reality! Set your goal, invite friends, and watch your savings grow together
           </p>
+
+          {/* Progress Steps Indicator */}
+          <div className="flex items-center justify-center space-x-2 mt-6">
+            <div className="flex items-center space-x-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-goal-border/30">
+              <div className="w-2 h-2 bg-goal-primary rounded-full"></div>
+              <span className="font-inter text-xs text-goal-text font-medium">Step 1: Create</span>
+              <ArrowRight className="w-3 h-3 text-goal-text/50" />
+              <div className="w-2 h-2 bg-goal-text/30 rounded-full"></div>
+              <span className="font-inter text-xs text-goal-text/50">Step 2: Share</span>
+              <ArrowRight className="w-3 h-3 text-goal-text/50" />
+              <div className="w-2 h-2 bg-goal-text/30 rounded-full"></div>
+              <span className="font-inter text-xs text-goal-text/50">Step 3: Save</span>
+            </div>
+          </div>
         </div>
 
-        <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-section rounded-3xl">
-          <form onSubmit={handleSubmit} className="space-component">
+        <Card className="bg-white/70 backdrop-blur-sm border-goal-border/20 p-8 rounded-3xl shadow-xl relative overflow-hidden">
+          {/* Cute background decorations */}
+
+          <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
             {/* Vault Name */}
-            <div>
-              <label htmlFor="name" className="block font-inter font-semibold text-goal-heading mb-2">
-                Vault Name *
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="e.g., Summer Vacation Fund 🏖️"
-                className="w-full px-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text placeholder-goal-text/60 focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent"
-              />
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">1</span>
+                </div>
+                <label htmlFor="name" className="font-fredoka font-bold text-goal-text text-lg">
+                  What's your dream called?
+                </label>
+              </div>
+              <div className="relative group">
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Summer Vacation Fund 🏖️"
+                  className="w-full px-6 py-4 bg-white/80 border-2 border-goal-border/30 rounded-2xl font-inter text-goal-text placeholder-goal-text/50 focus:outline-none focus:ring-2 focus:ring-goal-primary/50 focus:border-goal-primary/50 transition-all duration-200 hover:shadow-sm"
+                />
+
+              </div>
+              <p className="font-inter text-xs text-goal-text/60 ml-8">
+                Give your vault a fun, memorable name that inspires you!
+              </p>
             </div>
 
             {/* Description */}
-            <div>
-              <label htmlFor="description" className="block font-inter font-semibold text-goal-text mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows={3}
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Tell others about your savings goal..."
-                className="w-full px-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text placeholder-goal-text/60 focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent resize-none"
-              />
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">2</span>
+                </div>
+                <label htmlFor="description" className="font-fredoka font-bold text-goal-text text-lg">
+                  Tell your story!
+                </label>
+              </div>
+              <div className="relative group">
+                <textarea
+                  id="description"
+                  name="description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Share what makes this goal special to you..."
+                  className="w-full px-6 py-4 bg-white/80 border-2 border-goal-border/30 rounded-2xl font-inter text-goal-text placeholder-goal-text/50 focus:outline-none focus:ring-2 focus:ring-goal-primary/50 focus:border-goal-primary/50 transition-all duration-200 hover:shadow-sm resize-none"
+                />
+
+              </div>
+              <p className="font-inter text-xs text-goal-text/60 ml-8">
+                A compelling story helps others connect with your goal!
+              </p>
             </div>
 
             {/* Goal Amount and Deadline */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="goal" className="block font-inter font-semibold text-goal-text mb-2">
-                  Goal Amount (USD) *
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-goal-text/60" />
-                  <input
-                    id="goal"
-                    name="goal"
-                    type="number"
-                    required
-                    min="1"
-                    value={formData.goal}
-                    onChange={handleInputChange}
-                    placeholder="5000"
-                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text placeholder-goal-text/60 focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent"
-                  />
+            <div className="space-y-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">3</span>
                 </div>
+                <h3 className="font-fredoka font-bold text-goal-text text-lg">
+                  Set your targets!
+                </h3>
               </div>
 
-              <div>
-                <label htmlFor="deadline" className="block font-inter font-semibold text-goal-text mb-2">
-                  Deadline *
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-goal-text/60" />
-                  <input
-                    id="deadline"
-                    name="deadline"
-                    type="date"
-                    required
-                    min={new Date().toISOString().split('T')[0]}
-                    value={formData.deadline}
-                    onChange={handleInputChange}
-                    className="w-full pl-12 pr-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent"
-                  />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label htmlFor="goal" className="font-fredoka font-semibold text-goal-text flex items-center">
+                    <DollarSign className="w-4 h-4 mr-1 text-green-500" />
+                    {formData.goalType === 'group' ? 'Group' : 'Personal'} Goal Amount* 
+                  </label>
+                  {formData.goalType === 'personal' && (
+                    <div className="bg-blue-50/80 border border-blue-200/50 rounded-xl p-3">
+                      <p className="text-xs text-blue-700 font-inter">
+                        Personal goals can be flexible! Set a target or leave it open-ended.
+                      </p>
+                    </div>
+                  )}
+                  <div className="relative group">
+                    <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-green-500" />
+                    <input
+                      id="goal"
+                      name="goal"
+                      type="number"
+                      required={formData.goalType === 'group'}
+                      min="1"
+                      value={formData.goal}
+                      onChange={handleInputChange}
+                      placeholder={formData.goalType === 'group' ? "5000" : "Optional target amount"}
+                      className="w-full pl-12 pr-6 py-4 bg-white/80 border-2 border-goal-border/30 rounded-2xl font-inter text-goal-text placeholder-goal-text/50 focus:outline-none focus:ring-2 focus:ring-goal-primary/50 focus:border-goal-primary/50 transition-all duration-200 hover:shadow-sm"
+                    />
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-goal-text/30">
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label htmlFor="deadline" className="font-fredoka font-semibold text-goal-text flex items-center">
+                    <Calendar className="w-4 h-4 mr-1 text-purple-500" />
+                    Deadline*
+                  </label>
+                  <div className="relative group">
+                    <input
+                      id="deadline"
+                      name="deadline"
+                      type="date"
+                      required
+                      min={new Date().toISOString().split('T')[0]}
+                      value={formData.deadline}
+                      onChange={handleInputChange}
+                      className="w-full px-6 py-4 bg-white/80 border-2 border-goal-border/30 rounded-2xl font-inter text-goal-text focus:outline-none focus:ring-2 focus:ring-goal-primary/50 focus:border-goal-primary/50 transition-all duration-200 hover:shadow-sm"
+                    />
+                  </div>
+                  <p className="font-inter text-xs text-goal-text/60">
+                    When do you want to achieve this goal?
+                  </p>
                 </div>
               </div>
             </div>
@@ -300,18 +407,23 @@ const CreateVault = () => {
 
 
 
-            {/* Category - Updated Design */}
-            <div>
-              <label htmlFor="category" className="block font-inter font-semibold text-goal-text mb-2">
-                Category
-              </label>
-              <div className="relative">
+            {/* Category - Kawaii Design */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">4</span>
+                </div>
+                <label htmlFor="category" className="font-fredoka font-bold text-goal-text text-lg">
+                  Pick your vibe!
+                </label>
+              </div>
+              <div className="relative group">
                 <select
                   id="category"
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent appearance-none"
+                  className="w-full px-6 py-4 bg-white/80 border-2 border-goal-border/30 rounded-2xl font-inter text-goal-text focus:outline-none focus:ring-2 focus:ring-goal-primary/50 focus:border-goal-primary/50 transition-all duration-200 hover:shadow-sm appearance-none cursor-pointer"
                 >
                   {categories.map((cat) => (
                     <option key={cat.value} value={cat.value}>
@@ -319,83 +431,274 @@ const CreateVault = () => {
                     </option>
                   ))}
                 </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="w-5 h-5 text-goal-text/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <div className="flex items-center space-x-2">
+                    <svg className="w-5 h-5 text-goal-text/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
+              </div>
+              <p className="font-inter text-xs text-goal-text/60 ml-8">
+                Choose a category that matches your goal's personality!
+              </p>
+            </div>
+
+            {/* Goal Type Selection - Compact Design */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">5</span>
+                </div>
+                <label className="font-fredoka font-bold text-goal-heading text-lg">
+                  Choose your adventure style
+                </label>
+              </div>
+
+              {/* Compact Goal Type Selection */}
+              <div className="grid grid-cols-2 gap-3">
+                {goalTypes.map((type) => (
+                  <div
+                    key={type.id}
+                    className={`relative cursor-pointer transition-all duration-200 ${
+                      formData.goalType === type.id
+                        ? 'bg-goal-primary/15 border-goal-primary ring-2 ring-goal-primary/20'
+                        : 'bg-white/70 border-goal-border/40 hover:border-goal-primary/60 hover:bg-goal-primary/5'
+                    } border-2 rounded-xl p-3 group`}
+                    onClick={() => setFormData(prev => ({ ...prev, goalType: type.id }))}
+                  >
+                    {/* Selection indicator */}
+                    <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                      formData.goalType === type.id
+                        ? 'bg-goal-primary border-goal-primary'
+                        : 'border-goal-border/50 group-hover:border-goal-primary/60'
+                    }`}>
+                      {formData.goalType === type.id && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <div className="text-xl mt-0.5">
+                        {type.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
+                          {type.name}
+                        </h3>
+                        <p className="font-inter text-xs text-goal-text-secondary leading-tight">
+                          {type.description}
+                        </p>
+                        <p className="font-inter text-xs text-goal-text-muted mt-1">
+                          <span className="font-medium">e.g.</span> {type.examples}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Privacy Setting */}
-            <div className="bg-goal-accent/20 p-6 rounded-2xl">
-              <div className="flex items-start space-x-4">
-                <input
-                  id="isPublic"
-                  name="isPublic"
-                  type="checkbox"
-                  checked={formData.isPublic}
-                  onChange={handleInputChange}
-                  className="mt-1 h-5 w-5 text-goal-primary bg-white border-2 border-goal-border/50 rounded-lg focus:ring-goal-primary focus:ring-2 focus:border-goal-primary transition-colors"
-                />
-                <div className="flex-1">
-                  <label htmlFor="isPublic" className="flex items-center font-inter font-semibold text-goal-text mb-2 cursor-pointer">
-                    <Globe className="w-5 h-5 mr-2" />
-                    Make this vault public
-                  </label>
-                  <p className="font-inter text-sm text-goal-text/70">
-                    {formData.isPublic 
-                      ? "Anyone can discover and join your vault from the community page"
-                      : "Only people with the invite link can join your vault"
-                    }
-                  </p>
+            {/* Privacy Setting - Hidden for now, defaults to private */}
+            {/*
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">6</span>
                 </div>
-                {!formData.isPublic && <Lock className="w-5 h-5 text-goal-text/60 mt-1" />}
+                <h3 className="font-fredoka font-bold text-goal-text text-lg">
+                  Privacy settings
+                </h3>
+              </div>
+
+              <div className="bg-goal-soft/60 border-2 border-goal-border/30 p-6 rounded-2xl relative overflow-hidden">
+                <div className="absolute top-3 right-3 text-sm opacity-10">✨</div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="relative">
+                    <input
+                      id="isPublic"
+                      name="isPublic"
+                      type="checkbox"
+                      checked={formData.isPublic}
+                      onChange={handleInputChange}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor="isPublic"
+                      className={`flex items-center justify-center w-12 h-6 rounded-full cursor-pointer transition-all duration-300 ${
+                        formData.isPublic
+                          ? 'bg-goal-primary'
+                          : 'bg-gray-300'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+                        formData.isPublic ? 'translate-x-3' : '-translate-x-3'
+                      }`}>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-xs">
+                            {formData.isPublic ? '🌍' : '🔒'}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="flex-1">
+                    <label htmlFor="isPublic" className="flex items-center font-fredoka font-bold text-goal-text mb-2 cursor-pointer">
+                      {formData.isPublic ? (
+                        <>
+                          <Globe className="w-5 h-5 mr-2 text-blue-500" />
+                          Public Vault - Everyone can join!
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-5 h-5 mr-2 text-gray-500" />
+                          Private Vault - Invite only
+                        </>
+                      )}
+                    </label>
+                    <p className="font-inter text-sm text-goal-text/70 leading-relaxed">
+                      {formData.isPublic
+                        ? "Your vault will appear in the community page for others to discover and join!"
+                        : "Only people with your special invite link can join your vault."
+                      }
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
+            */}
 
-            {/* Fixed Submit Button */}
-            <div className="pt-4">
+            {/* Cute Error Display */}
+            {error && (
+              <div className="bg-red-50/80 border-2 border-red-200/50 rounded-2xl p-5 relative overflow-hidden">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm">!</span>
+                  </div>
+                  <div>
+                    <p className="font-fredoka font-bold text-red-700 mb-1">Oops! Something went wrong</p>
+                    <p className="font-inter text-sm text-red-600">
+                      {error.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cute Transaction Status */}
+            {txHash && (
+              <div className="bg-goal-soft/60 border-2 border-goal-border/30 rounded-2xl p-5 relative overflow-hidden">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm">📝</span>
+                  </div>
+                  <div>
+                    <p className="font-fredoka font-bold text-blue-700 mb-2">
+                      Transaction submitted!
+                    </p>
+                    <p className="text-xs text-blue-500 font-mono break-all bg-white/60 p-2 rounded-lg">
+                      {txHash}
+                    </p>
+                    {isConfirming && (
+                      <p className="font-inter text-sm text-blue-600 mt-2 flex items-center">
+                        <span className="animate-spin mr-2">⏳</span>
+                        Waiting for confirmation...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="pt-6">
               <Button
                 type="submit"
-                disabled={isCreating}
-                className="w-full h-12 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold text-lg rounded-2xl transition-all duration-300 hover:scale-105 disabled:hover:scale-100 shadow-lg"
+                disabled={isLoading || isConfirming || !isConnected}
+                className="w-full h-14 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold text-lg rounded-2xl transition-all duration-200 hover:shadow-md disabled:hover:shadow-none shadow-sm disabled:opacity-50 relative overflow-hidden"
               >
-                {isCreating ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
-                    <span>Creating Your Dream Vault...</span>
-                  </div>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Create My Dream Vault! 🚀
-                  </>
-                )}
+                <div className="relative">
+                  {!isConnected ? (
+                    <div className="flex items-center justify-center">
+                      <Lock className="w-5 h-5 mr-2" />
+                      Connect Wallet First
+                    </div>
+                  ) : isLoading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
+                      <span>Creating your vault...</span>
+                    </div>
+                  ) : isConfirming ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
+                      <span>Almost there...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Create My Dream Vault!
+                    </div>
+                  )}
+                </div>
               </Button>
             </div>
           </form>
         </Card>
 
-        <Card className="bg-white/40 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl mt-8">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-goal-primary rounded-2xl flex items-center justify-center flex-shrink-0">
-              <Users className="w-6 h-6 text-goal-text" />
+        {/* Cute Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+          <Card className="bg-goal-soft/60 backdrop-blur-sm border-2 border-goal-border/30 p-6 rounded-2xl relative overflow-hidden">
+            <div className="absolute top-2 right-2 text-lg opacity-20 animate-bounce">🎉</div>
+            <div className="flex items-start space-x-4">
+              <div className="w-14 h-14 bg-goal-primary rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <Users className="w-7 h-7 text-goal-text" />
+              </div>
+              <div>
+                <h3 className="font-fredoka font-bold text-goal-text mb-2 text-lg">
+                  Ready to invite friends?
+                </h3>
+                <p className="font-inter text-goal-text/70 text-sm leading-relaxed">
+                  After creating your vault, you'll get a magical shareable link!
+                  Invite friends and family to join your savings adventure!
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-fredoka font-semibold text-goal-text mb-2">
-                Ready to invite friends? 🎉
-              </h3>
-              <p className="font-inter text-goal-text/70 text-sm leading-relaxed">
-                After creating your vault, you'll get a shareable link to invite friends and family. 
-                Saving together makes goals more achievable and fun!
-              </p>
+          </Card>
+
+          <Card className="bg-goal-soft/60 backdrop-blur-sm border-2 border-goal-border/30 p-6 rounded-2xl relative overflow-hidden">
+            <div className="absolute top-2 right-2 text-lg opacity-20 animate-pulse">💰</div>
+            <div className="flex items-start space-x-4">
+              <div className="w-14 h-14 bg-goal-accent rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                <TrendingUp className="w-7 h-7 text-goal-text" />
+              </div>
+              <div>
+                <h3 className="font-fredoka font-bold text-goal-text mb-2 text-lg">
+                  Watch your savings grow!
+                </h3>
+                <p className="font-inter text-goal-text/70 text-sm leading-relaxed">
+                  Your vault will earn yield while you save! Track progress together
+                  and celebrate milestones as a team!
+                </p>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </main>
 
       <BottomNavigation />
+
+      {/* Wallet Guard Dialog */}
+      <WalletGuardDialog
+        isOpen={showConnectDialog}
+        onOpenChange={setShowConnectDialog}
+        title="Connect Wallet to Create Vault"
+        description="You need to connect your wallet to create a savings vault. Connect now to start building your financial goals!"
+        actionText="Create Vault"
+      />
     </div>
   );
 };
