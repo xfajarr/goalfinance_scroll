@@ -21,6 +21,7 @@ const CreateVault = () => {
     createVault,
     isLoading,
     isConfirming,
+    isSuccess,
     error,
     txHash,
     vaultId,
@@ -44,7 +45,7 @@ const CreateVault = () => {
 
   // Watch for successful vault creation
   useEffect(() => {
-    if (vaultId && txHash && !isLoading && !isConfirming) {
+    if (isSuccess && vaultId && txHash) {
       const link = `${window.location.origin}/join/${vaultId}`;
       setShareLink(link);
       setVaultCreated(true);
@@ -75,7 +76,7 @@ const CreateVault = () => {
         colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
       });
     }
-  }, [vaultId, txHash, isLoading, isConfirming]);
+  }, [isSuccess, vaultId, txHash]);
 
   const categories = [
     { value: 'travel', label: 'Travel & Adventure', emoji: '✈️' },
@@ -206,8 +207,15 @@ const CreateVault = () => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(`/vault/${vaultId}`)}
                 className="flex-1 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl px-6 py-3"
+              >
+                View My Vault
+              </Button>
+              <Button
+                onClick={() => navigate('/dashboard')}
+                variant="outline"
+                className="flex-1 border-goal-border text-goal-text hover:bg-goal-accent rounded-2xl px-6 py-3"
               >
                 View Dashboard
               </Button>

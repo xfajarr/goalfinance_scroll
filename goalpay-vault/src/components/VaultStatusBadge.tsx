@@ -59,9 +59,9 @@ export const VaultStatusBadge = ({ status, size = 'md' }: VaultStatusBadgeProps)
   };
 
   return (
-    <Badge 
-      variant="outline" 
-      className={`${config.className} ${sizeClasses[size]} inline-flex items-center gap-1 font-fredoka font-semibold`}
+    <Badge
+      variant="outline"
+      className={`${config.className} ${sizeClasses[size]} inline-flex items-center gap-1 font-fredoka font-semibold w-fit`}
     >
       <Icon className={iconSizes[size]} />
       {config.text}

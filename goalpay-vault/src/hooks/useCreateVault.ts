@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi';
-import { parseUnits } from 'viem';
+import { parseUnits, decodeEventLog } from 'viem';
 import { GoalVaultFactoryABI } from '../contracts/abis/GoalVaultFactory';
 import { CONTRACT_ADDRESSES } from '../config/wagmi';
 import { GoalType } from '../contracts/types';
@@ -18,6 +18,7 @@ export interface UseCreateVaultReturn {
   createVault: (params: CreateVaultParams) => Promise<void>;
   isLoading: boolean;
   isConfirming: boolean;
+  isSuccess: boolean;
   error: Error | null;
   txHash: string | null;
   vaultId: bigint | null;
@@ -41,10 +42,40 @@ export function useCreateVault(): UseCreateVaultReturn {
   const {
     isLoading: isConfirming,
     isSuccess: isConfirmed,
-    error: confirmError
+    error: confirmError,
+    data: receipt
   } = useWaitForTransactionReceipt({
     hash: txHash,
   });
+
+  // Extract vault ID from transaction logs when transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed && receipt && receipt.logs) {
+      try {
+        // Look for VaultCreated event in the logs
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: GoalVaultFactoryABI,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            if (decoded.eventName === 'VaultCreated') {
+              const vaultId = decoded.args.vaultId as bigint;
+              setVaultId(vaultId);
+              break;
+            }
+          } catch (decodeError) {
+            // Continue to next log if this one can't be decoded
+            continue;
+          }
+        }
+      } catch (error) {
+        console.error('Error extracting vault ID from transaction logs:', error);
+      }
+    }
+  }, [isConfirmed, receipt]);
 
   const createVault = async (params: CreateVaultParams) => {
     try {
@@ -122,6 +153,7 @@ export function useCreateVault(): UseCreateVaultReturn {
     createVault,
     isLoading: isWritePending,
     isConfirming,
+    isSuccess: isConfirmed,
     error: combinedError,
     txHash: txHash || null,
     vaultId,
