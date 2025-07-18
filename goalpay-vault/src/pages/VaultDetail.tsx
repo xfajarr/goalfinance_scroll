@@ -157,7 +157,7 @@ const VaultDetail = () => {
             {/* Title and Status */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                <div className="flex items-start justify-between mb-3">
                   <h1 className="text-2xl md:text-3xl lg:text-4xl font-fredoka font-bold text-goal-text">
                     {displayVault.name}
                   </h1>
