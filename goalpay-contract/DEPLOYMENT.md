@@ -1,6 +1,24 @@
 # GoalFi Contract Deployment Guide
 
-This guide explains how to deploy GoalFi contracts to any EVM-compatible blockchain using the dynamic deployment scripts.
+This guide explains how to deploy GoalFi contracts with MVP features to any EVM-compatible blockchain using the dynamic deployment scripts.
+
+## MVP Features Included
+
+The deployed contracts include the following MVP features:
+
+### 🏦 Vault Creation with Goal Types
+- **Group Goals**: Shared target amount for collaborative savings (e.g., Bali trip)
+- **Personal Goals**: Individual target amounts within shared vaults (e.g., MacBook, iPhone)
+
+### 💸 Enhanced Deposit & Tracking
+- **Progress Tracking**: Vault-wide and personal progress bars
+- **Goal Completion**: Automatic detection when goals are reached
+- **Member Management**: Enhanced member info with personal goals
+
+### ⏳ Fairness Logic & Penalties
+- **Early Withdrawal**: 2% penalty held for 1 month, then refundable
+- **Deadline Logic**: Different behavior for goal met vs not met scenarios
+- **Penalty System**: Time-locked penalty refunds after 1 month
 
 ## Prerequisites
 
@@ -188,14 +206,66 @@ forge verify-contract \
 3. **Verify contract source code** after deployment
 4. **Test thoroughly** on testnets before production
 
+## Testing MVP Features After Deployment
+
+After successful deployment, test the MVP features:
+
+### 1. Create Group Goal Vault
+```bash
+# Example: Create a group vacation fund
+cast send $FACTORY_ADDRESS "createVault(string,string,uint256,uint256,bool,uint8,address)" \
+  "Bali Trip Fund" \
+  "Saving for our group vacation to Bali" \
+  "5000000000" \
+  $(($(date +%s) + 7776000)) \
+  true \
+  0 \
+  $USDC_ADDRESS \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+```
+
+### 2. Create Personal Goal Vault
+```bash
+# Example: Create a personal goals vault
+cast send $FACTORY_ADDRESS "createVault(string,string,uint256,uint256,bool,uint8,address)" \
+  "Personal Tech Goals" \
+  "Individual savings for tech purchases" \
+  "0" \
+  $(($(date +%s) + 7776000)) \
+  true \
+  1 \
+  $USDC_ADDRESS \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+```
+
+### 3. Test Penalty System
+```bash
+# Join vault, add funds, then test early withdrawal
+# This will trigger the 2% penalty system
+cast send $VAULT_ADDRESS "withdrawEarly()" \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+```
+
+### 4. Monitor Events
+```bash
+# Watch for MVP-specific events
+cast logs --address $VAULT_ADDRESS \
+  --from-block latest \
+  --rpc-url $RPC_URL
+```
+
 ## Next Steps
 
-After deployment:
+After deployment and testing:
 
-1. **Test contract functionality** using the deployed addresses
-2. **Update frontend configuration** with new contract addresses
-3. **Set up monitoring** for contract events
-4. **Consider security audits** for mainnet deployments
+1. **Verify MVP functionality** using the test scenarios above
+2. **Update frontend configuration** with new contract addresses and MVP features
+3. **Set up event monitoring** for enhanced events (PersonalGoalReached, EarlyWithdrawal, etc.)
+4. **Test penalty refund system** after 1 month on testnet
+5. **Consider security audits** for mainnet deployments
 
 ## Support
 

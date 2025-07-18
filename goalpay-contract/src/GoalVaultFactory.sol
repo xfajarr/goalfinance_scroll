@@ -16,12 +16,27 @@ error GoalVaultFactory__InviteCodeInvalid();
 error GoalVaultFactory__EmptyName();
 error GoalVaultFactory__NotAuthorized();
 error GoalVaultFactory__VaultNotActive();
+error GoalVaultFactory__InvalidToken();
+error GoalVaultFactory__TokenNotSupported();
+error GoalVaultFactory__TokenAlreadySupported();
+error GoalVaultFactory__TokenNotActive();
 
 contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    IERC20 public immutable usdc;
     uint256 public nextVaultId;
+
+    // Supported tokens registry
+    mapping(address => TokenInfo) public supportedTokens;
+    address[] public tokenList;
+
+    struct TokenInfo {
+        string symbol;
+        string name;
+        uint8 decimals;
+        bool isActive;
+        uint256 addedAt;
+    }
 
     enum VaultStatus {
         ACTIVE,
@@ -35,13 +50,16 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
         address creator;
         string vaultName;
         string description;
-        uint256 targetAmount;
+        uint256 targetAmount; // For GROUP: shared target, For PERSONAL: not used
         uint256 deadline;
         uint256 createdAt;
         bool isPublic;
         bool isActive;
         VaultStatus status;
         uint256 memberCount;
+        address token; // Token contract address
+        string tokenSymbol; // Token symbol for display
+        IGoalVault.GoalType goalType; // GROUP or PERSONAL
     }
 
     struct MemberInfo {
@@ -65,6 +83,8 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
         uint256 targetAmount,
         uint256 deadline,
         bool isPublic,
+        address token,
+        string tokenSymbol,
         uint256 timestamp
     );
 
@@ -111,24 +131,90 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
     // Administrative Events
     event FactoryPaused(address indexed admin, uint256 timestamp, string reason);
     event FactoryUnpaused(address indexed admin, uint256 timestamp);
-    event USDCAddressUpdated(address indexed oldUSDC, address indexed newUSDC, uint256 timestamp);
+
+    // Token Management Events
+    event TokenAdded(address indexed token, string symbol, string name, uint8 decimals, uint256 timestamp);
+    event TokenRemoved(address indexed token, string symbol, uint256 timestamp);
+    event TokenStatusUpdated(address indexed token, bool isActive, uint256 timestamp);
     
     /**
-     * @notice Constructor sets the USDC token address
-     * @param _usdc Address of the USDC token contract
+     * @notice Constructor initializes the factory
      */
-    constructor(address _usdc) Ownable(msg.sender) {
-        usdc = IERC20(_usdc);
+    constructor() Ownable(msg.sender) {
         nextVaultId = 1; // Start vault IDs from 1
+    }
+
+    /**
+     * @notice Add a supported token to the registry
+     * @param token Address of the ERC20 token
+     * @param symbol Token symbol
+     * @param name Token name
+     * @param decimals Token decimals
+     */
+    function addSupportedToken(
+        address token,
+        string memory symbol,
+        string memory name,
+        uint8 decimals
+    ) external onlyOwner {
+        if (token == address(0)) {
+            revert GoalVaultFactory__InvalidToken();
+        }
+        if (supportedTokens[token].addedAt != 0) {
+            revert GoalVaultFactory__TokenAlreadySupported();
+        }
+
+        supportedTokens[token] = TokenInfo({
+            symbol: symbol,
+            name: name,
+            decimals: decimals,
+            isActive: true,
+            addedAt: block.timestamp
+        });
+
+        tokenList.push(token);
+
+        emit TokenAdded(token, symbol, name, decimals, block.timestamp);
+    }
+
+    /**
+     * @notice Remove a token from supported list
+     * @param token Address of the token to remove
+     */
+    function removeSupportedToken(address token) external onlyOwner {
+        if (supportedTokens[token].addedAt == 0) {
+            revert GoalVaultFactory__TokenNotSupported();
+        }
+
+        string memory symbol = supportedTokens[token].symbol;
+        supportedTokens[token].isActive = false;
+
+        emit TokenRemoved(token, symbol, block.timestamp);
+    }
+
+    /**
+     * @notice Update token active status
+     * @param token Address of the token
+     * @param isActive New active status
+     */
+    function updateTokenStatus(address token, bool isActive) external onlyOwner {
+        if (supportedTokens[token].addedAt == 0) {
+            revert GoalVaultFactory__TokenNotSupported();
+        }
+
+        supportedTokens[token].isActive = isActive;
+        emit TokenStatusUpdated(token, isActive, block.timestamp);
     }
 
     /**
      * @notice Creates a new savings vault
      * @param _vaultName Name of the vault
      * @param _description Description of the savings goal
-     * @param _targetAmount Target amount to save (in USDC, 6 decimals)
+     * @param _targetAmount Target amount to save (in token decimals) - only for GROUP type
      * @param _deadline Deadline timestamp for the goal
      * @param _isPublic Whether the vault is publicly visible
+     * @param _goalType Type of goal (GROUP or PERSONAL)
+     * @param _token Address of the ERC20 token to use
      * @return vaultId The ID of the created vault
      */
     function createVault(
@@ -136,17 +222,26 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
         string memory _description,
         uint256 _targetAmount,
         uint256 _deadline,
-        bool _isPublic
+        bool _isPublic,
+        IGoalVault.GoalType _goalType,
+        address _token
     ) external whenNotPaused nonReentrant returns (uint256) {
         // Input validation
         if (bytes(_vaultName).length == 0) {
             revert GoalVaultFactory__EmptyName();
         }
-        if (_targetAmount == 0) {
+        // For GROUP type, target amount must be > 0. For PERSONAL type, it can be 0
+        if (_goalType == IGoalVault.GoalType.GROUP && _targetAmount == 0) {
             revert GoalVaultFactory__InvalidAmount();
         }
         if (_deadline <= block.timestamp) {
             revert GoalVaultFactory__InvalidDeadline();
+        }
+        if (_token == address(0)) {
+            revert GoalVaultFactory__InvalidToken();
+        }
+        if (supportedTokens[_token].addedAt == 0 || !supportedTokens[_token].isActive) {
+            revert GoalVaultFactory__TokenNotSupported();
         }
 
         // Get unique vault ID
@@ -154,12 +249,13 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
 
         // Create new vault contract
         GoalVault newVault = new GoalVault(
-            address(usdc),
+            _token,
             _vaultName,
             _description,
             _targetAmount,
             _deadline,
             _isPublic,
+            _goalType,
             msg.sender,
             address(this)
         );
@@ -176,7 +272,10 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
             isPublic: _isPublic,
             isActive: true,
             status: VaultStatus.ACTIVE,
-            memberCount: 0
+            memberCount: 0,
+            token: _token,
+            tokenSymbol: supportedTokens[_token].symbol,
+            goalType: _goalType
         });
 
         // Add to creator's vault list
@@ -192,6 +291,8 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
             _targetAmount,
             _deadline,
             _isPublic,
+            _token,
+            supportedTokens[_token].symbol,
             block.timestamp
         );
 
@@ -249,8 +350,33 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
             revert GoalVaultFactory__VaultNotActive();
         }
 
-        // Call the vault's join function
-        GoalVault(vault.vaultAddress).joinVault(msg.sender);
+        // Call the vault's join function (0 for personal goal amount, can be updated later)
+        GoalVault(vault.vaultAddress).joinVault(msg.sender, 0);
+
+        emit VaultJoined(vaultId, msg.sender, address(0), block.timestamp);
+    }
+
+    /**
+     * @notice Join a vault using an invite code with personal goal amount (for PERSONAL type)
+     * @param _inviteCode The invite code for the vault
+     * @param _personalGoalAmount Personal goal amount (required for PERSONAL type vaults)
+     */
+    function joinVaultByInviteWithGoal(bytes32 _inviteCode, uint256 _personalGoalAmount) external whenNotPaused {
+        uint256 vaultId = inviteCodes[_inviteCode];
+
+        if (vaultId == 0) {
+            revert GoalVaultFactory__InviteCodeInvalid();
+        }
+
+        VaultInfo storage vault = vaults[vaultId];
+
+        // Additional security check: ensure vault is still active
+        if (!vault.isActive) {
+            revert GoalVaultFactory__VaultNotActive();
+        }
+
+        // Call the vault's join function with personal goal amount
+        GoalVault(vault.vaultAddress).joinVault(msg.sender, _personalGoalAmount);
 
         emit VaultJoined(vaultId, msg.sender, address(0), block.timestamp);
     }
@@ -363,11 +489,29 @@ contract GoalVaultFactory is Ownable, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Get the current USDC token address
-     * @return Address of the USDC token contract
+     * @notice Get supported tokens list
+     * @return Array of supported token addresses
      */
-    function getUSDCAddress() external view returns (address) {
-        return address(usdc);
+    function getSupportedTokens() external view returns (address[] memory) {
+        return tokenList;
+    }
+
+    /**
+     * @notice Get token information
+     * @param token Address of the token
+     * @return TokenInfo struct with token details
+     */
+    function getTokenInfo(address token) external view returns (TokenInfo memory) {
+        return supportedTokens[token];
+    }
+
+    /**
+     * @notice Check if token is supported and active
+     * @param token Address of the token
+     * @return True if token is supported and active
+     */
+    function isTokenSupported(address token) external view returns (bool) {
+        return supportedTokens[token].addedAt != 0 && supportedTokens[token].isActive;
     }
 
     // ============ INTERNAL FUNCTIONS ============

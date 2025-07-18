@@ -26,8 +26,17 @@ contract Deploy is Script {
         console.log("MockUSDC deployed to:", address(mockUSDC));
         
         // Deploy VaultFactory
-        GoalVaultFactory factory = new GoalVaultFactory(address(mockUSDC));
+        GoalVaultFactory factory = new GoalVaultFactory();
         console.log("GoalVaultFactory deployed to:", address(factory));
+
+        // Add USDC as supported token
+        factory.addSupportedToken(
+            address(mockUSDC),
+            "USDC",
+            "USD Coin",
+            6
+        );
+        console.log("Added USDC as supported token");
         
         vm.stopBroadcast();
         
@@ -44,8 +53,9 @@ contract Deploy is Script {
         console.log("MockUSDC symbol:", mockUSDC.symbol());
         console.log("MockUSDC decimals:", mockUSDC.decimals());
         console.log("MockUSDC total supply:", mockUSDC.totalSupply() / 1e6, "USDC");
-        console.log("Factory USDC address:", factory.getUSDCAddress());
+        console.log("Factory supported tokens:", factory.getSupportedTokens().length);
         console.log("Factory next vault ID:", factory.nextVaultId());
+        console.log("USDC token supported:", factory.isTokenSupported(address(mockUSDC)));
     }
 }
 
@@ -69,7 +79,8 @@ contract DeployLocal is Script {
         MockUSDC mockUSDC = new MockUSDC(initialSupply);
         
         // Deploy VaultFactory
-        GoalVaultFactory factory = new GoalVaultFactory(address(mockUSDC));
+        GoalVaultFactory factory = new GoalVaultFactory();
+        factory.addSupportedToken(address(mockUSDC), "USDC", "USD Coin", 6);
         
         vm.stopBroadcast();
         
@@ -89,13 +100,15 @@ contract DeployLocal is Script {
         // Give some USDC to deployer for testing
         mockUSDC.mint(deployer, 50000 * 1e6); // 50k USDC
         
-        // Create a test vault
+        // Create a test vault (GROUP type)
         uint256 vaultId = factory.createVault(
             "Test Vacation Fund",
             "Saving for a summer vacation to Hawaii",
             5000 * 1e6, // 5000 USDC target
             block.timestamp + 90 days, // 90 days deadline
-            true // public vault
+            true, // public vault
+            IGoalVault.GoalType.GROUP, // group goal type
+            address(mockUSDC) // token address
         );
         
         console.log("Created test vault with ID:", vaultId);
@@ -129,7 +142,8 @@ contract DeployTestnet is Script {
         MockUSDC mockUSDC = new MockUSDC(initialSupply);
         
         // Deploy VaultFactory
-        GoalVaultFactory factory = new GoalVaultFactory(address(mockUSDC));
+        GoalVaultFactory factory = new GoalVaultFactory();
+        factory.addSupportedToken(address(mockUSDC), "USDC", "USD Coin", 6);
         
         vm.stopBroadcast();
         
@@ -183,7 +197,8 @@ contract DeployMainnet is Script {
         vm.startBroadcast(deployerPrivateKey);
         
         // Deploy VaultFactory with real USDC
-        GoalVaultFactory factory = new GoalVaultFactory(MAINNET_USDC);
+        GoalVaultFactory factory = new GoalVaultFactory();
+        factory.addSupportedToken(MAINNET_USDC, "USDC", "USD Coin", 6);
         
         vm.stopBroadcast();
         

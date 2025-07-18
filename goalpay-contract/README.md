@@ -136,8 +136,9 @@ Individual vault contract for each savings goal.
 Test USDC token with faucet functionality.
 
 **Key Functions:**
-- `faucet()` - Get free test USDC (1000 USDC per day)
-- `mint()` / `burn()` - Admin token management
+- `mint(address, amount)` - Mint tokens (owner only)
+- `burn(amount)` - Burn caller's tokens
+- `burnFrom(address, amount)` - Burn tokens with allowance
 - Standard ERC20 functions with 6 decimals
 
 ## 🧪 Testing

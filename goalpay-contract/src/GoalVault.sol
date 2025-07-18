@@ -22,6 +22,11 @@ error GoalVault__VaultNotCompleted();
 error GoalVault__VaultNotFailed();
 error GoalVault__NoContribution();
 error GoalVault__TransferFailed();
+error GoalVault__InvalidGoalType();
+error GoalVault__PersonalGoalRequired();
+error GoalVault__NoPenaltyToRefund();
+error GoalVault__PenaltyNotReady();
+error GoalVault__PenaltyAlreadyClaimed();
 
 /**
  * @title GoalVault
@@ -31,45 +36,58 @@ error GoalVault__TransferFailed();
 contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
-    // State variables
-    IERC20 public immutable usdc;
+    // Immutable contracts
+    IERC20 public immutable token;
     address public immutable factory;
 
-    string public name;
-    string public description;
-    address public creator;
-    uint256 public targetAmount;
-    uint256 public currentAmount;
-    uint256 public deadline;
-    uint256 public createdAt;
-    bool public isPublic;
-    VaultStatus public status;
+    // Vault configuration and state (grouped in struct)
+    struct VaultConfig {
+        string name;
+        string description;
+        address creator;
+        uint256 targetAmount; // For GROUP: shared target, For PERSONAL: not used
+        uint256 deadline;
+        uint256 createdAt;
+        bool isPublic;
+        IGoalVault.GoalType goalType; // GROUP or PERSONAL
+    }
+
+    struct VaultState {
+        uint256 currentAmount;
+        IGoalVault.VaultStatus status;
+        uint256 memberCount;
+    }
+
+    VaultConfig public vaultConfig;
+    VaultState public vaultState;
 
     // Member management
-    mapping(address => MemberInfo) public members;
+    mapping(address => IGoalVault.MemberInfo) public members;
     address[] public memberList;
-    uint256 public memberCount;
+
+    // Penalty management for early withdrawals
+    mapping(address => IGoalVault.PenaltyInfo) public penalties;
 
     // Milestone tracking to prevent spam
     mapping(uint256 => bool) public milestonesReached;
 
     // Modifiers
     modifier onlyActive() {
-        if (status != VaultStatus.ACTIVE) {
+        if (vaultState.status != IGoalVault.VaultStatus.ACTIVE) {
             revert GoalVault__VaultNotActive();
         }
         _;
     }
 
     modifier onlyCreator() {
-        if (msg.sender != creator) {
+        if (msg.sender != vaultConfig.creator) {
             revert GoalVault__NotAuthorized();
         }
         _;
     }
 
     modifier onlyFactoryOrCreator() {
-        if (msg.sender != factory && msg.sender != creator) {
+        if (msg.sender != factory && msg.sender != vaultConfig.creator) {
             revert GoalVault__NotAuthorized();
         }
         _;
@@ -77,73 +95,84 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
 
     /**
      * @notice Constructor initializes the vault with parameters
-     * @param _usdc USDC token contract address
+     * @param _token ERC20 token contract address
      * @param _name Name of the savings goal
      * @param _description Description of the goal
-     * @param _targetAmount Target amount to save
+     * @param _targetAmount Target amount to save (in token decimals) - only for GROUP type
      * @param _deadline Deadline for the goal
      * @param _isPublic Whether vault is publicly visible
+     * @param _goalType Type of goal (GROUP or PERSONAL)
      * @param _creator Address of the vault creator
      * @param _factory Address of the factory contract
      */
     constructor(
-        address _usdc,
+        address _token,
         string memory _name,
         string memory _description,
         uint256 _targetAmount,
         uint256 _deadline,
         bool _isPublic,
+        IGoalVault.GoalType _goalType,
         address _creator,
         address _factory
     ) Ownable(_creator) {
-        usdc = IERC20(_usdc);
+        token = IERC20(_token);
         factory = _factory;
-        name = _name;
-        description = _description;
-        creator = _creator;
-        targetAmount = _targetAmount;
-        deadline = _deadline;
-        isPublic = _isPublic;
-        createdAt = block.timestamp;
-        status = VaultStatus.ACTIVE;
-        currentAmount = 0;
-        memberCount = 0;
+
+        // Initialize vault configuration
+        vaultConfig = VaultConfig({
+            name: _name,
+            description: _description,
+            creator: _creator,
+            targetAmount: _targetAmount,
+            deadline: _deadline,
+            createdAt: block.timestamp,
+            isPublic: _isPublic,
+            goalType: _goalType
+        });
+
+        // Initialize vault state
+        vaultState = VaultState({
+            currentAmount: 0,
+            status: IGoalVault.VaultStatus.ACTIVE,
+            memberCount: 0
+        });
     }
 
     /**
      * @notice Add funds to the vault
-     * @param amount Amount of USDC to contribute (6 decimals)
+     * @param amount Amount of tokens to contribute (in token decimals)
      */
     function addFunds(uint256 amount) external override onlyActive nonReentrant {
         if (amount == 0) {
             revert GoalVault__InvalidAmount();
         }
-        if (block.timestamp > deadline) {
+        if (block.timestamp > vaultConfig.deadline) {
             revert GoalVault__DeadlineReached();
         }
 
         // Auto-join if not already a member
         if (!members[msg.sender].isActive) {
-            _joinVault(msg.sender);
+            _joinVault(msg.sender, 0); // Default to 0 for auto-join, can be updated later
         }
 
-        // Transfer USDC from user to vault
-        usdc.safeTransferFrom(msg.sender, address(this), amount);
+        // Transfer tokens from user to vault
+        token.safeTransferFrom(msg.sender, address(this), amount);
 
         // Update member contribution
         members[msg.sender].contribution += amount;
-        currentAmount += amount;
+        vaultState.currentAmount += amount;
 
         // Calculate progress percentage with overflow protection
         uint256 progressPercentage;
-        if (currentAmount >= targetAmount) {
+        if (vaultState.currentAmount >= vaultConfig.targetAmount) {
             progressPercentage = 10000; // 100%
         } else {
             // Check for overflow before multiplication
-            if (currentAmount > type(uint256).max / 10000) {
+            if (vaultState.currentAmount > type(uint256).max / 10000) {
                 progressPercentage = 10000; // Treat as 100% if overflow would occur
             } else {
-                progressPercentage = (currentAmount * 10000) / targetAmount;
+                progressPercentage = (vaultState.currentAmount * 10000) / vaultConfig.targetAmount;
             }
         }
 
@@ -151,7 +180,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         emit FundsAdded(
             msg.sender,
             amount,
-            currentAmount,
+            vaultState.currentAmount,
             members[msg.sender].contribution,
             progressPercentage,
             block.timestamp
@@ -166,10 +195,10 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         );
 
         emit VaultProgressUpdate(
-            currentAmount,
-            targetAmount,
+            vaultState.currentAmount,
+            vaultConfig.targetAmount,
             progressPercentage,
-            memberCount,
+            vaultState.memberCount,
             this.getDaysRemaining(),
             block.timestamp
         );
@@ -177,8 +206,22 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         // Check for milestones
         _checkMilestones(progressPercentage);
 
-        // Check if goal is reached
-        if (currentAmount >= targetAmount) {
+        // Check if personal goal is reached (for PERSONAL type)
+        if (vaultConfig.goalType == IGoalVault.GoalType.PERSONAL) {
+            if (members[msg.sender].contribution >= members[msg.sender].personalGoalAmount &&
+                !members[msg.sender].hasReachedPersonalGoal) {
+                members[msg.sender].hasReachedPersonalGoal = true;
+                emit PersonalGoalReached(
+                    msg.sender,
+                    members[msg.sender].personalGoalAmount,
+                    members[msg.sender].contribution,
+                    block.timestamp
+                );
+            }
+        }
+
+        // Check if vault goal is reached
+        if (_isGoalReached()) {
             _completeVault();
         }
     }
@@ -186,9 +229,10 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
     /**
      * @notice Join the vault (called by factory or directly)
      * @param member Address of the member to add
+     * @param personalGoalAmount Personal goal amount (0 for GROUP type)
      */
-    function joinVault(address member) external override onlyFactoryOrCreator {
-        _joinVault(member);
+    function joinVault(address member, uint256 personalGoalAmount) external override onlyFactoryOrCreator {
+        _joinVault(member, personalGoalAmount);
     }
 
     /**
@@ -203,20 +247,20 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         }
 
         _removeMember(msg.sender);
-        emit MemberLeft(msg.sender, block.timestamp, memberCount, 0);
+        emit MemberLeft(msg.sender, block.timestamp, vaultState.memberCount, 0);
     }
 
     /**
      * @notice Complete the vault (can be called by anyone when conditions are met)
      */
     function completeVault() external override {
-        if (status != VaultStatus.ACTIVE) {
+        if (vaultState.status != VaultStatus.ACTIVE) {
             revert GoalVault__VaultNotActive();
         }
 
         // Check if goal reached or deadline passed
-        if (currentAmount >= targetAmount || block.timestamp > deadline) {
-            if (currentAmount >= targetAmount) {
+        if (_isGoalReached() || block.timestamp > vaultConfig.deadline) {
+            if (_isGoalReached()) {
                 _completeVault();
             } else {
                 _failVault();
@@ -228,12 +272,12 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @notice Cancel the vault (only creator can call)
      */
     function cancelVault() external override onlyCreator {
-        if (status != VaultStatus.ACTIVE) {
+        if (vaultState.status != VaultStatus.ACTIVE) {
             revert GoalVault__VaultNotActive();
         }
 
-        status = VaultStatus.CANCELLED;
-        emit VaultCancelled(block.timestamp, currentAmount, memberCount, "CREATOR_CANCELLED");
+        vaultState.status = IGoalVault.VaultStatus.CANCELLED;
+        emit VaultCancelled(block.timestamp, vaultState.currentAmount, vaultState.memberCount, "CREATOR_CANCELLED");
 
         // Return funds to members
         _returnFundsToMembers();
@@ -243,7 +287,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @notice Withdraw funds (when vault failed, cancelled, or completed)
      */
     function withdrawFunds() external override nonReentrant {
-        if (status == VaultStatus.ACTIVE) {
+        if (vaultState.status == VaultStatus.ACTIVE) {
             revert GoalVault__VaultNotCompleted();
         }
         if (!members[msg.sender].isActive) {
@@ -259,22 +303,22 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         uint256 withdrawAmount;
         string memory reason;
 
-        if (status == VaultStatus.COMPLETED) {
+        if (vaultState.status == VaultStatus.COMPLETED) {
             // For completed vaults, return proportional share
             withdrawAmount = _calculateCompletedVaultShare(msg.sender);
             reason = "VAULT_COMPLETED";
         } else {
             // For failed/cancelled vaults, return exact contribution
             withdrawAmount = contribution;
-            reason = status == VaultStatus.FAILED ? "VAULT_FAILED" : "VAULT_CANCELLED";
+            reason = vaultState.status == VaultStatus.FAILED ? "VAULT_FAILED" : "VAULT_CANCELLED";
         }
 
         // Reset member contribution
         members[msg.sender].contribution = 0;
 
         // Transfer funds
-        usdc.safeTransfer(msg.sender, withdrawAmount);
-        emit FundsWithdrawn(msg.sender, withdrawAmount, block.timestamp, reason);
+        token.safeTransfer(msg.sender, withdrawAmount);
+        emit FundsWithdrawn(msg.sender, withdrawAmount, 0, block.timestamp, reason);
     }
 
     /**
@@ -283,7 +327,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @param members_ Array of member addresses to distribute to (max 10)
      */
     function distributeToMembers(address[] calldata members_) external nonReentrant {
-        if (status != VaultStatus.COMPLETED) {
+        if (vaultState.status != VaultStatus.COMPLETED) {
             revert GoalVault__VaultNotCompleted();
         }
         if (members_.length == 0 || members_.length > 10) {
@@ -303,9 +347,9 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
                 members[member].contribution = 0;
 
                 // Transfer funds
-                usdc.safeTransfer(member, withdrawAmount);
+                token.safeTransfer(member, withdrawAmount);
 
-                emit FundsWithdrawn(member, withdrawAmount, block.timestamp, "BATCH_DISTRIBUTION");
+                emit FundsWithdrawn(member, withdrawAmount, 0, block.timestamp, "BATCH_DISTRIBUTION");
 
                 distributedCount++;
                 totalDistributed += withdrawAmount;
@@ -317,24 +361,97 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         }
     }
 
+    /**
+     * @notice Early withdrawal with 2% penalty
+     * @dev Can be called anytime during active vault, penalty held for 1 month
+     */
+    function withdrawEarly() external override nonReentrant {
+        if (vaultState.status != IGoalVault.VaultStatus.ACTIVE) {
+            revert GoalVault__VaultNotActive();
+        }
+        if (!members[msg.sender].isActive) {
+            revert GoalVault__NotMember();
+        }
+
+        uint256 contribution = members[msg.sender].contribution;
+        if (contribution == 0) {
+            revert GoalVault__NoContribution();
+        }
+
+        // Calculate 2% penalty
+        uint256 penalty = (contribution * 200) / 10000; // 2%
+        uint256 withdrawAmount = contribution - penalty;
+
+        // Reset member contribution
+        members[msg.sender].contribution = 0;
+        vaultState.currentAmount -= contribution;
+
+        // Store penalty info (1 month lock)
+        penalties[msg.sender] = IGoalVault.PenaltyInfo({
+            amount: penalty,
+            releaseTime: block.timestamp + 30 days,
+            claimed: false
+        });
+
+        // Transfer withdrawal amount to user
+        token.safeTransfer(msg.sender, withdrawAmount);
+
+        emit EarlyWithdrawal(
+            msg.sender,
+            withdrawAmount,
+            penalty,
+            block.timestamp + 30 days,
+            block.timestamp
+        );
+
+        emit FundsWithdrawn(msg.sender, withdrawAmount, penalty, block.timestamp, "EARLY_WITHDRAWAL");
+    }
+
+    /**
+     * @notice Claim penalty refund after 1 month
+     */
+    function claimPenaltyRefund() external override nonReentrant {
+        IGoalVault.PenaltyInfo storage penaltyInfo = penalties[msg.sender];
+
+        if (penaltyInfo.amount == 0) {
+            revert GoalVault__NoPenaltyToRefund();
+        }
+        if (block.timestamp < penaltyInfo.releaseTime) {
+            revert GoalVault__PenaltyNotReady();
+        }
+        if (penaltyInfo.claimed) {
+            revert GoalVault__PenaltyAlreadyClaimed();
+        }
+
+        uint256 refundAmount = penaltyInfo.amount;
+        penaltyInfo.claimed = true;
+
+        // Transfer penalty refund
+        token.safeTransfer(msg.sender, refundAmount);
+
+        emit PenaltyRefunded(msg.sender, refundAmount, block.timestamp);
+    }
+
     // ============ VIEW FUNCTIONS ============
 
     /**
      * @notice Get complete vault details
      * @return VaultDetails struct with all vault information
      */
-    function getVaultDetails() external view override returns (VaultDetails memory) {
-        return VaultDetails({
-            name: name,
-            description: description,
-            creator: creator,
-            targetAmount: targetAmount,
-            currentAmount: currentAmount,
-            deadline: deadline,
-            createdAt: createdAt,
-            status: status,
-            isPublic: isPublic,
-            memberCount: memberCount
+    function getVaultDetails() external view override returns (IGoalVault.VaultDetails memory) {
+        return IGoalVault.VaultDetails({
+            name: vaultConfig.name,
+            description: vaultConfig.description,
+            creator: vaultConfig.creator,
+            targetAmount: vaultConfig.targetAmount,
+            currentAmount: vaultState.currentAmount,
+            deadline: vaultConfig.deadline,
+            createdAt: vaultConfig.createdAt,
+            status: vaultState.status,
+            isPublic: vaultConfig.isPublic,
+            memberCount: vaultState.memberCount,
+            token: address(token),
+            goalType: vaultConfig.goalType
         });
     }
 
@@ -343,7 +460,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @param member Address of the member
      * @return MemberInfo struct with member details
      */
-    function getMemberInfo(address member) external view override returns (MemberInfo memory) {
+    function getMemberInfo(address member) external view override returns (IGoalVault.MemberInfo memory) {
         return members[member];
     }
 
@@ -351,8 +468,8 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @notice Get all members and their contributions
      * @return Array of MemberInfo structs
      */
-    function getAllMembers() external view override returns (MemberInfo[] memory) {
-        MemberInfo[] memory allMembers = new MemberInfo[](memberCount);
+    function getAllMembers() external view override returns (IGoalVault.MemberInfo[] memory) {
+        IGoalVault.MemberInfo[] memory allMembers = new IGoalVault.MemberInfo[](vaultState.memberCount);
         uint256 index = 0;
 
         for (uint256 i = 0; i < memberList.length; i++) {
@@ -370,7 +487,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @return Number of active members
      */
     function getMemberCount() external view override returns (uint256) {
-        return memberCount;
+        return vaultState.memberCount;
     }
 
     /**
@@ -378,7 +495,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @return Current amount contributed
      */
     function getTotalContributions() external view override returns (uint256) {
-        return currentAmount;
+        return vaultState.currentAmount;
     }
 
     /**
@@ -386,10 +503,10 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @return Amount still needed to reach target
      */
     function getRemainingAmount() external view override returns (uint256) {
-        if (currentAmount >= targetAmount) {
+        if (vaultState.currentAmount >= vaultConfig.targetAmount) {
             return 0;
         }
-        return targetAmount - currentAmount;
+        return vaultConfig.targetAmount - vaultState.currentAmount;
     }
 
     /**
@@ -397,9 +514,9 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @return Progress percentage (0-100, scaled by 100)
      */
     function getVaultProgress() external view override returns (uint256) {
-        if (targetAmount == 0) return 0;
-        if (currentAmount >= targetAmount) return 10000; // 100.00%
-        return (currentAmount * 10000) / targetAmount;
+        if (vaultConfig.targetAmount == 0) return 0;
+        if (vaultState.currentAmount >= vaultConfig.targetAmount) return 10000; // 100.00%
+        return (vaultState.currentAmount * 10000) / vaultConfig.targetAmount;
     }
 
     /**
@@ -407,30 +524,38 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @return Days remaining (0 if deadline passed)
      */
     function getDaysRemaining() external view override returns (uint256) {
-        if (block.timestamp >= deadline) {
+        if (block.timestamp >= vaultConfig.deadline) {
             return 0;
         }
-        return (deadline - block.timestamp) / 1 days;
+        return (vaultConfig.deadline - block.timestamp) / 1 days;
     }
 
     /**
      * @notice Check current vault status
      * @return Current VaultStatus
      */
-    function checkVaultStatus() external view override returns (VaultStatus) {
-        if (status != VaultStatus.ACTIVE) {
-            return status;
+    function checkVaultStatus() external view override returns (IGoalVault.VaultStatus) {
+        if (vaultState.status != IGoalVault.VaultStatus.ACTIVE) {
+            return vaultState.status;
         }
 
         // Check if conditions changed
-        if (currentAmount >= targetAmount) {
-            return VaultStatus.COMPLETED;
+        if (_isGoalReached()) {
+            return IGoalVault.VaultStatus.COMPLETED;
         }
-        if (block.timestamp > deadline) {
-            return VaultStatus.FAILED;
+        if (block.timestamp > vaultConfig.deadline) {
+            return IGoalVault.VaultStatus.FAILED;
         }
 
-        return VaultStatus.ACTIVE;
+        return IGoalVault.VaultStatus.ACTIVE;
+    }
+
+    /**
+     * @notice Get the vault's token address
+     * @return Address of the ERC20 token used by this vault
+     */
+    function getTokenAddress() external view returns (address) {
+        return address(token);
     }
 
     /**
@@ -444,11 +569,11 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
             return (false, 0);
         }
 
-        if (status == VaultStatus.ACTIVE) {
+        if (vaultState.status == IGoalVault.VaultStatus.ACTIVE) {
             return (false, 0);
         }
 
-        if (status == VaultStatus.COMPLETED) {
+        if (vaultState.status == IGoalVault.VaultStatus.COMPLETED) {
             return (true, _calculateCompletedVaultShare(member));
         } else {
             // FAILED or CANCELLED
@@ -456,28 +581,79 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         }
     }
 
+    /**
+     * @notice Get penalty information for a member
+     * @param member Address of the member
+     * @return PenaltyInfo struct with penalty details
+     */
+    function getPenaltyInfo(address member) external view override returns (IGoalVault.PenaltyInfo memory) {
+        return penalties[member];
+    }
+
+    /**
+     * @notice Get personal goal progress for a member (PERSONAL type only)
+     * @param member Address of the member
+     * @return Progress percentage (0-10000, scaled by 100)
+     */
+    function getPersonalGoalProgress(address member) external view override returns (uint256) {
+        if (vaultConfig.goalType != IGoalVault.GoalType.PERSONAL) {
+            return 0;
+        }
+
+        IGoalVault.MemberInfo memory memberInfo = members[member];
+        if (memberInfo.personalGoalAmount == 0) {
+            return 0;
+        }
+
+        if (memberInfo.contribution >= memberInfo.personalGoalAmount) {
+            return 10000; // 100%
+        }
+
+        return (memberInfo.contribution * 10000) / memberInfo.personalGoalAmount;
+    }
+
+    /**
+     * @notice Check if member can claim penalty refund
+     * @param member Address of the member
+     * @return True if penalty can be claimed
+     */
+    function canClaimPenaltyRefund(address member) external view override returns (bool) {
+        IGoalVault.PenaltyInfo memory penaltyInfo = penalties[member];
+        return penaltyInfo.amount > 0 &&
+               block.timestamp >= penaltyInfo.releaseTime &&
+               !penaltyInfo.claimed;
+    }
+
     // ============ INTERNAL FUNCTIONS ============
 
     /**
      * @notice Internal function to add a member to the vault
      * @param member Address of the member to add
+     * @param personalGoalAmount Personal goal amount (0 for GROUP type)
      */
-    function _joinVault(address member) internal {
+    function _joinVault(address member, uint256 personalGoalAmount) internal {
         if (members[member].isActive) {
             revert GoalVault__AlreadyMember();
         }
 
-        members[member] = MemberInfo({
+        // For PERSONAL type, personalGoalAmount must be > 0
+        if (vaultConfig.goalType == IGoalVault.GoalType.PERSONAL && personalGoalAmount == 0) {
+            revert GoalVault__PersonalGoalRequired();
+        }
+
+        members[member] = IGoalVault.MemberInfo({
             member: member,
             contribution: 0,
+            personalGoalAmount: personalGoalAmount,
             joinedAt: block.timestamp,
-            isActive: true
+            isActive: true,
+            hasReachedPersonalGoal: false
         });
 
         memberList.push(member);
-        memberCount++;
+        vaultState.memberCount++;
 
-        emit MemberJoined(member, block.timestamp, memberCount, address(0));
+        emit MemberJoined(member, personalGoalAmount, block.timestamp, vaultState.memberCount, address(0));
     }
 
     /**
@@ -490,9 +666,9 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
         }
 
         members[member].isActive = false;
-        memberCount--;
+        vaultState.memberCount--;
 
-        emit MemberLeft(member, block.timestamp, memberCount, 0);
+        emit MemberLeft(member, block.timestamp, vaultState.memberCount, 0);
 
         // Note: We don't remove from memberList to preserve history
         // The getAllMembers() function filters out inactive members
@@ -502,27 +678,27 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @notice Internal function to complete the vault successfully
      */
     function _completeVault() internal {
-        status = VaultStatus.COMPLETED;
+        vaultState.status = IGoalVault.VaultStatus.COMPLETED;
 
-        uint256 daysToComplete = (block.timestamp - createdAt) / 1 days;
+        uint256 daysToComplete = (block.timestamp - vaultConfig.createdAt) / 1 days;
 
         emit VaultCompleted(
-            currentAmount,
-            targetAmount,
+            vaultState.currentAmount,
+            vaultConfig.targetAmount,
             block.timestamp,
-            memberCount,
+            vaultState.memberCount,
             daysToComplete
         );
 
         emit VaultMilestone(
             "GOAL_COMPLETED",
-            currentAmount,
+            vaultState.currentAmount,
             10000, // 100%
             block.timestamp
         );
 
         // Notify factory of status change for synchronization
-        _notifyFactoryStatusChange(VaultStatus.COMPLETED, "GOAL_REACHED");
+        _notifyFactoryStatusChange(IGoalVault.VaultStatus.COMPLETED, "GOAL_REACHED");
 
         // In MVP, funds stay in contract (no yield distribution)
         // Future: Implement yield distribution logic here
@@ -532,18 +708,18 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
      * @notice Internal function to mark vault as failed
      */
     function _failVault() internal {
-        status = VaultStatus.FAILED;
+        vaultState.status = IGoalVault.VaultStatus.FAILED;
 
         emit VaultFailed(
-            currentAmount,
-            targetAmount,
+            vaultState.currentAmount,
+            vaultConfig.targetAmount,
             block.timestamp,
-            memberCount,
+            vaultState.memberCount,
             "DEADLINE_REACHED"
         );
 
         // Notify factory of status change for synchronization
-        _notifyFactoryStatusChange(VaultStatus.FAILED, "DEADLINE_REACHED");
+        _notifyFactoryStatusChange(IGoalVault.VaultStatus.FAILED, "DEADLINE_REACHED");
 
         // Funds can be withdrawn by members individually
     }
@@ -559,8 +735,8 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
 
             if (contribution > 0 && members[member].isActive) {
                 members[member].contribution = 0;
-                usdc.safeTransfer(member, contribution);
-                emit FundsWithdrawn(member, contribution, block.timestamp, "VAULT_CANCELLED");
+                token.safeTransfer(member, contribution);
+                emit FundsWithdrawn(member, contribution, 0, block.timestamp, "VAULT_CANCELLED");
             }
         }
     }
@@ -590,7 +766,7 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
 
                 emit VaultMilestone(
                     milestoneNames[i],
-                    currentAmount,
+                    vaultState.currentAmount,
                     milestones[i],
                     block.timestamp
                 );
@@ -614,11 +790,33 @@ contract GoalVault is IGoalVault, ReentrancyGuard, Ownable {
     }
 
     /**
+     * @notice Check if vault goal is reached based on goal type
+     * @return True if goal is reached
+     */
+    function _isGoalReached() internal view returns (bool) {
+        if (vaultConfig.goalType == IGoalVault.GoalType.GROUP) {
+            // For GROUP: check if total amount reaches target
+            return vaultState.currentAmount >= vaultConfig.targetAmount;
+        } else {
+            // For PERSONAL: check if all active members reached their personal goals
+            if (vaultState.memberCount == 0) return false;
+
+            for (uint256 i = 0; i < memberList.length; i++) {
+                address member = memberList[i];
+                if (members[member].isActive && !members[member].hasReachedPersonalGoal) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
      * @notice Notify factory of status changes for synchronization
      * @param newStatus New vault status
      * @param reason Reason for status change
      */
-    function _notifyFactoryStatusChange(VaultStatus newStatus, string memory reason) internal {
+    function _notifyFactoryStatusChange(IGoalVault.VaultStatus newStatus, string memory reason) internal {
         // Only notify if factory supports the interface
         if (factory.code.length > 0) {
             try IGoalVaultFactory(factory).updateVaultStatus(

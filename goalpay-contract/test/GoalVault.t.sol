@@ -24,7 +24,7 @@ contract GoalVaultTest is Test {
         // Deploy USDC
         usdc = new MockUSDC(1000000 * 1e6);
         
-        // Deploy vault
+        // Deploy vault (GROUP type)
         vm.startPrank(factory);
         vault = new GoalVault(
             address(usdc),
@@ -33,6 +33,7 @@ contract GoalVaultTest is Test {
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
             true,
+            IGoalVault.GoalType.GROUP,
             creator,
             factory
         );
@@ -89,7 +90,7 @@ contract GoalVaultTest is Test {
         
         // Should auto-join when adding funds
         vm.expectEmit(true, false, false, false);
-        emit IGoalVault.MemberJoined(user1, block.timestamp, 1, address(0));
+        emit IGoalVault.MemberJoined(user1, 0, block.timestamp, 1, address(0));
         
         vault.addFunds(amount);
         
@@ -125,9 +126,9 @@ contract GoalVaultTest is Test {
         vm.startPrank(factory);
         
         vm.expectEmit(true, false, false, false);
-        emit IGoalVault.MemberJoined(user1, block.timestamp, 1, address(0));
-        
-        vault.joinVault(user1);
+        emit IGoalVault.MemberJoined(user1, 0, block.timestamp, 1, address(0));
+
+        vault.joinVault(user1, 0);
         
         assertTrue(vault.getMemberInfo(user1).isActive);
         assertEq(vault.getMemberCount(), 1);
@@ -138,17 +139,17 @@ contract GoalVaultTest is Test {
     function testJoinVaultAlreadyMember() public {
         vm.startPrank(factory);
         
-        vault.joinVault(user1);
-        
+        vault.joinVault(user1, 0);
+
         vm.expectRevert(GoalVault__AlreadyMember.selector);
-        vault.joinVault(user1);
+        vault.joinVault(user1, 0);
         
         vm.stopPrank();
     }
     
     function testLeaveVault() public {
         vm.startPrank(factory);
-        vault.joinVault(user1);
+        vault.joinVault(user1, 0);
         vm.stopPrank();
         
         vm.startPrank(user1);
@@ -250,7 +251,7 @@ contract GoalVaultTest is Test {
         vm.startPrank(user1);
         
         vm.expectEmit(true, false, false, false);
-        emit IGoalVault.FundsWithdrawn(user1, 1000 * 1e6, block.timestamp, "VAULT_FAILED");
+        emit IGoalVault.FundsWithdrawn(user1, 1000 * 1e6, 0, block.timestamp, "VAULT_FAILED");
         
         vault.withdrawFunds();
         
@@ -287,8 +288,8 @@ contract GoalVaultTest is Test {
     function testGetAllMembers() public {
         // Add multiple members
         vm.startPrank(factory);
-        vault.joinVault(user1);
-        vault.joinVault(user2);
+        vault.joinVault(user1, 0);
+        vault.joinVault(user2, 0);
         vm.stopPrank();
 
         IGoalVault.MemberInfo[] memory members = vault.getAllMembers();
@@ -313,7 +314,7 @@ contract GoalVaultTest is Test {
         vm.startPrank(user1);
 
         vm.expectEmit(true, false, false, false);
-        emit IGoalVault.FundsWithdrawn(user1, TARGET_AMOUNT, block.timestamp, "VAULT_COMPLETED");
+        emit IGoalVault.FundsWithdrawn(user1, TARGET_AMOUNT, 0, block.timestamp, "VAULT_COMPLETED");
 
         vault.withdrawFunds();
 
@@ -345,5 +346,217 @@ contract GoalVaultTest is Test {
         (canWithdraw, amount) = vault.getWithdrawableAmount(user1);
         assertTrue(canWithdraw);
         assertEq(amount, 1000 * 1e6);
+    }
+
+    // ============ NEW MVP TESTS ============
+
+    function testPersonalGoalVault() public {
+        // Deploy PERSONAL type vault
+        vm.startPrank(factory);
+        GoalVault personalVault = new GoalVault(
+            address(usdc),
+            "Personal Goals Vault",
+            "Individual savings goals",
+            0, // No shared target for PERSONAL type
+            block.timestamp + DEADLINE,
+            true,
+            IGoalVault.GoalType.PERSONAL,
+            creator,
+            factory
+        );
+        vm.stopPrank();
+
+        uint256 user1Goal = 2000 * 1e6; // 2k USDC
+        uint256 user2Goal = 3000 * 1e6; // 3k USDC
+
+        // User1 joins with personal goal (via factory)
+        vm.startPrank(factory);
+        personalVault.joinVault(user1, user1Goal);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+        usdc.approve(address(personalVault), user1Goal);
+
+        // Add funds towards personal goal
+        personalVault.addFunds(1500 * 1e6); // 1.5k USDC
+
+        IGoalVault.MemberInfo memory user1Info = personalVault.getMemberInfo(user1);
+        assertEq(user1Info.personalGoalAmount, user1Goal);
+        assertEq(user1Info.contribution, 1500 * 1e6);
+        assertFalse(user1Info.hasReachedPersonalGoal);
+        vm.stopPrank();
+
+        // User2 joins with different personal goal (via factory)
+        vm.startPrank(factory);
+        personalVault.joinVault(user2, user2Goal);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        usdc.approve(address(personalVault), user2Goal);
+        personalVault.addFunds(user2Goal); // Reach personal goal immediately
+
+        IGoalVault.MemberInfo memory user2Info = personalVault.getMemberInfo(user2);
+        assertTrue(user2Info.hasReachedPersonalGoal);
+        vm.stopPrank();
+
+        // Check personal goal progress
+        assertEq(personalVault.getPersonalGoalProgress(user1), 7500); // 75%
+        assertEq(personalVault.getPersonalGoalProgress(user2), 10000); // 100%
+    }
+
+    function testEarlyWithdrawalPenalty() public {
+        uint256 contribution = 1000 * 1e6; // 1k USDC
+
+        // User adds funds
+        vm.startPrank(user1);
+        usdc.approve(address(vault), contribution);
+        vault.addFunds(contribution);
+
+        // Early withdrawal
+        uint256 expectedPenalty = (contribution * 200) / 10000; // 2%
+        uint256 expectedWithdraw = contribution - expectedPenalty;
+
+        vm.expectEmit(true, false, false, false);
+        emit IGoalVault.EarlyWithdrawal(
+            user1,
+            expectedWithdraw,
+            expectedPenalty,
+            block.timestamp + 30 days,
+            block.timestamp
+        );
+
+        vault.withdrawEarly();
+
+        // Check penalty info
+        IGoalVault.PenaltyInfo memory penaltyInfo = vault.getPenaltyInfo(user1);
+        assertEq(penaltyInfo.amount, expectedPenalty);
+        assertEq(penaltyInfo.releaseTime, block.timestamp + 30 days);
+        assertFalse(penaltyInfo.claimed);
+
+        // Check user received withdrawal amount
+        assertEq(usdc.balanceOf(user1), 10000 * 1e6 - contribution + expectedWithdraw);
+
+        // Cannot claim penalty refund yet
+        assertFalse(vault.canClaimPenaltyRefund(user1));
+        vm.stopPrank();
+    }
+
+    function testPenaltyRefundAfterOneMonth() public {
+        uint256 contribution = 1000 * 1e6;
+
+        // User adds funds and withdraws early
+        vm.startPrank(user1);
+        usdc.approve(address(vault), contribution);
+        vault.addFunds(contribution);
+        vault.withdrawEarly();
+
+        uint256 expectedPenalty = (contribution * 200) / 10000; // 2%
+
+        // Fast forward 1 month
+        vm.warp(block.timestamp + 30 days + 1);
+
+        // Now can claim penalty refund
+        assertTrue(vault.canClaimPenaltyRefund(user1));
+
+        vm.expectEmit(true, false, false, false);
+        emit IGoalVault.PenaltyRefunded(user1, expectedPenalty, block.timestamp);
+
+        vault.claimPenaltyRefund();
+
+        // Check penalty is marked as claimed
+        IGoalVault.PenaltyInfo memory penaltyInfo = vault.getPenaltyInfo(user1);
+        assertTrue(penaltyInfo.claimed);
+        vm.stopPrank();
+    }
+
+    function testGroupGoalCompletion() public {
+        // Multiple users contribute to reach group goal
+        vm.startPrank(user1);
+        usdc.approve(address(vault), 3000 * 1e6);
+        vault.addFunds(3000 * 1e6);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        usdc.approve(address(vault), 2000 * 1e6);
+        vault.addFunds(2000 * 1e6); // Total: 5000 USDC = TARGET_AMOUNT
+        vm.stopPrank();
+
+        // Vault should be completed
+        assertEq(uint256(vault.checkVaultStatus()), uint256(IGoalVault.VaultStatus.COMPLETED));
+
+        // Both users can withdraw their contributions (no yield in MVP)
+        vm.startPrank(user1);
+        vault.withdrawFunds();
+        assertEq(usdc.balanceOf(user1), 10000 * 1e6); // Got back original contribution
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        vault.withdrawFunds();
+        assertEq(usdc.balanceOf(user2), 10000 * 1e6); // Got back original contribution
+        vm.stopPrank();
+    }
+
+    function testPersonalGoalVaultCompletion() public {
+        // Deploy PERSONAL type vault
+        vm.startPrank(factory);
+        GoalVault personalVault = new GoalVault(
+            address(usdc),
+            "Personal Goals Vault",
+            "Individual savings goals",
+            0,
+            block.timestamp + DEADLINE,
+            true,
+            IGoalVault.GoalType.PERSONAL,
+            creator,
+            factory
+        );
+        vm.stopPrank();
+
+        uint256 user1Goal = 1000 * 1e6;
+        uint256 user2Goal = 2000 * 1e6;
+
+        // Both users join and reach their personal goals
+        vm.startPrank(factory);
+        personalVault.joinVault(user1, user1Goal);
+        personalVault.joinVault(user2, user2Goal);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+        usdc.approve(address(personalVault), user1Goal);
+        personalVault.addFunds(user1Goal);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        usdc.approve(address(personalVault), user2Goal);
+        personalVault.addFunds(user2Goal);
+        vm.stopPrank();
+
+        // Vault should be completed (all members reached personal goals)
+        assertEq(uint256(personalVault.checkVaultStatus()), uint256(IGoalVault.VaultStatus.COMPLETED));
+    }
+
+    function testVaultFailureScenarioAfterDeadline() public {
+        uint256 contribution = 1000 * 1e6; // Less than target
+
+        // User adds funds but doesn't reach target
+        vm.startPrank(user1);
+        usdc.approve(address(vault), contribution);
+        vault.addFunds(contribution);
+        vm.stopPrank();
+
+        // Fast forward past deadline
+        vm.warp(block.timestamp + DEADLINE + 1);
+
+        // Complete vault (should fail due to deadline)
+        vault.completeVault();
+
+        // Vault should be failed
+        assertEq(uint256(vault.checkVaultStatus()), uint256(IGoalVault.VaultStatus.FAILED));
+
+        // User can withdraw full contribution (no penalty for failed vault)
+        vm.startPrank(user1);
+        vault.withdrawFunds();
+        assertEq(usdc.balanceOf(user1), 10000 * 1e6); // Got back original contribution
+        vm.stopPrank();
     }
 }

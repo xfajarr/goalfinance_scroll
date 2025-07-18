@@ -29,6 +29,8 @@ contract GoalVaultFactoryTest is Test {
         uint256 targetAmount,
         uint256 deadline,
         bool isPublic,
+        address token,
+        string tokenSymbol,
         uint256 timestamp
     );
 
@@ -51,7 +53,10 @@ contract GoalVaultFactoryTest is Test {
         
         // Deploy contracts
         usdc = new MockUSDC(INITIAL_SUPPLY);
-        factory = new GoalVaultFactory(address(usdc));
+        factory = new GoalVaultFactory();
+
+        // Add USDC as supported token
+        factory.addSupportedToken(address(usdc), "USDC", "USD Coin", 6);
         
         // Give users some USDC
         usdc.mint(user1, 10000 * 1e6);
@@ -68,14 +73,16 @@ contract GoalVaultFactoryTest is Test {
         uint256 deadline = block.timestamp + DEADLINE;
         
         vm.expectEmit(true, false, true, false);
-        emit VaultCreated(1, address(0), user1, name, description, TARGET_AMOUNT, deadline, true, block.timestamp);
+        emit VaultCreated(1, address(0), user1, name, description, TARGET_AMOUNT, deadline, true, address(usdc), "USDC", block.timestamp);
         
         uint256 vaultId = factory.createVault(
             name,
             description,
             TARGET_AMOUNT,
             deadline,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         assertEq(vaultId, 1);
@@ -103,7 +110,9 @@ contract GoalVaultFactoryTest is Test {
             "Test",
             0, // Invalid amount
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         vm.stopPrank();
@@ -118,7 +127,9 @@ contract GoalVaultFactoryTest is Test {
             "Test",
             TARGET_AMOUNT,
             block.timestamp - 1, // Past deadline
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         vm.stopPrank();
@@ -133,7 +144,9 @@ contract GoalVaultFactoryTest is Test {
             "Test",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         vm.stopPrank();
@@ -148,7 +161,9 @@ contract GoalVaultFactoryTest is Test {
             "Test Description",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         // Generate invite code
@@ -172,7 +187,9 @@ contract GoalVaultFactoryTest is Test {
             "Private Description",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            false // Private vault
+            false, // Private vault
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         vm.stopPrank();
@@ -195,7 +212,9 @@ contract GoalVaultFactoryTest is Test {
             "Test Description",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         bytes32 inviteCode = factory.generateInviteCode(vaultId);
@@ -217,9 +236,9 @@ contract GoalVaultFactoryTest is Test {
         vm.startPrank(user1);
         
         // Create multiple vaults
-        factory.createVault("Vault 1", "Desc 1", TARGET_AMOUNT, block.timestamp + DEADLINE, true);
-        factory.createVault("Vault 2", "Desc 2", TARGET_AMOUNT, block.timestamp + DEADLINE, false);
-        factory.createVault("Vault 3", "Desc 3", TARGET_AMOUNT, block.timestamp + DEADLINE, true);
+        factory.createVault("Vault 1", "Desc 1", TARGET_AMOUNT, block.timestamp + DEADLINE, true, IGoalVault.GoalType.GROUP, address(usdc));
+        factory.createVault("Vault 2", "Desc 2", TARGET_AMOUNT, block.timestamp + DEADLINE, false, IGoalVault.GoalType.GROUP, address(usdc));
+        factory.createVault("Vault 3", "Desc 3", TARGET_AMOUNT, block.timestamp + DEADLINE, true, IGoalVault.GoalType.GROUP, address(usdc));
         
         uint256[] memory vaults = factory.getVaultsByCreator(user1);
         
@@ -235,9 +254,9 @@ contract GoalVaultFactoryTest is Test {
         vm.startPrank(user1);
         
         // Create mix of public and private vaults
-        factory.createVault("Public 1", "Desc 1", TARGET_AMOUNT, block.timestamp + DEADLINE, true);
-        factory.createVault("Private 1", "Desc 2", TARGET_AMOUNT, block.timestamp + DEADLINE, false);
-        factory.createVault("Public 2", "Desc 3", TARGET_AMOUNT, block.timestamp + DEADLINE, true);
+        factory.createVault("Public 1", "Desc 1", TARGET_AMOUNT, block.timestamp + DEADLINE, true, IGoalVault.GoalType.GROUP, address(usdc));
+        factory.createVault("Private 1", "Desc 2", TARGET_AMOUNT, block.timestamp + DEADLINE, false, IGoalVault.GoalType.GROUP, address(usdc));
+        factory.createVault("Public 2", "Desc 3", TARGET_AMOUNT, block.timestamp + DEADLINE, true, IGoalVault.GoalType.GROUP, address(usdc));
         
         uint256[] memory publicVaults = factory.getPublicVaults();
         
@@ -265,7 +284,9 @@ contract GoalVaultFactoryTest is Test {
             "Test",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         
         vm.stopPrank();
@@ -282,7 +303,9 @@ contract GoalVaultFactoryTest is Test {
             "Test",
             TARGET_AMOUNT,
             block.timestamp + DEADLINE,
-            true
+            true,
+            IGoalVault.GoalType.GROUP,
+            address(usdc)
         );
         assertEq(vaultId, 1);
         vm.stopPrank();
@@ -294,6 +317,71 @@ contract GoalVaultFactoryTest is Test {
         vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", user1));
         factory.pause("Unauthorized pause attempt");
         
+        vm.stopPrank();
+    }
+
+    // ============ NEW MVP TESTS ============
+
+    function testCreatePersonalGoalVault() public {
+        vm.startPrank(user1);
+
+        string memory name = "Personal Goals Vault";
+        string memory description = "Individual savings goals";
+        uint256 deadline = block.timestamp + DEADLINE;
+
+        uint256 vaultId = factory.createVault(
+            name,
+            description,
+            0, // No shared target for PERSONAL type
+            deadline,
+            true,
+            IGoalVault.GoalType.PERSONAL,
+            address(usdc)
+        );
+
+        // Check vault info
+        GoalVaultFactory.VaultInfo memory vaultInfo = factory.getVault(vaultId);
+        assertEq(uint256(vaultInfo.goalType), uint256(IGoalVault.GoalType.PERSONAL));
+        assertEq(vaultInfo.targetAmount, 0); // No shared target
+
+        vm.stopPrank();
+    }
+
+    function testJoinVaultWithPersonalGoal() public {
+        vm.startPrank(user1);
+
+        // Create PERSONAL type vault
+        uint256 vaultId = factory.createVault(
+            "Personal Goals Vault",
+            "Individual savings goals",
+            0,
+            block.timestamp + DEADLINE,
+            true,
+            IGoalVault.GoalType.PERSONAL,
+            address(usdc)
+        );
+
+        // Generate invite code
+        bytes32 inviteCode = factory.generateInviteCode(vaultId);
+        vm.stopPrank();
+
+        // User2 joins with personal goal amount
+        vm.startPrank(user2);
+        uint256 personalGoal = 2000 * 1e6; // 2k USDC
+
+        vm.expectEmit(true, true, false, false);
+        emit VaultJoined(vaultId, user2, address(0), block.timestamp);
+
+        factory.joinVaultByInviteWithGoal(inviteCode, personalGoal);
+
+        // Check that user joined with correct personal goal
+        GoalVaultFactory.VaultInfo memory vaultInfo = factory.getVault(vaultId);
+        GoalVault vault = GoalVault(vaultInfo.vaultAddress);
+        IGoalVault.MemberInfo memory memberInfo = vault.getMemberInfo(user2);
+
+        assertEq(memberInfo.personalGoalAmount, personalGoal);
+        assertTrue(memberInfo.isActive);
+
         vm.stopPrank();
     }
 }
