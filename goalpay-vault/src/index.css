@@ -206,4 +206,34 @@ All colors MUST be HSL.
   .container-narrow {
     @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
   }
+
+  /* Mobile bottom navigation spacing utility */
+  .mobile-nav-spacing {
+    @apply pb-32 md:pb-0;
+  }
+
+  /* Continuous Scroll Animation */
+  @keyframes scroll-left {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll-left {
+    animation: scroll-left 25s linear infinite;
+    will-change: transform;
+  }
+
+  .scroll-container:hover .animate-scroll-left {
+    animation-play-state: paused;
+  }
+
+  /* Ensure smooth animation performance */
+  .animate-scroll-left > * {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
 }

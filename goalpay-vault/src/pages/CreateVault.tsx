@@ -240,7 +240,7 @@ const CreateVault = () => {
   }
 
   return (
-    <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+    <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
       <Navigation />
 
       <main className="container-narrow py-8">

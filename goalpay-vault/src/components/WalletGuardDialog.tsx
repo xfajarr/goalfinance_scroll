@@ -87,7 +87,7 @@ export const WalletGuardDialog = ({
           <Button
             onClick={handleConnect}
             disabled={!ready}
-            className="w-full bg-gradient-to-r from-goal-primary to-purple-500 hover:from-goal-primary/90 hover:to-purple-500/90 text-goal-text font-fredoka font-semibold rounded-xl py-3 transition-all duration-300 hover:scale-105 disabled:hover:scale-100 shadow-lg"
+            className="w-full bg-gradient-to-r from-goal-primary to-purple-500 hover:from-goal-primary/90 hover:to-purple-500/90 text-goal-text font-fredoka font-semibold rounded-xl py-3 transition-all duration-200 hover:scale-[1.02] disabled:hover:scale-100 shadow-lg"
           >
             {!ready ? (
               <div className="flex items-center space-x-2">

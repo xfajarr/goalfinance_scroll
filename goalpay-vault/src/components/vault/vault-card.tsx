@@ -22,7 +22,7 @@ interface VaultCardProps {
 export const VaultCard = ({ vault }: VaultCardProps) => {
   return (
     <Link to={`/vault/${vault.id}`}>
-      <Card className="p-component bg-goal-accent/30 border-goal-border/30 rounded-2xl hover:scale-105 hover:shadow-lg transition-all duration-300 cursor-pointer group">
+      <Card className="p-component bg-goal-accent/30 border-goal-border/30 rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer group">
         <div className="space-component">
           <div className="flex justify-between items-start">
             <h3 className="font-fredoka font-bold text-lg text-goal-text group-hover:text-goal-subheading transition-colors">

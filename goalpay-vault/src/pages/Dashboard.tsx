@@ -24,7 +24,7 @@ const Dashboard = () => {
   const [recentActivity] = useState(MOCK_ACTIVITY);
 
   return (
-    <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+    <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
       <Navigation />
 
       <main className="container-content py-8">
@@ -67,7 +67,7 @@ const Dashboard = () => {
 
             {/* Recent Activity */}
             <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-section rounded-3xl">
-              <h2 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-heading mb-6">Recent Activity</h2>
+              <h2 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text-primary mb-6">Recent Activity</h2>
 
               <div className="space-element">
                 {recentActivity.map((activity) => (

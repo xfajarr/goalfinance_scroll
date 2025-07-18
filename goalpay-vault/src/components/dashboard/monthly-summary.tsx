@@ -10,7 +10,7 @@ interface MonthlySummaryProps {
 export const MonthlySummary = ({ saved, yieldEarned, goalsReached }: MonthlySummaryProps) => {
   return (
     <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-component rounded-3xl">
-      <h3 className="font-fredoka font-bold text-lg text-goal-heading mb-4">This Month</h3>
+      <h3 className="font-fredoka font-bold text-lg text-goal-text-primary mb-4">This Month</h3>
 
       <div className="space-element">
         <div className="flex justify-between items-center">

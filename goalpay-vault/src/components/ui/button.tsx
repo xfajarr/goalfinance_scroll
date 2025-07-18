@@ -9,16 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-goal-primary text-goal-heading hover:bg-goal-primary/90 hover:scale-105 shadow-sm hover:shadow-md",
+        default: "bg-goal-primary text-goal-heading hover:bg-goal-primary/90 hover:scale-[1.02] shadow-sm hover:shadow-md",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:scale-105",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:scale-[1.02]",
         outline:
           "border-2 border-goal-border bg-background text-goal-text-primary hover:bg-goal-accent hover:text-goal-heading hover:border-goal-primary",
         secondary:
           "bg-goal-accent text-goal-text-primary hover:bg-goal-accent/80 hover:text-goal-heading",
         ghost: "text-goal-text-primary hover:bg-goal-accent hover:text-goal-heading",
         link: "text-goal-text-primary underline-offset-4 hover:underline hover:text-goal-heading",
-        goal: "bg-gradient-to-r from-goal-primary to-goal-accent text-goal-heading hover:from-goal-primary/90 hover:to-goal-accent/90 hover:scale-105 shadow-md hover:shadow-lg",
+        goal: "bg-gradient-to-r from-goal-primary to-goal-accent text-goal-heading hover:from-goal-primary/90 hover:to-goal-accent/90 hover:scale-[1.02] shadow-md hover:shadow-lg",
       },
       size: {
         default: "h-11 px-6 py-3 text-sm",

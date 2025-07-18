@@ -58,7 +58,7 @@ export const WalletGuardExample = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               onClick={handleCreateVault}
-              className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl py-3 transition-all duration-300 hover:scale-105"
+              className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl py-3 transition-all duration-200 hover:scale-[1.02]"
             >
               <Target className="w-4 h-4 mr-2" />
               Create Vault
@@ -66,7 +66,7 @@ export const WalletGuardExample = () => {
 
             <Button
               onClick={handleJoinVault}
-              className="bg-purple-500 hover:bg-purple-500/90 text-white font-fredoka font-semibold rounded-2xl py-3 transition-all duration-300 hover:scale-105"
+              className="bg-purple-500 hover:bg-purple-500/90 text-white font-fredoka font-semibold rounded-2xl py-3 transition-all duration-200 hover:scale-[1.02]"
             >
               <Plus className="w-4 h-4 mr-2" />
               Join Vault

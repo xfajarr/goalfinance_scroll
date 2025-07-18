@@ -42,7 +42,7 @@ export const ConnectWalletDialog = ({ children }: ConnectWalletDialogProps) => {
               Wallet Connected
             </DialogTitle>
             <DialogDescription className="font-inter text-goal-text">
-              Your wallet is connected and ready to use with goalpay.
+              Your wallet is connected and ready to use with Goal Finance.
             </DialogDescription>
           </DialogHeader>
 

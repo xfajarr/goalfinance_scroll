@@ -144,7 +144,7 @@ const Learn = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+    <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
       <Navigation />
       
       <main className="container-content py-8">
@@ -177,7 +177,7 @@ const Learn = () => {
                   {flashcardSets.map((set, index) => (
                     <Card 
                       key={index}
-                      className={`p-6 border-goal-border/30 rounded-2xl cursor-pointer hover:scale-105 transition-all ${
+                      className={`p-6 border-goal-border/30 rounded-2xl cursor-pointer hover:scale-[1.02] transition-all duration-200 ${
                         completedSets.has(index) 
                           ? 'bg-green-50/60 border-green-200' 
                           : 'bg-goal-accent/30 hover:bg-goal-accent/40'

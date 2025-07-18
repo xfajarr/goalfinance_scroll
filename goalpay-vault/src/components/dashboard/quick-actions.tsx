@@ -7,7 +7,7 @@ import { Plus, Users, BookOpen } from 'lucide-react';
 export const QuickActions = () => {
   return (
     <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-component rounded-3xl">
-      <h3 className="font-fredoka font-bold text-lg text-goal-heading mb-4">Quick Actions</h3>
+      <h3 className="font-fredoka font-bold text-lg text-goal-text-primary mb-4">Quick Actions</h3>
 
       <div className="space-tight">
         <Link to="/create-vault">

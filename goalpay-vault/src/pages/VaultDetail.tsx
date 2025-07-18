@@ -88,7 +88,7 @@ const VaultDetail = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
         <Navigation />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-20">
@@ -103,7 +103,7 @@ const VaultDetail = () => {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
         <Navigation />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
@@ -138,7 +138,7 @@ const VaultDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
+    <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
       <Navigation />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

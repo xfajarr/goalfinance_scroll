@@ -43,7 +43,7 @@ export const FlashcardContent = ({ front, back, difficulty = 'medium', onStudied
   return (
     <div className="w-full h-72 perspective-1000">
       <div
-        className={`relative w-full h-full cursor-pointer transition-all duration-700 transform-style-preserve-3d hover:scale-105 ${
+        className={`relative w-full h-full cursor-pointer transition-all duration-700 transform-style-preserve-3d hover:scale-[1.02] ${
           shouldShowBack ? 'rotate-y-180' : ''
         } ${cardIsStudied ? 'opacity-75 scale-95' : ''}`}
         onClick={handleFlip}

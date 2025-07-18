@@ -8,8 +8,8 @@ export const AchievementsPreview = () => {
   return (
     <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-fredoka font-semibold text-goal-text">Latest Achievement</h3>
-        <Link to="/learn" className="text-goal-primary hover:text-goal-primary/80 font-inter text-sm">
+        <h3 className="font-fredoka font-semibold text-goal-text-primary">Latest Achievement</h3>
+        <Link to="/learn" className="text-goal-text hover:text-goal-text-primary font-inter text-sm">
           View All
         </Link>
       </div>

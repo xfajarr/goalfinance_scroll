@@ -1,11 +1,15 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Vault, TrendingUp, Shield, Users } from 'lucide-react';
+import { Vault, TrendingUp, Shield, Users } from 'lucide-react';
 
 export const CardVaultSection = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
 
   const vaultCards = [
     {
@@ -14,7 +18,7 @@ export const CardVaultSection = () => {
       apy: "5.2%",
       minAmount: "$100",
       icon: Shield,
-      color: "from-blue-500 to-blue-600"
+      color: "from-goal-primary to-goal-accent"
     },
     {
       title: "Growth Vault",
@@ -22,7 +26,7 @@ export const CardVaultSection = () => {
       apy: "12.8%",
       minAmount: "$500",
       icon: TrendingUp,
-      color: "from-green-500 to-green-600"
+      color: "from-goal-primary to-goal-accent"
     },
     {
       title: "Community Vault",
@@ -30,7 +34,7 @@ export const CardVaultSection = () => {
       apy: "8.4%",
       minAmount: "$50",
       icon: Users,
-      color: "from-purple-500 to-purple-600"
+      color: "from-goal-primary to-goal-accent"
     },
     {
       title: "Goal Vault",
@@ -38,110 +42,68 @@ export const CardVaultSection = () => {
       apy: "7.1%",
       minAmount: "$250",
       icon: Vault,
-      color: "from-orange-500 to-orange-600"
+      color: "from-goal-primary to-goal-accent"
     }
   ];
 
-  // Auto-slide effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % vaultCards.length);
-    }, 4000); // Slide every 4 seconds
-
-    return () => clearInterval(interval);
-  }, [vaultCards.length]);
-
-  const nextCard = () => {
-    setCurrentIndex((prev) => (prev + 1) % vaultCards.length);
-  };
-
-  const prevCard = () => {
-    setCurrentIndex((prev) => (prev - 1 + vaultCards.length) % vaultCards.length);
-  };
+  // Duplicate the array to create seamless loop
+  const duplicatedVaults = [...vaultCards, ...vaultCards];
 
   return (
-    <div className="mt-16 space-y-6">
+    <div className={`mt-16 space-y-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
       <div className="text-center">
-        <h2 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text mb-3">
+        <h2 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text-primary mb-3">
           Choose Your Vault
         </h2>
-        <p className="text-base font-inter text-goal-text/70 max-w-xl mx-auto">
+        <p className="text-base font-inter text-goal-text-secondary max-w-xl mx-auto">
           Different vaults for different goals. Start with any amount and watch your savings grow.
         </p>
       </div>
 
-      <div className="relative">
-        <div className="overflow-hidden">
-          <div 
-            className="flex transition-transform duration-700 ease-in-out"
-            style={{ transform: `translateX(-${currentIndex * 33.333}%)` }}
-          >
-            {vaultCards.map((vault, index) => {
-              const Icon = vault.icon;
-              return (
-                <div key={index} className="w-1/3 flex-shrink-0 px-3">
-                  <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-5 rounded-3xl hover:scale-105 transition-all duration-300 h-full">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${vault.color} rounded-2xl flex items-center justify-center mb-4`}>
-                      <Icon className="w-6 h-6 text-white" />
+      {/* Animated Vault Carousel */}
+      <div className="relative overflow-hidden py-4 scroll-container">
+        <div className="flex animate-scroll-left space-x-6 pl-6" style={{ width: 'max-content' }}>
+          {duplicatedVaults.map((vault, index) => {
+            const Icon = vault.icon;
+            return (
+              <div
+                key={`${vault.title}-${index}`}
+                className="flex-shrink-0 min-w-[280px] md:min-w-[320px] hover:scale-[1.02] transition-all duration-200"
+              >
+                <Card className="bg-goal-accent/60 backdrop-blur-sm border border-goal-border/50 p-6 rounded-3xl h-full">
+                  <div className={`w-12 h-12 bg-gradient-to-br ${vault.color} rounded-2xl flex items-center justify-center mb-4`}>
+                    <Icon className="w-6 h-6 text-goal-heading" />
+                  </div>
+
+                  <h3 className="font-fredoka font-bold text-goal-heading text-lg mb-2">
+                    {vault.title}
+                  </h3>
+
+                  <p className="font-inter text-goal-text-secondary text-sm mb-4 leading-relaxed">
+                    {vault.description}
+                  </p>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-inter text-goal-text-muted text-xs">APY</span>
+                      <span className="font-fredoka font-bold text-goal-heading text-base">{vault.apy}</span>
                     </div>
-                    
-                    <h3 className="font-fredoka font-bold text-goal-text text-lg mb-2">
-                      {vault.title}
-                    </h3>
-                    
-                    <p className="font-inter text-goal-text/70 text-sm mb-4 leading-relaxed">
-                      {vault.description}
-                    </p>
-                    
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="font-inter text-goal-text/60 text-xs">APY</span>
-                        <span className="font-fredoka font-bold text-goal-text text-base">{vault.apy}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-inter text-goal-text/60 text-xs">Min Amount</span>
-                        <span className="font-inter text-goal-text font-semibold text-sm">{vault.minAmount}</span>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-inter text-goal-text-muted text-xs">Min Amount</span>
+                      <span className="font-inter text-goal-heading font-semibold text-sm">{vault.minAmount}</span>
                     </div>
-                    
-                    <Button className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl py-2 text-sm">
-                      Start Saving
-                    </Button>
-                  </Card>
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+
+                  <Button className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-heading font-fredoka font-semibold rounded-2xl py-2 text-sm">
+                    Start Saving
+                  </Button>
+                </Card>
+              </div>
+            );
+          })}
         </div>
-
-        {/* Navigation buttons */}
-        <button
-          onClick={prevCard}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-10"
-        >
-          <ChevronLeft className="w-5 h-5 text-goal-text" />
-        </button>
-
-        <button
-          onClick={nextCard}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors z-10"
-        >
-          <ChevronRight className="w-5 h-5 text-goal-text" />
-        </button>
       </div>
 
-      {/* Dots indicator */}
-      <div className="flex justify-center space-x-2">
-        {vaultCards.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex ? 'bg-goal-primary' : 'bg-goal-primary/30'
-            }`}
-          />
-        ))}
-      </div>
     </div>
   );
 };

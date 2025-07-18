@@ -35,8 +35,8 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-2xl md:text-3xl font-fredoka font-bold text-goal-subheading hover:text-goal-text transition-colors">
-              goalpay
+            <span className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text-primary hover:text-goal-text transition-colors">
+              Goal Finance
             </span>
           </Link>
 
@@ -64,21 +64,21 @@ const Navigation = () => {
               </Button>
             </ConnectWalletDialog>
 
-            <Button
+            {/* <Button
               asChild
               className="bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full px-4 py-2 text-sm"
             >
               <Link to="/dashboard">
                 {isWalletConnected ? 'Dashboard' : 'Start'}
               </Link>
-            </Button>
+            </Button> */}
             
-            <button
+            {/* <button
               onClick={toggleMobileMenu}
               className="p-2 rounded-lg text-goal-text hover:bg-goal-accent/50 transition-colors"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            </button> */}
           </div>
         </div>
 

@@ -7,6 +7,7 @@ import FloatingDecorations from '@/components/FloatingDecorations';
 import OnboardingWelcome from '@/components/OnboardingWelcome';
 import { CloudMoneyIcon } from '@/components/CloudMoneyIcon';
 import { CardVaultSection } from '@/components/CardVaultSection';
+import { ProtocolPartners } from '@/components/ProtocolPartners';
 
 const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -37,8 +38,8 @@ const Index = () => {
       <main className={`relative z-10 container-narrow pt-16 pb-24 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="text-center">
           {/* Cloud Money Icon */}
-          <div className={`flex justify-center mb-8 transition-all duration-700 delay-200 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-            <CloudMoneyIcon size={120} className="animate-bounce" />
+          <div className={`flex justify-center transition-all duration-700 delay-200 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+            <CloudMoneyIcon size={120} />
           </div>
 
           {/* Mascot */}
@@ -48,7 +49,7 @@ const Index = () => {
 
           {/* Hero Text */}
           <div className={`space-section transition-all duration-700 delay-400 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-fredoka font-bold text-goal-subheading leading-tight">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-fredoka font-bold text-goal-text-primary leading-tight">
               Save Together,
               <br />
               <span className="bg-gradient-to-r from-goal-primary to-goal-accent bg-clip-text text-goal-text">
@@ -57,7 +58,7 @@ const Index = () => {
             </h1>
 
             <p className="text-lg md:text-xl font-inter text-goal-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Hit your goal, earn the yield. Miss it, get refunded.
+              The cross-chain way to save smarter with friends.
               <br />
               The fun way to save with friends and reach your dreams.
             </p>
@@ -68,17 +69,17 @@ const Index = () => {
                 asChild
                 variant="goal"
                 size="lg"
-                className="text-lg px-12 py-4 rounded-full shadow-lg hover:shadow-xl"
+                className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md hover:shadow-lg hover:scale-[1.02]"
               >
                 <Link to="/dashboard">
                   Start Saving ✨
                 </Link>
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => setShowOnboarding(true)}
-                className="border-2 border-goal-primary text-goal-primary hover:bg-goal-primary hover:text-goal-text font-fredoka font-semibold text-lg px-8 py-4 rounded-full transition-all duration-300 hover:scale-105"
+                className="border-2 border-goal-primary text-goal-text hover:bg-goal-primary hover:text-goal-text font-fredoka font-semibold text-lg px-8 py-4 rounded-full transition-all duration-200 hover:scale-[1.02]"
               >
                 Take the Tour 🎯
               </Button>
@@ -86,22 +87,22 @@ const Index = () => {
             
             {/* Trust indicators */}
             <div className={`pt-8 transition-all duration-700 delay-600 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <p className="text-sm text-goal-text/60 mb-4">Trusted by savers worldwide</p>
+              <p className="text-sm text-goal-text mb-4">Trusted by savers worldwide</p>
               <div className="flex justify-center items-center space-x-8 opacity-60">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-goal-primary/20 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-goal-primary rounded-full flex items-center justify-center">
                     <span className="text-sm">🛡️</span>
                   </div>
                   <span className="text-sm font-inter text-goal-text">Secure</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-goal-primary/20 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-goal-primary rounded-full flex items-center justify-center">
                     <span className="text-sm">🏆</span>
                   </div>
                   <span className="text-sm font-inter text-goal-text">Rewarding</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-goal-primary/20 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-goal-primary rounded-full flex items-center justify-center">
                     <span className="text-sm">👥</span>
                   </div>
                   <span className="text-sm font-inter text-goal-text">Social</span>
@@ -148,10 +149,15 @@ const Index = () => {
             <CardVaultSection />
           </div>
 
+          {/* Protocol Partners Section */}
+          <div className={`transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <ProtocolPartners />
+          </div>
+
           {/* Social Proof - Compact Stats */}
           <div className={`mt-16 bg-gradient-to-r from-goal-accent/20 to-goal-primary/20 rounded-3xl p-6 transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <h3 className="font-fredoka font-bold text-goal-text text-lg mb-4">
-              Join thousands of successful savers! 🎉
+              Join thousands of successful savers!
             </h3>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
