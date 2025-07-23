@@ -59,7 +59,7 @@ const Index = () => {
             </h1>
 
             <p className="text-lg md:text-xl font-inter text-goal-text-secondary max-w-2xl mx-auto leading-relaxed">
-              The cross-chain way to save smarter with friends.
+              Save together. On any chain. For anything.
               <br />
               The fun way to save with friends and reach your dreams.
             </p>
