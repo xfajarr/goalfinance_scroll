@@ -75,11 +75,11 @@
     "mantle-sepolia": {
       "name": "Mantle Sepolia",
       "chainId": 5003,
-      "rpc": "https://rpc.sepolia.mantle.xyz",
+      "rpc": "https://purple-sparkling-diagram.mantle-sepolia.quiknode.pro/f22ce1388f7416cd81d8bf303a531bd88b336258",
       "explorer": "https://sepolia.mantlescan.xyz",
       "apiKeyEnv": "MANTLESCAN_API_KEY",
       "verifierUrl": "https://api-sepolia.mantlescan.xyz/api",
-      "compilerVersion": "v0.8.24+commit.e11b9ed9",
+      "compilerVersion": "v0.8.24+commit.73d96a93",
       "currency": "MNT",
       "type": "testnet"
     },

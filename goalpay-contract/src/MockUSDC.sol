@@ -12,6 +12,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract MockUSDC is ERC20, Ownable {
     uint8 private constant DECIMALS = 6;
 
+    // Custom errors for gas optimization
+    error ZeroAddress();
+    error InsufficientBalance();
+    error InsufficientAllowance();
+    error InvalidAmount();
+
     event Mint(address indexed to, uint256 amount);
     event Burn(address indexed from, uint256 amount);
 
@@ -38,7 +44,8 @@ contract MockUSDC is ERC20, Ownable {
      * @param amount Amount to mint (in 6 decimal format)
      */
     function mint(address to, uint256 amount) external onlyOwner {
-        require(to != address(0), "Cannot mint to zero address");
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert InvalidAmount();
         _mint(to, amount);
         emit Mint(to, amount);
     }
@@ -48,7 +55,8 @@ contract MockUSDC is ERC20, Ownable {
      * @param amount Amount to burn (in 6 decimal format)
      */
     function burn(uint256 amount) external {
-        require(balanceOf(msg.sender) >= amount, "Insufficient balance to burn");
+        if (amount == 0) revert InvalidAmount();
+        if (balanceOf(msg.sender) < amount) revert InsufficientBalance();
         _burn(msg.sender, amount);
         emit Burn(msg.sender, amount);
     }
@@ -59,11 +67,15 @@ contract MockUSDC is ERC20, Ownable {
      * @param amount Amount to burn (in 6 decimal format)
      */
     function burnFrom(address from, uint256 amount) external {
-        require(balanceOf(from) >= amount, "Insufficient balance to burn");
-        uint256 currentAllowance = allowance(from, msg.sender);
-        require(currentAllowance >= amount, "Burn amount exceeds allowance");
+        if (amount == 0) revert InvalidAmount();
+        if (balanceOf(from) < amount) revert InsufficientBalance();
 
-        _approve(from, msg.sender, currentAllowance - amount);
+        uint256 currentAllowance = allowance(from, msg.sender);
+        if (currentAllowance < amount) revert InsufficientAllowance();
+
+        unchecked {
+            _approve(from, msg.sender, currentAllowance - amount);
+        }
         _burn(from, amount);
         emit Burn(from, amount);
     }

@@ -50,7 +50,7 @@ contract MockUSDCTest is Test {
     }
     
     function testMintZeroAddress() public {
-        vm.expectRevert("Cannot mint to zero address");
+        vm.expectRevert(MockUSDC.ZeroAddress.selector);
         usdc.mint(address(0), 1000 * 1e6);
     }
     
@@ -75,9 +75,9 @@ contract MockUSDCTest is Test {
     function testBurnInsufficientBalance() public {
         // User1 has no tokens
         assertEq(usdc.balanceOf(user1), 0);
-        
+
         vm.prank(user1);
-        vm.expectRevert("Insufficient balance to burn");
+        vm.expectRevert(MockUSDC.InsufficientBalance.selector);
         usdc.burn(1000 * 1e6);
     }
     
@@ -107,18 +107,18 @@ contract MockUSDCTest is Test {
         // User1 has no tokens but approves user2
         vm.prank(user1);
         usdc.approve(user2, 1000 * 1e6);
-        
+
         vm.prank(user2);
-        vm.expectRevert("Insufficient balance to burn");
+        vm.expectRevert(MockUSDC.InsufficientBalance.selector);
         usdc.burnFrom(user1, 1000 * 1e6);
     }
     
     function testBurnFromInsufficientAllowance() public {
         // Give user1 tokens but no allowance
         usdc.mint(user1, 10000 * 1e6);
-        
+
         vm.prank(user2);
-        vm.expectRevert("Burn amount exceeds allowance");
+        vm.expectRevert(MockUSDC.InsufficientAllowance.selector);
         usdc.burnFrom(user1, 1000 * 1e6);
     }
     

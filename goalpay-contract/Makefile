@@ -31,6 +31,11 @@ build: ## Build contracts
 	forge build
 	@echo "$(GREEN)Build complete!$(NC)"
 
+build-v2: ## Build V2 contracts specifically
+	@echo "$(GREEN)Building V2 contracts...$(NC)"
+	forge build --contracts src/GoalVaultV2.sol src/GoalVaultFactoryV2.sol src/MockUSDCV2.sol
+	@echo "$(GREEN)V2 build complete!$(NC)"
+
 clean: ## Clean build artifacts
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
 	forge clean
@@ -61,6 +66,14 @@ test-vault: ## Run only vault tests
 	@echo "$(GREEN)Running vault tests...$(NC)"
 	forge test --match-contract GoalVaultTest -vv
 
+test-v2: ## Run V2 tests specifically
+	@echo "$(GREEN)Running V2 tests...$(NC)"
+	forge test --match-contract "V2" -vv
+
+test-v2-coverage: ## Run V2 tests with coverage
+	@echo "$(GREEN)Running V2 tests with coverage...$(NC)"
+	forge coverage --match-contract "V2"
+
 # Formatting
 format: ## Format code
 	@echo "$(GREEN)Formatting code...$(NC)"
@@ -70,27 +83,92 @@ format-check: ## Check code formatting
 	@echo "$(GREEN)Checking code formatting...$(NC)"
 	forge fmt --check
 
-# Local deployment
+# Universal deployment (auto-detects network)
+deploy: ## Deploy to any network (auto-detects chain)
+	@echo "$(GREEN)Deploying GoalFinance (auto-detecting network)...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --broadcast --private-key $(PRIVATE_KEY)
+
+deploy-verify: ## Deploy to any network with verification
+	@echo "$(GREEN)Deploying GoalFinance with verification...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --broadcast --verify --private-key $(PRIVATE_KEY)
+
+# Specific network deployments
 deploy-local: ## Deploy to local network
 	@echo "$(GREEN)Deploying to local network...$(NC)"
-	forge script script/Deploy.s.sol:DeployLocal --rpc-url http://localhost:8545 --broadcast --private-key $(PRIVATE_KEY)
+	forge script script/Deploy.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast --private-key $(PRIVATE_KEY)
 
-deploy-local-verify: ## Deploy to local network and verify
-	@echo "$(GREEN)Deploying to local network with verification...$(NC)"
-	forge script script/Deploy.s.sol:DeployLocal --rpc-url http://localhost:8545 --broadcast --verify --private-key $(PRIVATE_KEY)
+deploy-sepolia: ## Deploy to Ethereum Sepolia
+	@echo "$(GREEN)Deploying to Ethereum Sepolia...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
 
-# Testnet deployment
-deploy-sepolia: ## Deploy to Sepolia testnet
-	@echo "$(GREEN)Deploying to Sepolia testnet...$(NC)"
-	forge script script/Deploy.s.sol:DeployTestnet --rpc-url $(SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+deploy-base-sepolia: ## Deploy to Base Sepolia
+	@echo "$(GREEN)Deploying to Base Sepolia...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(BASE_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
 
-# Mainnet deployment (with confirmation)
-deploy-mainnet: ## Deploy to Ethereum mainnet (DANGEROUS)
-	@echo "$(RED)WARNING: This will deploy to MAINNET!$(NC)"
+deploy-mantle-sepolia: ## Deploy to Mantle Sepolia
+	@echo "$(GREEN)Deploying to Mantle Sepolia...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(MANTLE_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-arbitrum-sepolia: ## Deploy to Arbitrum Sepolia
+	@echo "$(GREEN)Deploying to Arbitrum Sepolia...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(ARBITRUM_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-optimism-sepolia: ## Deploy to Optimism Sepolia
+	@echo "$(GREEN)Deploying to Optimism Sepolia...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(OPTIMISM_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+# Mainnet deployments (with confirmation)
+deploy-ethereum: ## Deploy to Ethereum mainnet (DANGEROUS)
+	@echo "$(RED)WARNING: This will deploy to ETHEREUM MAINNET!$(NC)"
 	@echo "$(RED)Make sure you have reviewed all contracts and tests!$(NC)"
 	@read -p "Are you sure you want to deploy to mainnet? (yes/no): " confirm && [ "$$confirm" = "yes" ]
 	@echo "$(GREEN)Deploying to Ethereum mainnet...$(NC)"
-	forge script script/Deploy.s.sol:DeployMainnet --rpc-url $(MAINNET_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(ETHEREUM_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-base: ## Deploy to Base mainnet (DANGEROUS)
+	@echo "$(RED)WARNING: This will deploy to BASE MAINNET!$(NC)"
+	@read -p "Are you sure you want to deploy to mainnet? (yes/no): " confirm && [ "$$confirm" = "yes" ]
+	@echo "$(GREEN)Deploying to Base mainnet...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(BASE_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-arbitrum: ## Deploy to Arbitrum mainnet (DANGEROUS)
+	@echo "$(RED)WARNING: This will deploy to ARBITRUM MAINNET!$(NC)"
+	@read -p "Are you sure you want to deploy to mainnet? (yes/no): " confirm && [ "$$confirm" = "yes" ]
+	@echo "$(GREEN)Deploying to Arbitrum mainnet...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(ARBITRUM_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-optimism: ## Deploy to Optimism mainnet (DANGEROUS)
+	@echo "$(RED)WARNING: This will deploy to OPTIMISM MAINNET!$(NC)"
+	@read -p "Are you sure you want to deploy to mainnet? (yes/no): " confirm && [ "$$confirm" = "yes" ]
+	@echo "$(GREEN)Deploying to Optimism mainnet...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(OPTIMISM_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-polygon: ## Deploy to Polygon mainnet (DANGEROUS)
+	@echo "$(RED)WARNING: This will deploy to POLYGON MAINNET!$(NC)"
+	@read -p "Are you sure you want to deploy to mainnet? (yes/no): " confirm && [ "$$confirm" = "yes" ]
+	@echo "$(GREEN)Deploying to Polygon mainnet...$(NC)"
+	forge script script/Deploy.s.sol:Deploy --rpc-url $(POLYGON_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+# V2 Deployment targets
+deploy-v2-local: ## Deploy V2 contracts to local network
+	@echo "$(GREEN)Deploying V2 to local network...$(NC)"
+	forge script script/DeployV2.s.sol:DeployV2 --rpc-url http://localhost:8545 --broadcast --private-key $(PRIVATE_KEY)
+
+deploy-v2-sepolia: ## Deploy V2 contracts to Sepolia
+	@echo "$(GREEN)Deploying V2 to Sepolia...$(NC)"
+	forge script script/DeployV2.s.sol:DeployV2 --rpc-url $(SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-v2-mantle: ## Deploy V2 contracts to Mantle Sepolia
+	@echo "$(GREEN)Deploying V2 to Mantle Sepolia...$(NC)"
+	forge script script/DeployV2.s.sol:DeployV2 --rpc-url $(MANTLE_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-v2-base: ## Deploy V2 contracts to Base Sepolia
+	@echo "$(GREEN)Deploying V2 to Base Sepolia...$(NC)"
+	forge script script/DeployV2.s.sol:DeployV2 --rpc-url $(BASE_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
+
+deploy-v2-arbitrum: ## Deploy V2 contracts to Arbitrum Sepolia
+	@echo "$(GREEN)Deploying V2 to Arbitrum Sepolia...$(NC)"
+	forge script script/DeployV2.s.sol:DeployV2 --rpc-url $(ARBITRUM_SEPOLIA_RPC_URL) --broadcast --verify --private-key $(PRIVATE_KEY)
 
 # Verification
 verify-sepolia: ## Verify contracts on Sepolia
@@ -169,4 +247,4 @@ ci-coverage: ## CI coverage command
 security-check: slither ## Run security checks
 	@echo "$(GREEN)Security checks complete!$(NC)"
 
-.PHONY: help install build clean test test-verbose test-gas test-coverage test-factory test-vault format format-check deploy-local deploy-sepolia deploy-mainnet verify-sepolia anvil create-vault get-vault size gas-snapshot slither mythril docs docs-serve setup-env setup-hooks dev-setup full-test ci-test ci-coverage security-check
+.PHONY: help install build build-v2 clean test test-verbose test-gas test-coverage test-factory test-vault test-v2 test-v2-coverage format format-check deploy-local deploy-sepolia deploy-mainnet deploy-v2-local deploy-v2-sepolia deploy-v2-mantle deploy-v2-base deploy-v2-arbitrum verify-sepolia anvil create-vault get-vault size gas-snapshot slither mythril docs docs-serve setup-env setup-hooks dev-setup full-test ci-test ci-coverage security-check
