@@ -19,9 +19,9 @@ const Navigation = () => {
   
   const navItems = [
     { label: 'Home', path: '/' },
+    { label: 'Explore Savings Goals', path: '/community' },
     { label: 'How it Works', path: '/how-it-works' },
     { label: 'FAQ', path: '/faq' },
-    { label: 'Community', path: '/community' },
     { label: 'Learn', path: '/learn' },
   ];
 

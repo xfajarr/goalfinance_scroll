@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Send
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useShareVault } from '@/hooks/useShareVault';
 import { useToast } from '@/hooks/use-toast';
 import { ShareVaultData } from '@/contracts/types';
@@ -110,11 +111,7 @@ export const ShareVaultDialog = ({
     }
   };
 
-  const generateQRCode = () => {
-    if (!shareData) return '';
-    // Using a QR code service - in production, you might want to use a library like qrcode
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareData.shareUrl)}`;
-  };
+  // QR code is now generated using the QRCodeSVG component directly
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -187,11 +184,17 @@ export const ShareVaultDialog = ({
               </h4>
               <div className="flex justify-center">
                 <Card className="p-3 bg-white/70 border-goal-border/40 rounded-lg">
-                  <img
-                    src={generateQRCode()}
-                    alt="QR Code for vault invitation"
-                    className="w-24 h-24 sm:w-28 sm:h-28"
-                  />
+                  {shareData && (
+                    <QRCodeSVG
+                      value={shareData.shareUrl}
+                      size={112} // 28 * 4 for better resolution
+                      bgColor="#ffffff"
+                      fgColor="#8B5CF6" // goal-primary color
+                      level="M"
+                      includeMargin={true}
+                      title="Scan to join vault"
+                    />
+                  )}
                 </Card>
               </div>
             </div>

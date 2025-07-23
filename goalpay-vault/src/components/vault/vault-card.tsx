@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, Calendar, ChevronRight } from 'lucide-react';
 import { formatCurrency, calculateProgress } from '@/utils/formatters';
-import { getStatusColor } from '@/utils/status-helpers';
+import { getStatusColor, getStatusText } from '@/utils/status-helpers';
 
 interface VaultCardProps {
   vault: {
@@ -29,7 +29,7 @@ export const VaultCard = ({ vault }: VaultCardProps) => {
               {vault.name}
             </h3>
             <Badge className={`${getStatusColor(vault.status)} font-fredoka font-medium`}>
-              {vault.status}
+              {getStatusText(vault.status)}
             </Badge>
           </div>
 

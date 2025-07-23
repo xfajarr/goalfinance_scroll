@@ -1,70 +1,230 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { parseUnits, Address } from 'viem';
+import { GOAL_FINANCE_CONTRACT } from '../config/contracts';
+import { AddNativeFundsParams, AddTokenFundsParams } from '../contracts/types';
 import { useToast } from '@/hooks/use-toast';
-import confetti from 'canvas-confetti';
-import { AddFundsParams, UseAddFundsReturn } from '@/contracts/types';
+import { useUSDCApproval } from './useUSDCApproval';
+import GoalFinanceABI from '../contracts/abis/GoalFinance.json';
+
+export interface UseAddFundsReturn {
+  // Add native token funds (MNT/ETH)
+  addNativeFunds: (vaultId: bigint, amount: string) => Promise<void>;
+  // Add ERC20 token funds (USDC)
+  addTokenFunds: (vaultId: bigint, amount: string) => Promise<void>;
+  isLoading: boolean;
+  isConfirming: boolean;
+  isSuccess: boolean;
+  error: Error | null;
+  txHash: string | null;
+  reset: () => void;
+  // Approval states for ERC20 tokens
+  isApproving: boolean;
+  isApprovingConfirming: boolean;
+  approvalTxHash: string | null;
+  needsApproval: boolean;
+  currentStep: 'idle' | 'checking' | 'approving' | 'adding' | 'success' | 'error';
+}
 
 export const useAddFunds = (): UseAddFundsReturn => {
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [txHash, setTxHash] = useState<string | null>(null);
-
+  const [currentStep, setCurrentStep] = useState<'idle' | 'checking' | 'approving' | 'adding' | 'success' | 'error'>('idle');
+  const [needsApproval, setNeedsApproval] = useState(false);
+  const { address } = useAccount();
   const { toast } = useToast();
 
-  const addFunds = async ({ vaultId, amount }: AddFundsParams): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-    setTxHash(null);
+  const {
+    writeContract,
+    data: txHash,
+    isPending: isWritePending,
+    error: writeError,
+    reset: resetWrite
+  } = useWriteContract();
 
+  const {
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
+  // USDC Approval hook
+  const {
+    approve,
+    needsApproval: checkNeedsApproval,
+    isLoading: isApproving,
+    isConfirming: isApprovingConfirming,
+    isSuccess: isApprovalSuccess,
+    error: approvalError,
+    txHash: approvalTxHash,
+    reset: resetApproval
+  } = useUSDCApproval();
+
+  // Reset current step when approval is successful
+  useEffect(() => {
+    if (isApprovalSuccess && currentStep === 'approving') {
+      setCurrentStep('idle');
+      toast({
+        title: '✅ Approval Successful',
+        description: 'You can now add funds to the vault',
+      });
+    }
+  }, [isApprovalSuccess, currentStep, toast]);
+
+  // Add native token funds (MNT/ETH)
+  const addNativeFunds = async (vaultId: bigint, amount: string): Promise<void> => {
     try {
-      // Simulate transaction delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setError(null);
+      setCurrentStep('adding');
 
-      // Mock transaction hash
-      const mockTxHash = `0x${Math.random().toString(16).substr(2, 64)}`;
-      setTxHash(mockTxHash);
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
 
-      toast({
-        title: '🚀 Transaction Submitted',
-        description: `Adding $${Number(amount) / 1000000} USDC to vault.`,
-        className: 'top-4 right-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-400 shadow-lg',
+      // Validate inputs
+      if (!vaultId || vaultId <= 0n) {
+        throw new Error('Invalid vault ID');
+      }
+
+      if (!amount || parseFloat(amount) <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+
+      const value = parseUnits(amount, 18); // Native tokens use 18 decimals
+
+      console.log('💰 Adding native funds:', {
+        vaultId: vaultId.toString(),
+        amount,
+        value: value.toString()
       });
 
-      // Simulate confirmation delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      toast({
-        title: '✅ Funds Added Successfully!',
-        description: `Successfully added $${Number(amount) / 1000000} to the vault.`,
-        className: 'top-4 right-4 bg-goal-primary text-goal-text border-goal-primary shadow-lg',
+      // Call addNativeFunds function
+      writeContract({
+        address: GOAL_FINANCE_CONTRACT.address,
+        abi: GoalFinanceABI,
+        functionName: 'addNativeFunds',
+        args: [vaultId],
+        value: value,
       });
 
-      // Trigger confetti animation
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+      toast({
+        title: '💰 Funds Added Successfully!',
+        description: `Added ${amount} native tokens to your vault`,
       });
 
     } catch (err) {
-      const error = err as Error;
-      setError(error);
+      setCurrentStep('error');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add native funds';
+      setError(new Error(errorMessage));
       toast({
-        title: '❌ Transaction Failed',
-        description: error.message,
+        title: 'Failed to Add Funds',
+        description: errorMessage,
         variant: 'destructive',
-        className: 'top-4 right-4 bg-gradient-to-r from-red-500 to-rose-500 text-white border-red-400 shadow-lg',
       });
-      throw error;
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
   };
 
+  // Add ERC20 token funds (USDC)
+  const addTokenFunds = async (vaultId: bigint, amount: string): Promise<void> => {
+    try {
+      setError(null);
+      setCurrentStep('checking');
+
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
+
+      // Validate inputs
+      if (!vaultId || vaultId <= 0n) {
+        throw new Error('Invalid vault ID');
+      }
+
+      if (!amount || parseFloat(amount) <= 0) {
+        throw new Error('Amount must be greater than 0');
+      }
+
+      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+
+      // Check if approval is needed
+      const needsApprovalCheck = await checkNeedsApproval(amountWei, GOAL_FINANCE_CONTRACT.address);
+      setNeedsApproval(needsApprovalCheck);
+
+      if (needsApprovalCheck) {
+        setCurrentStep('approving');
+
+        toast({
+          title: 'Approval Required',
+          description: 'Please approve USDC spending first, then try adding funds again',
+        });
+
+        // Request approval
+        await approve(amountWei, GOAL_FINANCE_CONTRACT.address);
+
+        // Exit here - user needs to call addTokenFunds again after approval
+        return;
+      }
+
+      setCurrentStep('adding');
+
+      console.log('💰 Adding token funds:', {
+        vaultId: vaultId.toString(),
+        amount,
+        amountWei: amountWei.toString()
+      });
+
+      // Call addTokenFunds function
+      writeContract({
+        address: GOAL_FINANCE_CONTRACT.address,
+        abi: GoalFinanceABI,
+        functionName: 'addTokenFunds',
+        args: [vaultId, amountWei],
+      });
+
+      toast({
+        title: '💰 Funds Added Successfully!',
+        description: `Added ${amount} USDC to your vault`,
+      });
+
+    } catch (err) {
+      setCurrentStep('error');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add token funds';
+      setError(new Error(errorMessage));
+      toast({
+        title: 'Failed to Add Funds',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      throw err;
+    }
+  };
+
+  const reset = () => {
+    resetWrite();
+    resetApproval();
+    setError(null);
+    setCurrentStep('idle');
+    setNeedsApproval(false);
+  };
+
+  // Set error from write, confirmation, or approval
+  const combinedError = error || writeError || confirmError || approvalError;
+
   return {
-    addFunds,
-    isLoading,
-    error,
-    txHash,
+    addNativeFunds,
+    addTokenFunds,
+    isLoading: isWritePending,
+    isConfirming,
+    isSuccess: isConfirmed,
+    error: combinedError,
+    txHash: txHash || null,
+    reset,
+    // Approval states
+    isApproving,
+    isApprovingConfirming,
+    approvalTxHash: approvalTxHash || null,
+    needsApproval,
+    currentStep,
   };
 };

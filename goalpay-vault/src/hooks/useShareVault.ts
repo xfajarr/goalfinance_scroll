@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ShareVaultData, UseShareVaultReturn } from '@/contracts/types';
+import { generateCompleteShareData } from '@/utils/inviteCodeUtils';
 
 export const useShareVault = (): UseShareVaultReturn => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,25 +11,8 @@ export const useShareVault = (): UseShareVaultReturn => {
     setError(null);
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate mock invite code
-      const inviteCode = `GOAL${vaultId}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
-
-      // Generate share URL
-      const baseUrl = window.location.origin;
-      const shareUrl = `${baseUrl}/join/${vaultId}?invite=${inviteCode}`;
-
-      // Generate QR code data (URL for QR code generation)
-      const qrCodeData = shareUrl;
-
-      const shareData: ShareVaultData = {
-        vaultId,
-        inviteCode,
-        shareUrl,
-        qrCodeData,
-      };
+      // Generate complete share data instantly (no blockchain calls needed)
+      const shareData = generateCompleteShareData(vaultId);
 
       return shareData;
 

@@ -11,12 +11,15 @@ import confetti from 'canvas-confetti';
 import { useCreateVault, getGoalTypeFromString } from '@/hooks/useCreateVault';
 import { GoalType } from '@/contracts/types';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { CONTRACT_ADDRESSES, NATIVE_TOKEN } from '@/config/contracts';
+import { useChainId } from 'wagmi';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import { toast } from '@/components/ui/sonner';
 
 const CreateVault = () => {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
   const {
     createVault,
     isLoading,
@@ -25,6 +28,7 @@ const CreateVault = () => {
     error,
     txHash,
     vaultId,
+    inviteCode,
     reset
   } = useCreateVault();
 
@@ -38,45 +42,122 @@ const CreateVault = () => {
     deadline: '',
     isPublic: false, // Always private by default
     category: 'other',
-    goalType: 'group' // Changed from apyTier to goalType
+    goalType: 'group', // Changed from apyTier to goalType
+    tokenType: 'usdc' // 'usdc' or 'native'
   });
   const [vaultCreated, setVaultCreated] = useState(false);
   const [shareLink, setShareLink] = useState('');
 
   // Watch for successful vault creation
   useEffect(() => {
-    if (isSuccess && vaultId && txHash) {
-      const link = `${window.location.origin}/join/${vaultId}`;
-      setShareLink(link);
-      setVaultCreated(true);
+    console.log('🔍 Success state check:', { isSuccess, vaultId, txHash, inviteCode });
 
-      // Show success toast with transaction hash
-      toast('🎉 Vault Created Successfully!', {
+    if (isSuccess && txHash) {
+      // Show immediate success notification even if vault ID is not yet available
+      if (!vaultCreated) {
+        console.log('🎉 Transaction confirmed! Setting up success state...');
+
+        // Set vault created state immediately
+        setVaultCreated(true);
+
+        // Generate share link (use vault ID if available, otherwise use transaction hash)
+        const link = vaultId
+          ? `${window.location.origin}/join/${vaultId}`
+          : `${window.location.origin}/vault/tx/${txHash}`;
+        setShareLink(link);
+
+        // Show success toast with transaction info
+        toast('🎉 Vault Created Successfully!', {
+          description: (
+            <div className="space-y-3">
+              <p className="font-semibold text-green-800">Your vault has been created and is ready to use!</p>
+              {vaultId && (
+                <div className="text-sm text-gray-600">
+                  <strong>Vault ID:</strong> {vaultId.toString()}
+                </div>
+              )}
+              {inviteCode && (
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <div className="text-sm font-medium text-blue-800 mb-1">
+                    🎫 Invite Code (Share with friends):
+                  </div>
+                  <div className="font-mono text-xs text-blue-900 bg-white p-2 rounded border break-all">
+                    {inviteCode}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    💡 Friends can use this code to join your vault!
+                  </div>
+                </div>
+              )}
+              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                <div className="text-sm font-medium text-green-800 mb-1">
+                  ✅ Transaction Confirmed:
+                </div>
+                <a
+                  href={`https://sepolia.mantlescan.xyz/tx/${txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline text-sm font-mono"
+                >
+                  {txHash.slice(0, 10)}...{txHash.slice(-8)}
+                </a>
+              </div>
+            </div>
+          ),
+          duration: 15000, // Longer duration to read all info
+        });
+
+        // Trigger confetti animation
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE', '#10B981', '#34D399']
+        });
+
+        // Additional confetti burst after a short delay
+        setTimeout(() => {
+          confetti({
+            particleCount: 100,
+            spread: 50,
+            origin: { y: 0.7 },
+            colors: ['#F59E0B', '#FBBF24', '#FCD34D']
+          });
+        }, 500);
+      }
+    }
+  }, [isSuccess, vaultId, txHash, inviteCode, vaultCreated]);
+
+  // Watch for errors and display them
+  useEffect(() => {
+    if (error) {
+      console.error('❌ Vault creation error:', error);
+      toast('❌ Vault Creation Failed', {
         description: (
           <div className="space-y-2">
-            <p>Your vault has been created and is ready to use!</p>
-            <a
-              href={`https://sepolia.mantlescan.xyz/tx/${txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 underline text-sm"
-            >
-              View transaction: {txHash.slice(0, 10)}...{txHash.slice(-8)}
-            </a>
+            <p className="font-medium">Failed to create vault</p>
+            <p className="text-sm text-gray-600">{error.message}</p>
+            <p className="text-xs text-gray-500">Please check your wallet connection and try again.</p>
           </div>
         ),
         duration: 8000,
       });
-
-      // Trigger confetti animation
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
-      });
     }
-  }, [isSuccess, vaultId, txHash]);
+  }, [error]);
+
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('🔍 CreateVault state update:', {
+      isLoading,
+      isConfirming,
+      isSuccess,
+      vaultCreated,
+      txHash: txHash ? `${txHash.slice(0, 10)}...` : null,
+      vaultId: vaultId?.toString(),
+      inviteCode: inviteCode ? `${inviteCode.slice(0, 10)}...` : null,
+      error: error?.message
+    });
+  }, [isLoading, isConfirming, isSuccess, vaultCreated, txHash, vaultId, inviteCode, error]);
 
   const categories = [
     { value: 'travel', label: 'Travel & Adventure', emoji: '✈️' },
@@ -139,14 +220,46 @@ const CreateVault = () => {
         throw new Error('Deadline must be in the future');
       }
 
+      // Determine token based on selection
+      const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
+      const token = formData.tokenType === 'native'
+        ? NATIVE_TOKEN
+        : contractAddresses?.USDC;
+
+      // Validate token address is available
+      if (!token) {
+        throw new Error(`${formData.tokenType === 'native' ? 'Native token' : 'USDC'} is not supported on this chain`);
+      }
+
+      console.log('🚀 Starting vault creation with params:', {
+        vaultName: formData.name,
+        description: formData.description,
+        targetAmount: formData.goal || '0',
+        deadline: deadlineDate,
+        isPublic: formData.isPublic,
+        goalType: goalType,
+        token: token,
+        penaltyRate: 2
+      });
+
+      // Show immediate feedback that transaction is being processed
+      toast('🚀 Creating Your Vault...', {
+        description: 'Please confirm the transaction in your wallet and wait for confirmation.',
+        duration: 5000,
+      });
+
       await createVault({
         vaultName: formData.name,
         description: formData.description,
         targetAmount: formData.goal || '0',
         deadline: deadlineDate,
         isPublic: formData.isPublic,
-        goalType: goalType
+        goalType: goalType,
+        token: token,
+        penaltyRate: 2 // Default 2% penalty rate
       });
+
+      console.log('✅ Vault creation transaction submitted successfully!');
 
     } catch (error) {
       console.error('Failed to create vault:', error);
@@ -154,7 +267,7 @@ const CreateVault = () => {
       // Show error toast
       toast('❌ Vault Creation Failed', {
         description: error instanceof Error ? error.message : 'Failed to create vault. Please try again.',
-        duration: 5000,
+        duration: 8000,
       });
     }
   };
@@ -178,6 +291,48 @@ const CreateVault = () => {
             <p className="font-inter text-base md:text-lg text-goal-text-secondary mb-6 leading-relaxed">
               Your "{formData.name}" vault is ready! Start inviting friends to save together.
             </p>
+
+            {/* Vault Details */}
+            <div className="bg-goal-accent/10 p-4 rounded-2xl mb-6 text-left">
+              <h3 className="font-fredoka font-bold text-goal-text mb-3">📊 Vault Details</h3>
+              <div className="space-y-2 text-sm">
+                {vaultId && (
+                  <div className="flex justify-between">
+                    <span className="text-goal-text/70">Vault ID:</span>
+                    <span className="font-mono font-semibold text-goal-text">{vaultId.toString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-goal-text/70">Goal Amount:</span>
+                  <span className="font-semibold text-goal-text">${formData.goal}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-goal-text/70">Token:</span>
+                  <span className="font-semibold text-goal-text">
+                    {formData.tokenType === 'native' ? 'MNT' : 'USDC'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-goal-text/70">Privacy:</span>
+                  <span className="font-semibold text-goal-text">
+                    {formData.isPublic ? 'Public' : 'Private'}
+                  </span>
+                </div>
+                {txHash && (
+                  <div className="pt-2 border-t border-goal-border/20">
+                    <span className="text-goal-text/70 text-xs">Transaction:</span>
+                    <a
+                      href={`https://sepolia.mantlescan.xyz/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-blue-600 hover:text-blue-800 underline text-xs font-mono mt-1"
+                    >
+                      {txHash.slice(0, 20)}...{txHash.slice(-20)}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="bg-goal-accent/20 p-4 rounded-2xl mb-6">
               <p className="font-inter text-sm font-semibold text-goal-text mb-2">Share Link:</p>
@@ -229,7 +384,8 @@ const CreateVault = () => {
                     deadline: '',
                     isPublic: false,
                     category: 'other',
-                    goalType: 'group'
+                    goalType: 'group',
+                    tokenType: 'usdc'
                   });
                   reset(); // Reset the contract hook state
                 }}
@@ -509,6 +665,78 @@ const CreateVault = () => {
               </div>
             </div>
 
+            {/* Token Type Selection */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">6</span>
+                </div>
+                <label className="font-fredoka font-bold text-goal-heading text-lg">
+                  Token Type
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* USDC Option */}
+                <div
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.tokenType === 'usdc'
+                      ? 'bg-goal-primary/10 border-goal-primary'
+                      : 'bg-goal-soft/60 border-goal-border/30 hover:border-goal-primary/50'
+                  }`}
+                  onClick={() => setFormData(prev => ({ ...prev, tokenType: 'usdc' }))}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <img src="/usdc-logo.svg" alt="USDC" className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
+                        USDC
+                      </h3>
+                      <p className="font-inter text-xs text-goal-text-secondary leading-tight">
+                        Stable USD coin - Perfect for savings goals
+                      </p>
+                    </div>
+                    {formData.tokenType === 'usdc' && (
+                      <div className="w-5 h-5 bg-goal-primary rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* MNT Option */}
+                <div
+                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                    formData.tokenType === 'native'
+                      ? 'bg-goal-primary/10 border-goal-primary'
+                      : 'bg-goal-soft/60 border-goal-border/30 hover:border-goal-primary/50'
+                  }`}
+                  onClick={() => setFormData(prev => ({ ...prev, tokenType: 'native' }))}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <img src="/mantle-mnt-logo.svg" alt="MNT" className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
+                        MNT
+                      </h3>
+                      <p className="font-inter text-xs text-goal-text-secondary leading-tight">
+                        Native Mantle token - Gas-efficient deposits
+                      </p>
+                    </div>
+                    {formData.tokenType === 'native' && (
+                      <div className="w-5 h-5 bg-goal-primary rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Privacy Setting - Hidden for now, defaults to private */}
             {/*
             <div className="space-y-3">
@@ -678,7 +906,9 @@ const CreateVault = () => {
           </Card>
 
           <Card className="bg-goal-soft/60 backdrop-blur-sm border-2 border-goal-border/30 p-6 rounded-2xl relative overflow-hidden">
-            <div className="absolute top-2 right-2 text-lg opacity-20 animate-pulse">💰</div>
+            <div className="absolute top-2 right-2 opacity-20 animate-pulse">
+              <DollarSign className="w-5 h-5 text-goal-text" />
+            </div>
             <div className="flex items-start space-x-4">
               <div className="w-14 h-14 bg-goal-accent rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm">
                 <TrendingUp className="w-7 h-7 text-goal-text" />

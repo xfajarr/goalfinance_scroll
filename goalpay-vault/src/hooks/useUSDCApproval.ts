@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useReadContract, useAccount, useChainId } from 'wagmi';
-import { parseUnits, formatUnits } from 'viem';
+import { useWriteContract, useWaitForTransactionReceipt, useReadContract, useAccount, useChainId, useConfig } from 'wagmi';
+import { parseUnits, formatUnits, Address } from 'viem';
 import { ERC20ABI } from '../contracts/abis/ERC20';
 import { CONTRACT_ADDRESSES } from '../config/wagmi';
 
@@ -9,6 +9,7 @@ export interface UseUSDCApprovalReturn {
   checkAllowance: (spender: string) => Promise<bigint>;
   isLoading: boolean;
   isConfirming: boolean;
+  isSuccess: boolean;
   error: Error | null;
   txHash: string | null;
   reset: () => void;
@@ -18,6 +19,7 @@ export interface UseUSDCApprovalReturn {
 export function useUSDCApproval(): UseUSDCApprovalReturn {
   const { address } = useAccount();
   const chainId = useChainId();
+  const config = useConfig();
   const [error, setError] = useState<Error | null>(null);
 
   const {
@@ -51,12 +53,20 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
         throw new Error(`Unsupported network: ${chainId}`);
       }
 
+      // Find the current chain configuration
+      const currentChain = config.chains.find(chain => chain.id === chainId);
+      if (!currentChain) {
+        throw new Error(`Chain configuration not found for chainId: ${chainId}`);
+      }
+
       // Call approve function
       await writeContract({
         address: contractAddresses.USDC as `0x${string}`,
         abi: ERC20ABI,
         functionName: 'approve',
         args: [spender as `0x${string}`, amount],
+        chain: currentChain,
+        account: address,
       });
 
     } catch (err) {
@@ -78,9 +88,23 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
       throw new Error(`Unsupported network: ${chainId}`);
     }
 
-    // This would need to be implemented with a direct contract call
-    // For now, return 0n to indicate no allowance
-    return 0n;
+    try {
+      // Use wagmi's readContract to check allowance
+      const { readContract } = await import('wagmi/actions');
+      const { config } = await import('../config/wagmi');
+
+      const allowance = await readContract(config, {
+        address: contractAddresses.USDC as `0x${string}`,
+        abi: ERC20ABI,
+        functionName: 'allowance',
+        args: [address as `0x${string}`, spender as `0x${string}`],
+      });
+
+      return allowance as bigint;
+    } catch (error) {
+      console.error('Error checking allowance:', error);
+      return 0n; // Return 0 if we can't check allowance
+    }
   };
 
   const needsApproval = async (amount: bigint, spender: string): Promise<boolean> => {
@@ -105,6 +129,7 @@ export function useUSDCApproval(): UseUSDCApprovalReturn {
     checkAllowance,
     isLoading: isWritePending,
     isConfirming,
+    isSuccess: isConfirmed,
     error: combinedError,
     txHash: txHash || null,
     reset,
@@ -143,3 +168,21 @@ export function formatUSDCAmount(amount: bigint): string {
 export function parseUSDCAmount(amount: string): bigint {
   return parseUnits(amount, 6);
 }
+
+// Hook to read USDC allowance using wagmi
+export function useUSDCAllowance(spender: Address | undefined) {
+  const { address } = useAccount();
+  const chainId = useChainId();
+  const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
+
+  return useReadContract({
+    address: contractAddresses?.USDC as Address,
+    abi: ERC20ABI,
+    functionName: 'allowance',
+    args: address && spender ? [address, spender] : undefined,
+    query: {
+      enabled: !!address && !!spender && !!contractAddresses?.USDC,
+    },
+  });
+}
+

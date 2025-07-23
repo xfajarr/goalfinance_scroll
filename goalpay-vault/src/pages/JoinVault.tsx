@@ -7,39 +7,100 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/BottomNavigation';
-import { ArrowLeft, Users, Target, Calendar, Plus, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Users, Target, Calendar, Plus, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useWalletGuard } from '@/hooks/useWalletGuard';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
+import { useInviteCode, VaultPreview } from '@/hooks/useInviteCode';
+import { extractVaultIdFromInviteCode } from '@/utils/inviteCodeUtils';
+import { formatUnits, parseUnits } from 'viem';
 import confetti from 'canvas-confetti';
 
 const JoinVault = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const [contributionAmount, setContributionAmount] = useState('');
-  const [isJoining, setIsJoining] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
+  const [vaultPreview, setVaultPreview] = useState<VaultPreview | null>(null);
+  const [isLoadingVault, setIsLoadingVault] = useState(true);
+  const [isNativeToken, setIsNativeToken] = useState(false);
   const { toast } = useToast();
 
   // Wallet guard for protecting vault joining
   const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
 
+  // Invite code hooks
+  const {
+    validateInviteCode,
+    isValidating,
+    joinVaultByInvite,
+    isJoining,
+    joinError
+  } = useInviteCode();
+
   const inviteCode = searchParams.get('invite');
-  
-  // Mock vault data
-  const vault = {
+
+  // Load vault data when component mounts
+  useEffect(() => {
+    const loadVaultData = async () => {
+      if (!inviteCode) {
+        toast({
+          title: 'Missing Invite Code',
+          description: 'No invite code provided in the URL.',
+          variant: 'destructive',
+        });
+        setIsLoadingVault(false);
+        return;
+      }
+
+      try {
+        setIsLoadingVault(true);
+        const preview = await validateInviteCode(inviteCode);
+        if (preview) {
+          setVaultPreview(preview);
+        } else {
+          toast({
+            title: 'Invalid Invite Code',
+            description: 'The invite code is invalid or the vault does not exist.',
+            variant: 'destructive',
+          });
+        }
+      } catch (error) {
+        console.error('Error loading vault:', error);
+        toast({
+          title: 'Error Loading Vault',
+          description: 'Failed to load vault information.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoadingVault(false);
+      }
+    };
+
+    loadVaultData();
+  }, [inviteCode, validateInviteCode, toast]);
+
+  // Mock vault data for fallback (will be replaced by real data)
+  const vault = vaultPreview ? {
+    id: Number(vaultPreview.id),
+    name: vaultPreview.name,
+    description: vaultPreview.description,
+    goal: Number(formatUnits(vaultPreview.targetAmount || 0n, 6)),
+    current: Number(formatUnits(vaultPreview.currentAmount || 0n, 6)),
+    members: [], // Would need to fetch member data separately
+    daysLeft: Math.max(0, Math.floor((Number(vaultPreview.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
+    creator: vaultPreview.creator,
+    isPublic: vaultPreview.isPublic,
+    yieldRate: "8% APY"
+  } : {
     id: 1,
-    name: "Summer Vacation Fund 🏖️",
-    description: "Let's save together for our amazing summer vacation to Bali! 🌴",
-    goal: 5000,
-    current: 2800,
-    members: [
-      { id: 1, name: "Sarah", contributed: 800, avatar: "S" },
-      { id: 2, name: "Mike", contributed: 1200, avatar: "M" },
-      { id: 3, name: "Emma", contributed: 800, avatar: "E" }
-    ],
-    daysLeft: 45,
-    creator: "Sarah",
+    name: "Loading...",
+    description: "Loading vault information...",
+    goal: 0,
+    current: 0,
+    members: [],
+    daysLeft: 0,
+    creator: "",
     isPublic: true,
     yieldRate: "8% APY"
   };
@@ -49,7 +110,14 @@ const JoinVault = () => {
   };
 
   const handleJoinVault = async () => {
-    if (!contributionAmount || parseFloat(contributionAmount) <= 0) return;
+    if (!inviteCode || !vaultPreview) {
+      toast({
+        title: 'Cannot Join Vault',
+        description: 'Vault information is not loaded yet.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Use wallet guard to check connection and show dialog if needed
     requireWalletConnection(async () => {
@@ -58,17 +126,20 @@ const JoinVault = () => {
   };
 
   const performVaultJoin = async () => {
-    setIsJoining(true);
-    try {
-      // Mock joining vault - replace with actual Web3 logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log(`Joining vault ${id} with ${contributionAmount} USD using invite code: ${inviteCode}`);
+    if (!inviteCode) return;
 
-      toast({
-        title: '🎉 Successfully Joined!',
-        description: `You've joined "${vault.name}" with $${contributionAmount}!`,
-        className: 'top-4 right-4 bg-goal-primary text-goal-text border-goal-primary shadow-lg',
-      });
+    try {
+      // Validate contribution amount
+      if (!contributionAmount || parseFloat(contributionAmount) <= 0) {
+        toast({
+          title: 'Enter Contribution Amount',
+          description: 'Please enter a valid contribution amount.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await joinVaultByInvite(inviteCode, contributionAmount, isNativeToken);
 
       // Trigger confetti animation
       confetti({
@@ -80,17 +151,57 @@ const JoinVault = () => {
 
       setHasJoined(true);
     } catch (error) {
-      console.error('Failed to join vault:', error);
-      toast({
-        title: '❌ Failed to Join',
-        description: 'Please try again later.',
-        variant: 'destructive',
-        className: 'top-4 right-4 bg-red-500 text-white border-red-400 shadow-lg',
-      });
-    } finally {
-      setIsJoining(false);
+      console.error('Error joining vault:', error);
+      // Error handling is done in the hook
     }
   };
+
+  // Loading state
+  if (isLoadingVault) {
+    return (
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
+        <Navigation />
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-goal-primary" />
+            <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">
+              Loading Vault...
+            </h2>
+            <p className="font-inter text-goal-text/80">
+              Please wait while we load the vault information.
+            </p>
+          </Card>
+        </main>
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  // Error state - no vault found
+  if (!vaultPreview) {
+    return (
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
+        <Navigation />
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
+            <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">
+              Vault Not Found
+            </h2>
+            <p className="font-inter text-goal-text/80 mb-4">
+              The invite code is invalid or the vault does not exist.
+            </p>
+            <Button
+              onClick={() => window.location.href = '/dashboard'}
+              className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-6 py-3"
+            >
+              Go to Dashboard
+            </Button>
+          </Card>
+        </main>
+        <BottomNavigation />
+      </div>
+    );
+  }
 
   // Success state after joining
   if (hasJoined) {
@@ -109,7 +220,7 @@ const JoinVault = () => {
             </h1>
 
             <p className="font-inter text-goal-text/80 mb-6">
-              You've successfully joined "{vault.name}" with ${contributionAmount}!
+              You've successfully joined "{vault.name}"!
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
@@ -266,6 +377,31 @@ const JoinVault = () => {
               </div>
             </div>
 
+            {/* Token Selection */}
+            <div className="space-y-3">
+              <label className="font-inter font-semibold text-goal-text">Choose Token</label>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant={!isNativeToken ? "default" : "outline"}
+                  onClick={() => setIsNativeToken(false)}
+                  className="flex-1 rounded-xl"
+                >
+                  <img src="/usdc-logo.svg" alt="USDC" className="w-4 h-4 mr-2" />
+                  USDC
+                </Button>
+                <Button
+                  type="button"
+                  variant={isNativeToken ? "default" : "outline"}
+                  onClick={() => setIsNativeToken(true)}
+                  className="flex-1 rounded-xl"
+                >
+                  <img src="/mantle-mnt-logo.svg" alt="MNT" className="w-4 h-4 mr-2" />
+                  MNT
+                </Button>
+              </div>
+            </div>
+
             <div className="bg-goal-accent/20 p-4 rounded-2xl">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-goal-primary">💎</span>
@@ -290,7 +426,7 @@ const JoinVault = () => {
               ) : (
                 <>
                   <Plus className="w-5 h-5 mr-2" />
-                  Join Vault with ${contributionAmount || '0'}
+                  Join Vault with {contributionAmount || '0'} {isNativeToken ? 'ETH/MNT' : 'USDC'}
                 </>
               )}
             </Button>

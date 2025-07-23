@@ -12,11 +12,11 @@ const BottomNavigation = () => {
       path: '/dashboard',
       active: location.pathname === '/dashboard'
     },
-    { 
-      icon: BookOpen, 
-      label: 'Learn', 
-      path: '/learn',
-      active: location.pathname === '/learn'
+    {
+      icon: Search,
+      label: 'Explore Vaults',
+      path: '/community',
+      active: location.pathname === '/community'
     },
     { 
       icon: Plus, 
@@ -24,11 +24,11 @@ const BottomNavigation = () => {
       path: '/create-vault',
       active: location.pathname === '/create-vault'
     },
-    {
-      icon: Search,
-      label: 'Explore Vaults',
-      path: '/community',
-      active: location.pathname === '/community'
+    { 
+      icon: BookOpen, 
+      label: 'Learn', 
+      path: '/learn',
+      active: location.pathname === '/learn'
     },
     { 
       icon: User, 

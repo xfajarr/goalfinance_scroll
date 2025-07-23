@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -10,76 +10,190 @@ import BottomNavigation from '@/components/BottomNavigation';
 import { VaultStatusBadge } from '@/components/VaultStatusBadge';
 import { AddFundsDialog } from '@/components/vault/AddFundsDialog';
 import { ShareVaultDialog } from '@/components/vault/ShareVaultDialog';
+import { WithdrawDialog } from '@/components/vault/WithdrawDialog';
 import { useVaultData } from '@/hooks/useVaultData';
+import { useCheckVaultStatus } from '@/hooks/useVaultReads';
 import { formatUnits } from 'viem';
-import { ArrowLeft, Share2, Plus, Calendar, Users, Target, MessageCircle, Activity, Send } from 'lucide-react';
+import { ArrowLeft, Share2, Plus, Calendar, Users, Target, MessageCircle, Activity, Send, AlertCircle, ArrowDownToLine, RefreshCw } from 'lucide-react';
 
-const VaultDetail = () => {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class VaultErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return {
+      hasError: true,
+      error
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('VaultDetail error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
+          <Navigation />
+          <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h2 className="text-xl font-fredoka font-bold text-goal-text mb-4">
+                Something went wrong
+              </h2>
+              <p className="font-inter text-goal-text/70 mb-6">
+                We're sorry, but there was an error loading this vault.
+                Please try refreshing the page.
+              </p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3"
+              >
+                Refresh Page
+              </Button>
+            </Card>
+          </main>
+          <BottomNavigation />
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const VaultDetailContent = () => {
   const { id } = useParams();
+  if (!id) {
+    throw new Error('No vault ID provided');
+  }
+
   const [newMessage, setNewMessage] = useState('');
-
-  // Parse vault ID from URL params
-  const vaultId = id ? BigInt(id) : 0n;
-
-  // Fetch real vault data using the hook
-  const { vault, members, isLoading, error, refetch } = useVaultData(vaultId);
-
-  // Fallback to mock data if real data is not available (for development)
-  const mockVault = {
-    id: 1,
-    name: "Summer Vacation Fund 🏖️",
-    goal: 5000,
-    current: 3250,
-    members: [
-      { id: 1, name: "Alex", contributed: 850, avatar: "A" },
-      { id: 2, name: "Sarah", contributed: 1200, avatar: "S" },
-      { id: 3, name: "Mike", contributed: 650, avatar: "M" },
-      { id: 4, name: "Emma", contributed: 550, avatar: "E" }
-    ],
-    daysLeft: 45,
-    createdDate: "March 15, 2024",
-    description: "Let's save together for our amazing summer vacation to Bali! 🌴",
-    targetDate: "June 30, 2024",
-    status: "active" as const,
-    yieldRate: 8.5 // 8.5% APY
-  };
-
-  // Use real data if available, otherwise fallback to mock
-  const displayVault = vault ? {
-    id: Number(vault.id),
-    name: vault.name,
-    goal: Number(formatUnits(vault.goalAmount, 6)),
-    current: Number(formatUnits(vault.currentAmount, 6)),
-    members: members.map((member, index) => ({
-      id: index + 1,
-      name: `${member.member.slice(0, 6)}...${member.member.slice(-4)}`,
-      contributed: Number(formatUnits(member.contribution, 6)),
-      avatar: member.member.slice(2, 3).toUpperCase()
-    })),
-    daysLeft: Math.max(0, Math.floor((Number(vault.deadline) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
-    createdDate: new Date(Number(vault.createdAt) * 1000).toLocaleDateString(),
-    description: vault.description,
-    targetDate: new Date(Number(vault.deadline) * 1000).toLocaleDateString(),
-    status: vault.status === 0 ? "active" as const : "completed" as const,
-    yieldRate: Number(vault.yieldRate) / 100 // Convert basis points to percentage
-  } : mockVault;
-
-  // Mock activity data
-  const activities = [
-    { id: 1, user: "Sarah", action: "contributed", amount: 200, timestamp: "2 hours ago", avatar: "S" },
-    { id: 2, user: "Mike", action: "joined", timestamp: "1 day ago", avatar: "M" },
-    { id: 3, user: "Alex", action: "contributed", amount: 150, timestamp: "2 days ago", avatar: "A" },
-    { id: 4, user: "Emma", action: "contributed", amount: 100, timestamp: "3 days ago", avatar: "E" },
-    { id: 5, user: "Sarah", action: "created the vault", timestamp: "1 week ago", avatar: "S" }
-  ];
-
-  // Mock chat messages
   const [messages, setMessages] = useState([
     { id: 1, user: "Sarah", message: "So excited for this trip! 🎉", timestamp: "2 hours ago", avatar: "S" },
     { id: 2, user: "Mike", message: "Just added my contribution! We're getting closer!", timestamp: "1 day ago", avatar: "M" },
     { id: 3, user: "Alex", message: "Bali here we come! 🏝️", timestamp: "2 days ago", avatar: "A" },
     { id: 4, user: "Emma", message: "Can't wait to hit the beaches!", timestamp: "3 days ago", avatar: "E" }
   ]);
+
+  // Parse vault ID from URL params
+  const vaultId = id ? BigInt(id) : 0n;
+
+  // Fetch vault data using the hook
+  const { vault, members, isLoading, error, refetch } = useVaultData(vaultId);
+
+  // Get real-time vault status using checkVaultStatus function
+  const {
+    data: realTimeStatus,
+    isLoading: isLoadingStatus,
+    error: statusError
+  } = useCheckVaultStatus(vaultId > 0n ? vaultId : undefined);
+
+  // Handle vault loading errors gracefully
+  if (error) {
+    console.error('Vault loading error:', error.message);
+  }
+
+  // Debug logging for status checking
+  if (statusError) {
+    console.error('Status check error:', statusError.message);
+  }
+
+  // No old contract fallbacks - using new GoalFinance contract only
+
+  const safeVault = vault ?? {
+    id: vaultId,
+    name: "Loading...",
+    description: "Loading vault details...",
+    creator: "0x0000000000000000000000000000000000000000",
+    token: "0x0000000000000000000000000000000000000000",
+    goalType: 0,
+    visibility: 0,
+    targetAmount: 0n,
+    totalDeposited: 0n,
+    deadline: BigInt(Math.floor(Date.now() / 1000) + 86400), // 24 hours from now
+    memberCount: 0n,
+    status: 0,
+    inviteCode: "0x0000000000000000000000000000000000000000000000000000000000000000",
+    createdAt: BigInt(Math.floor(Date.now() / 1000)),
+  };
+
+  const safeMembers = members ?? [];
+
+  // Cast to proper vault type
+  const vaultData = safeVault as any;
+  const isNativeToken = vaultData.config?.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  const decimals = isNativeToken ? 18 : 6;
+
+  // Helper function to map contract status to display status
+  const getDisplayStatus = (): 'active' | 'completed' | 'failed' | 'pending' => {
+    // Use real-time status if available, otherwise fall back to stored status
+    const currentStatus = realTimeStatus !== undefined ? realTimeStatus : safeVault.status;
+
+    console.log('🔍 Status mapping:', {
+      realTimeStatus,
+      storedStatus: safeVault.status,
+      currentStatus,
+      vaultId: Number(vaultData.id)
+    });
+
+    // Map contract status enum to display status
+    // Contract: 0 = ACTIVE, 1 = SUCCESS, 2 = FAILED
+    switch (currentStatus) {
+      case 0:
+        return 'active';
+      case 1:
+        return 'completed';
+      case 2:
+        return 'failed';
+      default:
+        return 'pending';
+    }
+  };
+
+  const displayVault = {
+    id: Number(vaultData.id),
+    name: vaultData.config?.name || 'Unknown Vault',
+    description: vaultData.config?.description || 'No description',
+    goal: Number(formatUnits(vaultData.config?.targetAmount || 0n, decimals)),
+    current: Number(formatUnits(vaultData.totalDeposited || 0n, decimals)),
+    members: safeMembers.map((memberAddress, index) => ({
+      id: index + 1,
+      name: `${memberAddress.slice(0, 6)}...${memberAddress.slice(-4)}`,
+      contributed: 0, // We'd need to fetch individual member data for this
+      avatar: memberAddress.slice(2, 3).toUpperCase()
+    })),
+    daysLeft: Math.max(0, Math.floor((Number(vaultData.config?.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
+    createdDate: new Date(Number(safeVault.createdAt || 0n) * 1000).toLocaleDateString(),
+    targetDate: new Date(Number(vaultData.config?.deadline || 0n) * 1000).toLocaleDateString(),
+    status: getDisplayStatus(),
+    yieldRate: 0 // No yield rate in new contract structure
+  };
+
+  // Activity data based on members
+  const activities = safeMembers.map((memberAddress, index) => ({
+    id: index + 1,
+    user: `${memberAddress.slice(0, 6)}...${memberAddress.slice(-4)}`,
+    action: "contributed",
+    amount: 0, // We'd need to fetch individual member data for this
+    timestamp: 'Recently',
+    avatar: memberAddress.slice(2, 3).toUpperCase()
+  }));
 
   const getProgressPercentage = (current: number, goal: number) => {
     return Math.min((current / goal) * 100, 100);
@@ -108,10 +222,11 @@ const VaultDetail = () => {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-4">
-              Failed to Load Vault
+              Vault Not Found
             </h2>
             <p className="font-inter text-goal-text/70 mb-6">
-              {error.message}
+              This vault may have been created with an older contract version or doesn't exist.
+              Please create a new vault or check the vault ID.
             </p>
             <Button onClick={refetch} className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3">
               Try Again
@@ -151,6 +266,8 @@ const VaultDetail = () => {
           <span className="font-inter font-medium text-sm md:text-base">Back to Dashboard</span>
         </Link>
 
+
+
         {/* Vault Header */}
         <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl p-6 md:p-8 mb-6 md:mb-8">
           <div className="space-y-6">
@@ -161,7 +278,21 @@ const VaultDetail = () => {
                   <h1 className="text-2xl md:text-3xl lg:text-4xl font-fredoka font-bold text-goal-text">
                     {displayVault.name}
                   </h1>
-                  <VaultStatusBadge status={displayVault.status} size="md" />
+                  <div className="flex items-center gap-2">
+                    <VaultStatusBadge status={displayVault.status} size="md" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        refetch();
+                        console.log('🔄 Refreshing vault status...');
+                      }}
+                      className="h-8 w-8 p-0 text-goal-text/60 hover:text-goal-text hover:bg-goal-accent/20"
+                      title="Refresh vault status"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isLoadingStatus ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </div>
                 </div>
                 <p className="font-inter text-goal-text/80 text-base md:text-lg leading-relaxed">
                   {displayVault.description}
@@ -214,6 +345,16 @@ const VaultDetail = () => {
                     Add Funds
                   </Button>
                 </AddFundsDialog>
+
+                <WithdrawDialog
+                  vaultId={vaultId}
+                  vaultName={displayVault.name}
+                >
+                  <Button variant="outline" className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 py-3 transition-all duration-300 hover:scale-105">
+                    <ArrowDownToLine className="w-5 h-5 mr-2" />
+                    Withdraw
+                  </Button>
+                </WithdrawDialog>
 
                 <ShareVaultDialog
                   vaultId={vaultId}
@@ -335,22 +476,28 @@ const VaultDetail = () => {
               </h2>
               
               <div className="space-y-4">
-                {activities.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4 p-4 bg-goal-accent/20 rounded-2xl">
-                    <Avatar className="w-10 h-10 bg-goal-primary">
-                      <AvatarFallback className="text-goal-text font-fredoka font-semibold">
-                        {activity.avatar}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-inter text-goal-text">
-                        <span className="font-semibold">{activity.user}</span> {activity.action}
-                        {activity.amount && <span className="font-semibold"> ${activity.amount}</span>}
-                      </p>
-                      <p className="font-inter text-sm text-goal-text/60">{activity.timestamp}</p>
+                {activities.length > 0 ? (
+                  activities.map((activity) => (
+                    <div key={activity.id} className="flex items-center space-x-4 p-4 bg-goal-accent/20 rounded-2xl">
+                      <Avatar className="w-10 h-10 bg-goal-primary">
+                        <AvatarFallback className="text-goal-text font-fredoka font-semibold">
+                          {activity.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-inter text-goal-text">
+                          <span className="font-semibold">{activity.user}</span> {activity.action}
+                          {activity.amount && <span className="font-semibold"> ${activity.amount.toLocaleString()}</span>}
+                        </p>
+                        <p className="font-inter text-sm text-goal-text/60">{activity.timestamp}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="font-inter text-goal-text/70">No activity to show yet</p>
                   </div>
-                ))}
+                )}
               </div>
             </TabsContent>
             
@@ -362,41 +509,13 @@ const VaultDetail = () => {
                   </h2>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-                  {messages.map((message) => (
-                    <div key={message.id} className="flex items-start space-x-3">
-                      <Avatar className="w-8 h-8 bg-goal-primary">
-                        <AvatarFallback className="text-goal-text font-fredoka font-semibold text-sm">
-                          {message.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-inter font-semibold text-goal-text text-sm">{message.user}</span>
-                          <span className="font-inter text-xs text-goal-text/60">{message.timestamp}</span>
-                        </div>
-                        <p className="font-inter text-goal-text/80 mt-1">{message.message}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="p-4 md:p-6 border-t border-goal-border/30">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type your message..."
-                      className="flex-1 px-4 py-3 bg-white/50 border border-goal-border/50 rounded-2xl font-inter text-goal-text placeholder-goal-text/60 focus:outline-none focus:ring-2 focus:ring-goal-primary focus:border-transparent"
-                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    />
-                    <Button
-                      onClick={handleSendMessage}
-                      className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text rounded-2xl px-4 py-3"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <MessageCircle className="w-12 h-12 text-goal-text/30 mx-auto mb-4" />
+                    <h3 className="font-fredoka font-bold text-goal-text mb-2">Chat Coming Soon</h3>
+                    <p className="font-inter text-goal-text/70">
+                      Chat functionality will be available in a future update.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -407,6 +526,14 @@ const VaultDetail = () => {
 
       <BottomNavigation />
     </div>
+  );
+};
+
+const VaultDetail = () => {
+  return (
+    <VaultErrorBoundary>
+      <VaultDetailContent />
+    </VaultErrorBoundary>
   );
 };
 

@@ -1,3 +1,7 @@
+// Import the new GoalFinance ABI
+import GoalFinanceABIJson from './GoalFinance.json';
+export const GoalFinanceABI = GoalFinanceABIJson as const;
+
 export const GoalVaultABI = [
   {
     "type": "constructor",
@@ -158,5 +162,153 @@ export const GoalVaultABI = [
       {"name": "daysToComplete", "type": "uint256", "indexed": false, "internalType": "uint256"}
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__DeadlineExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__DeadlineNotReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__InsufficientAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__InvalidGoalType",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__InvalidPersonalGoal",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__MemberAlreadyExists",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__MemberNotFound",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__NoPenaltyToClaim",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__NotCreator",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__NotMember",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__PenaltyNotUnlocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__TargetNotReached",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__TransferFailed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__VaultAlreadyCompleted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__VaultNotActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GoalVault__ZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OwnableInvalidOwner",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Unauthorized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultLibrary__DivisionByZero",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultLibrary__InvalidAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultLibrary__InvalidDeadline",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "VaultLibrary__InvalidGoalType",
+    "inputs": []
   }
 ] as const;

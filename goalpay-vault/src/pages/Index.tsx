@@ -8,6 +8,7 @@ import OnboardingWelcome from '@/components/OnboardingWelcome';
 import { CloudMoneyIcon } from '@/components/CloudMoneyIcon';
 import { CardVaultSection } from '@/components/CardVaultSection';
 import { ProtocolPartners } from '@/components/ProtocolPartners';
+import { TrendingUp } from 'lucide-react';
 
 const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -19,7 +20,7 @@ const Index = () => {
     if (!hasVisited) {
       setShowOnboarding(true);
     }
-    
+
     // Trigger animation after component mounts
     setTimeout(() => setIsLoaded(true), 100);
   }, []);
@@ -33,7 +34,7 @@ const Index = () => {
     <div className="min-h-screen bg-goal-bg relative">
       <FloatingDecorations />
       <Navigation />
-      
+
       {/* Hero Section */}
       <main className={`relative z-10 container-narrow pt-16 pb-24 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="text-center">
@@ -62,7 +63,7 @@ const Index = () => {
               <br />
               The fun way to save with friends and reach your dreams.
             </p>
-            
+
             {/* CTA Buttons */}
             <div className={`pt-8 flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <Button
@@ -84,7 +85,7 @@ const Index = () => {
                 Take the Tour 🎯
               </Button>
             </div>
-            
+
             {/* Trust indicators */}
             <div className={`pt-8 transition-all duration-700 delay-600 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <p className="text-sm text-goal-text mb-4">Trusted by savers worldwide</p>
@@ -110,7 +111,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Features Preview */}
           <div className={`mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 transition-all duration-700 delay-700 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-goal-border/30 hover:scale-105 transition-all duration-300">
@@ -122,9 +123,11 @@ const Index = () => {
                 Create savings vaults with friends and family for shared dreams
               </p>
             </div>
-            
+
             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-goal-border/30 hover:scale-105 transition-all duration-300">
-              <div className="text-4xl mb-4">💰</div>
+              <div className="w-12 h-12 bg-goal-primary/20 rounded-2xl flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-goal-primary" />
+              </div>
               <h3 className="font-fredoka font-semibold text-goal-text text-lg mb-2">
                 Earn While You Save
               </h3>
@@ -132,7 +135,7 @@ const Index = () => {
                 Up to 12.8% APY on your savings with flexible yield strategies
               </p>
             </div>
-            
+
             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-goal-border/30 hover:scale-105 transition-all duration-300">
               <div className="text-4xl mb-4">🛡️</div>
               <h3 className="font-fredoka font-semibold text-goal-text text-lg mb-2">
@@ -144,38 +147,44 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Card Vault Section */}
-          <div className={`transition-all duration-700 delay-800 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <CardVaultSection />
-          </div>
+        </div>
+      </main>
 
-          {/* Protocol Partners Section */}
-          <div className={`transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <ProtocolPartners />
-          </div>
+      {/* Wide Sections Container */}
+      <div className="relative z-10 container-page py-8">
+        {/* Card Vault Section */}
+        <div className={`transition-all duration-700 delay-800 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <CardVaultSection />
+        </div>
 
-          {/* Social Proof - Compact Stats */}
-          <div className={`mt-16 bg-gradient-to-r from-goal-accent/20 to-goal-primary/20 rounded-3xl p-6 transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            <h3 className="font-fredoka font-bold text-goal-text text-lg mb-4">
-              Join thousands of successful savers!
-            </h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-goal-text">$2.5M+</div>
-                <div className="text-xs text-goal-text/70">Saved</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-goal-text">89%</div>
-                <div className="text-xs text-goal-text/70">Success</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-goal-text">5K+</div>
-                <div className="text-xs text-goal-text/70">Users</div>
-              </div>
+        {/* Protocol Partners Section */}
+        <div className={`transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <ProtocolPartners />
+        </div>
+
+        {/* Social Proof - Compact Stats */}
+        <div className={`mt-16 bg-gradient-to-r from-goal-accent/20 to-goal-primary/20 rounded-3xl p-6 transition-all duration-700 delay-900 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+          <h3 className="font-fredoka font-bold text-goal-text text-lg mb-4">
+            Join thousands of successful savers!
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-goal-text">$2.5M+</div>
+              <div className="text-xs text-goal-text/70">Saved</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-goal-text">89%</div>
+              <div className="text-xs text-goal-text/70">Success</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-goal-text">5K+</div>
+              <div className="text-xs text-goal-text/70">Users</div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
+
+
 
       {/* Onboarding Modal */}
       {showOnboarding && (

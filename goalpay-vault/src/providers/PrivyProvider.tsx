@@ -4,16 +4,12 @@ import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { http } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { mantleSepolia } from '@/config/wagmi';
-import { sepolia, baseSepolia, arbitrumSepolia } from 'viem/chains';
 
-// Create wagmi config for Privy integration
+// Create wagmi config for Privy integration - Only Mantle Sepolia
 const config = createConfig({
-  chains: [mantleSepolia, sepolia, baseSepolia, arbitrumSepolia],
+  chains: [mantleSepolia],
   transports: {
     [mantleSepolia.id]: http(),
-    [sepolia.id]: http(),
-    [baseSepolia.id]: http(),
-    [arbitrumSepolia.id]: http(),
   },
 });
 
@@ -43,12 +39,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           createOnLogin: 'users-without-wallets',
           requireUserPasswordOnCreate: false,
         },
-        supportedChains: [mantleSepolia, baseSepolia],
+        supportedChains: [mantleSepolia],
         defaultChain: mantleSepolia,
-        mfa: {
-          noPromptOnMfaRequired: false,
-        },
-        walletConnectCloudProjectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
       }}
     >
       <QueryClientProvider client={queryClient}>

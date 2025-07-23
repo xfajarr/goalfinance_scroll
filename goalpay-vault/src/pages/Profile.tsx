@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/BottomNavigation';
-import { Settings, Trophy, Target, Users, Copy, Check } from 'lucide-react';
+import { Settings, Trophy, Target, Users, Copy, Check, DollarSign } from 'lucide-react';
 
 const Profile = () => {
   const [walletCopied, setWalletCopied] = useState(false);
@@ -138,7 +138,7 @@ const Profile = () => {
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-goal-border rounded-2xl flex items-center justify-center">
-                <span className="text-lg">💰</span>
+                <DollarSign className="w-6 h-6 text-goal-text" />
               </div>
               <div>
                 <p className="font-inter text-xl font-bold text-goal-text">

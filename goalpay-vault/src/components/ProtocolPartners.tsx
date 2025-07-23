@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 
 export const ProtocolPartners = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -55,16 +54,22 @@ export const ProtocolPartners = () => {
         </p> */}
       </div>
 
-      {/* Animated Partners Carousel */}
+      {/* Animated Partners Carousel with Gradient Edges */}
       <div className="relative overflow-hidden py-4 scroll-container">
+        {/* Left Gradient */}
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-goal-bg via-goal-accent/60 to-transparent z-10 pointer-events-none"></div>
+
+        {/* Right Gradient */}
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-goal-bg via-goal-accent/60 to-transparent z-10 pointer-events-none"></div>
+
         <div className="flex animate-scroll-left space-x-6 pl-6" style={{ width: 'max-content' }}>
           {duplicatedPartners.map((partner, index) => (
             <div
               key={`${partner.name}-${index}`}
-              className="flex-shrink-0 bg-goal-accent/60 backdrop-blur-sm border border-goal-border/50 rounded-2xl p-4 md:p-6 min-w-[200px] md:min-w-[240px] hover:scale-[1.02] transition-all duration-200"
+              className="flex-shrink-0 bg-goal-accent/60 backdrop-blur-sm border border-goal-border/50 rounded-2xl p-6 md:p-8 min-w-[240px] md:min-w-[300px] lg:min-w-[340px] hover:scale-[1.02] transition-all duration-200"
             >
               <div className="flex items-center justify-center space-x-4">
-                <div className="w-28 h-20 flex items-center justify-center">
+                <div className="w-36 h-24 flex items-center justify-center">
                   <img
                     src={partner.logoSrc}
                     alt={partner.logoAlt}

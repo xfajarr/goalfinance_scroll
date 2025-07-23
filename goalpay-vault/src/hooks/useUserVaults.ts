@@ -1,7 +1,8 @@
 import { useMemo, useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 import { VaultData } from '@/contracts/types';
-import { useGetVaultsByCreator, useGetVault, useGetVaultDetails } from './useVaultReads';
+import { useGetVaultsByCreator, useGetVault } from './useVaultReads';
+import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 
 export interface UseUserVaultsReturn {
   vaults: VaultData[];
@@ -17,6 +18,11 @@ export interface UseUserVaultsReturn {
  */
 export function useUserVaults(): UseUserVaultsReturn {
   const { address } = useAccount();
+  const chainId = useChainId();
+
+  // Check if contracts are available for current chain
+  const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
+  const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
 
   // Get vault IDs created by user
   const {
@@ -26,111 +32,126 @@ export function useUserVaults(): UseUserVaultsReturn {
     refetch: refetchIds
   } = useGetVaultsByCreator(address);
 
+  // Debug logging for vault IDs
+  console.log('useUserVaults Debug - Vault IDs:', {
+    address,
+    chainId,
+    isChainSupported,
+    vaultIds: vaultIds ? vaultIds.map(id => id.toString()) : null,
+    isLoadingIds,
+    idsError: idsError?.message
+  });
+
   // Get detailed info for each vault (up to first 5 vaults for performance)
+  // Always call hooks in the same order
   const vault1 = useGetVault(vaultIds?.[0]);
   const vault2 = useGetVault(vaultIds?.[1]);
   const vault3 = useGetVault(vaultIds?.[2]);
   const vault4 = useGetVault(vaultIds?.[3]);
   const vault5 = useGetVault(vaultIds?.[4]);
 
-  // Get detailed vault data from individual vault contracts
-  const vaultDetails1 = useGetVaultDetails(vault1.data?.vaultAddress);
-  const vaultDetails2 = useGetVaultDetails(vault2.data?.vaultAddress);
-  const vaultDetails3 = useGetVaultDetails(vault3.data?.vaultAddress);
-  const vaultDetails4 = useGetVaultDetails(vault4.data?.vaultAddress);
-  const vaultDetails5 = useGetVaultDetails(vault5.data?.vaultAddress);
+  // Combine all vault queries (no need for individual vault contract calls)
+  const vaultQueries = useMemo(() => [vault1, vault2, vault3, vault4, vault5], [vault1, vault2, vault3, vault4, vault5]);
 
-  // Combine all vault queries
-  const vaultQueries = [vault1, vault2, vault3, vault4, vault5];
-  const vaultDetailsQueries = [vaultDetails1, vaultDetails2, vaultDetails3, vaultDetails4, vaultDetails5];
+  // Debug logging for individual vault queries
+  console.log('useUserVaults Debug - Vault Queries:', {
+    vault1: { data: vault1.data, isLoading: vault1.isLoading, error: vault1.error?.message },
+    vault2: { data: vault2.data, isLoading: vault2.isLoading, error: vault2.error?.message },
+    vault3: { data: vault3.data, isLoading: vault3.isLoading, error: vault3.error?.message },
+    vault4: { data: vault4.data, isLoading: vault4.isLoading, error: vault4.error?.message },
+    vault5: { data: vault5.data, isLoading: vault5.isLoading, error: vault5.error?.message },
+  });
 
   // Check if any vault details are loading
-  const isLoadingDetails = vaultQueries.some(query => query.isLoading) ||
-                          vaultDetailsQueries.some(query => query.isLoading);
+  const isLoadingDetails = vaultQueries.some(query => query.isLoading);
 
   // Check for any errors in vault details
-  const detailsError = vaultQueries.find(query => query.error)?.error ||
-                      vaultDetailsQueries.find(query => query.error)?.error;
+  const detailsError = vaultQueries.find(query => query.error)?.error;
 
   // Transform vault data
   const vaults: VaultData[] = useMemo(() => {
-    if (!vaultIds) return [];
+    // Handle unsupported chain
+    if (!isChainSupported) {
+      return [];
+    }
 
-    return vaultIds.slice(0, 5).map((id, index) => {
+    // Handle error cases
+    if (idsError) {
+      console.warn('Error loading user vaults:', idsError.message);
+      return [];
+    }
+
+    if (!vaultIds || !Array.isArray(vaultIds)) return [];
+
+    return (vaultIds as bigint[]).slice(0, 5).map((id, index) => {
       const vaultQuery = vaultQueries[index];
-      const vaultDetailsQuery = vaultDetailsQueries[index];
       const vaultInfo = vaultQuery?.data;
-      const vaultDetails = vaultDetailsQuery?.data;
 
-      if (vaultInfo && vaultDetails) {
-        // Transform VaultInfo + VaultDetails to VaultData format
+      if (vaultInfo) {
+        // Use VaultInfo from new GoalFinance contract
+        // The structure is: { id, config: { name, description, token, goalType, visibility, targetAmount, deadline, penaltyRate }, creator, totalDeposited, memberCount, status, inviteCode, createdAt }
+        const vault = vaultInfo as any; // Type assertion for contract data
+        const config = vault.config || {};
+
+        console.log('Processing vault data:', {
+          vaultId: id.toString(),
+          vault: JSON.parse(JSON.stringify(vault, (_key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          )),
+          config: JSON.parse(JSON.stringify(config, (_key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          ))
+        });
+
         return {
           id,
-          name: vaultDetails.name,
-          description: vaultDetails.description,
-          creator: vaultDetails.creator,
-          goalAmount: vaultDetails.targetAmount,
-          currentAmount: vaultDetails.currentAmount, // Now we have the real current amount!
-          deadline: vaultDetails.deadline,
-          status: vaultDetails.status,
-          isPublic: vaultDetails.isPublic,
-          memberCount: vaultDetails.memberCount,
-          yieldRate: 0n,
-          createdAt: vaultDetails.createdAt,
-        };
-      } else if (vaultInfo) {
-        // Partial data from factory only
-        return {
-          id,
-          name: vaultInfo.vaultName,
-          description: vaultInfo.description,
-          creator: vaultInfo.creator,
-          goalAmount: vaultInfo.targetAmount,
-          currentAmount: 0n, // Don't have vault details yet
-          deadline: vaultInfo.deadline,
-          status: vaultInfo.status,
-          isPublic: vaultInfo.isPublic,
-          memberCount: vaultInfo.memberCount,
-          yieldRate: 0n,
-          createdAt: vaultInfo.createdAt,
+          name: config.name || `Vault ${id}`,
+          description: config.description || 'No description',
+          creator: vault.creator || address || '0x0',
+          token: config.token || '0x0',
+          goalType: config.goalType ?? 0,
+          visibility: config.visibility ?? 0,
+          targetAmount: config.targetAmount || 0n,
+          totalDeposited: vault.totalDeposited || 0n,
+          deadline: config.deadline || 0n,
+          memberCount: vault.memberCount || 0n,
+          status: vault.status ?? 0,
+          inviteCode: vault.inviteCode || '0x0000000000000000000000000000000000000000000000000000000000000000',
+          createdAt: vault.createdAt || 0n,
         };
       } else {
-        // Fallback data while loading
-        return {
-          id,
-          name: `Vault ${id}`,
-          description: 'Loading...',
-          creator: address || '0x0',
-          goalAmount: 0n,
-          currentAmount: 0n,
-          deadline: 0n,
-          status: 0,
-          isPublic: false,
-          memberCount: 0n,
-          yieldRate: 0n,
-          createdAt: 0n,
-        };
+        // Return null for failed loads - no fallback data
+        return null;
       }
-    });
+    }).filter((vault): vault is VaultData => vault !== null);
   }, [
     vaultIds,
-    vault1.data, vault2.data, vault3.data, vault4.data, vault5.data,
-    vaultDetails1.data, vaultDetails2.data, vaultDetails3.data, vaultDetails4.data, vaultDetails5.data,
-    address
+    address,
+    isChainSupported,
+    idsError,
+    vaultQueries
   ]);
 
   const isLoading = isLoadingIds || isLoadingDetails;
-  const error = idsError || detailsError;
+
+  // Create a comprehensive error that includes chain support info
+  const error = useMemo(() => {
+    if (!isChainSupported) {
+      return new Error(`Chain ${chainId} is not supported. Please switch to Mantle Sepolia or Base Sepolia.`);
+    }
+    return idsError || detailsError;
+  }, [isChainSupported, chainId, idsError, detailsError]);
 
   const refetch = () => {
-    refetchIds();
-    vaultQueries.forEach(query => query.refetch?.());
-    vaultDetailsQueries.forEach(query => query.refetch?.());
+    if (isChainSupported) {
+      refetchIds();
+      vaultQueries.forEach(query => query.refetch?.());
+    }
   };
 
   return {
     vaults,
-    vaultIds: vaultIds || [],
+    vaultIds: (vaultIds as bigint[]) || [],
     isLoading,
     error,
     refetch,
@@ -143,48 +164,63 @@ export function useUserVaults(): UseUserVaultsReturn {
  */
 export function useUserVaultsDetailed(): UseUserVaultsReturn {
   const { address } = useAccount();
-  
+  const chainId = useChainId();
+
+  // Check if contracts are available for current chain
+  const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
+  const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
+
   // Get vault IDs created by user
-  const { 
-    data: vaultIds, 
-    isLoading: isLoadingIds, 
+  const {
+    data: vaultIds,
+    isLoading: isLoadingIds,
     error: idsError,
     refetch: refetchIds
   } = useGetVaultsByCreator(address);
 
-  // For the detailed version, we'll need to implement a pattern
-  // that can handle dynamic vault fetching. For now, let's use
-  // the basic version and enhance it later.
-  
-  const isLoading = isLoadingIds;
-  const error = idsError;
-
+  // For basic version, just return vault IDs with minimal data
   const vaults: VaultData[] = useMemo(() => {
-    if (!vaultIds || !address) return [];
-    
-    return vaultIds.map((id) => ({
+    if (!isChainSupported || !vaultIds || !Array.isArray(vaultIds)) {
+      return [];
+    }
+
+    return (vaultIds as bigint[]).map((id) => ({
       id,
-      name: `My Vault ${id}`,
-      description: 'User created vault',
-      creator: address,
-      goalAmount: 1000000000n, // $1000 default
-      currentAmount: 0n,
-      deadline: BigInt(Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)), // 30 days
-      status: 0, // ACTIVE
-      isPublic: false,
-      memberCount: 1n,
-      yieldRate: 0n,
-      createdAt: BigInt(Math.floor(Date.now() / 1000)),
+      name: `Vault ${id}`,
+      description: 'Loading vault details...',
+      creator: address || '0x0',
+      token: '0x0',
+      goalType: 0,
+      visibility: 0,
+      targetAmount: 0n,
+      totalDeposited: 0n,
+      deadline: 0n,
+      memberCount: 0n,
+      status: 0,
+      inviteCode: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      createdAt: 0n,
     }));
-  }, [vaultIds, address]);
+  }, [vaultIds, address, isChainSupported]);
+
+  const isLoading = isLoadingIds;
+
+  // Create a comprehensive error that includes chain support info
+  const error = useMemo(() => {
+    if (!isChainSupported) {
+      return new Error(`Chain ${chainId} is not supported. Please switch to Mantle Sepolia.`);
+    }
+    return idsError;
+  }, [isChainSupported, chainId, idsError]);
 
   const refetch = () => {
-    refetchIds();
+    if (isChainSupported) {
+      refetchIds();
+    }
   };
 
   return {
     vaults,
-    vaultIds: vaultIds || [],
+    vaultIds: (vaultIds as bigint[]) || [],
     isLoading,
     error,
     refetch,

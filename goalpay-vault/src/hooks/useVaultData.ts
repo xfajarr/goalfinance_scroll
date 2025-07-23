@@ -1,8 +1,12 @@
-import { VaultData, MemberData, UseVaultDataReturn, MemberInfo } from '@/contracts/types';
-import { useGetVault, useGetVaultDetails, useGetVaultMembers } from './useVaultReads';
+import { Vault, Member, UseVaultDataReturn } from '@/contracts/types';
+import { useGetVault, useGetVaultMembers, useGetMemberInfo } from './useVaultReads';
+import { useAccount } from 'wagmi';
+import { Address } from 'viem';
 
 export const useVaultData = (vaultId: bigint): UseVaultDataReturn => {
-  // Get vault info from factory
+  const { address } = useAccount();
+
+  // Get vault info from the new GoalFinance contract
   const {
     data: vaultInfo,
     isLoading: isLoadingVaultInfo,
@@ -10,61 +14,63 @@ export const useVaultData = (vaultId: bigint): UseVaultDataReturn => {
     refetch: refetchVaultInfo
   } = useGetVault(vaultId > 0n ? vaultId : undefined);
 
-  // Get detailed vault data from vault contract
-  const {
-    data: vaultDetails,
-    isLoading: isLoadingVaultDetails,
-    error: vaultDetailsError,
-    refetch: refetchVaultDetails
-  } = useGetVaultDetails(vaultInfo?.vaultAddress);
-
-  // Get vault members
+  // Get vault members using vault ID
   const {
     data: vaultMembers,
     isLoading: isLoadingMembers,
     error: membersError,
     refetch: refetchMembers
-  } = useGetVaultMembers(vaultInfo?.vaultAddress);
+  } = useGetVaultMembers(vaultId > 0n ? vaultId : undefined);
+
+  // Get current user's member info if they're connected
+  const {
+    data: userMemberInfo,
+    isLoading: isLoadingUserMember,
+    error: userMemberError,
+    refetch: refetchUserMember
+  } = useGetMemberInfo(
+    vaultId > 0n ? vaultId : undefined,
+    address
+  );
 
   // Combine loading states
-  const isLoading = isLoadingVaultInfo || isLoadingVaultDetails || isLoadingMembers;
+  const isLoading = isLoadingVaultInfo || isLoadingMembers;
 
-  // Combine errors
-  const error = vaultInfoError || vaultDetailsError || membersError || null;
+  // Only treat vault info errors as critical
+  const error = vaultInfoError || null;
 
-  // Transform data to match expected format
-  const vault: VaultData | null = vaultInfo && vaultDetails ? {
-    id: vaultId,
-    name: vaultDetails.name,
-    description: vaultDetails.description,
-    creator: vaultDetails.creator,
-    goalAmount: vaultDetails.targetAmount,
-    currentAmount: vaultDetails.currentAmount,
-    deadline: vaultDetails.deadline,
-    status: vaultDetails.status,
-    isPublic: vaultDetails.isPublic,
-    memberCount: vaultDetails.memberCount,
-    yieldRate: 0n, // MVP doesn't have yield yet
-    createdAt: vaultDetails.createdAt,
-  } : null;
+  // Log member errors but don't fail the entire component
+  if (membersError) {
+    console.warn('Failed to load vault members:', membersError.message);
+  }
+  if (userMemberError) {
+    console.warn('Failed to load user member info:', userMemberError.message);
+  }
 
-  // Transform members data
-  const members: MemberData[] = vaultMembers ? vaultMembers.map((member: MemberInfo) => ({
-    member: member.member,
-    contribution: member.contribution,
-    joinedAt: member.joinedAt,
-    isActive: member.isActive,
-  })) : [];
+  // Transform vault data to match expected format
+  const vault: Vault | null = vaultInfo ? (vaultInfo as Vault) : null;
+
+  // Transform members data - create a map of member addresses to their data
+  const members: Address[] = vaultMembers && Array.isArray(vaultMembers)
+    ? (vaultMembers as Address[])
+    : [];
+
+  // Create member data map - for now just include the current user's data
+  const memberData: Record<Address, Member> = {};
+  if (address && userMemberInfo) {
+    memberData[address] = userMemberInfo as Member;
+  }
 
   const refetch = () => {
     refetchVaultInfo();
-    refetchVaultDetails();
     refetchMembers();
+    refetchUserMember();
   };
 
   return {
     vault,
     members,
+    memberData,
     isLoading,
     error,
     refetch,
