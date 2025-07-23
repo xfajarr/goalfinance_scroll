@@ -130,7 +130,7 @@ export const JoinVaultSection = () => {
           <div className="space-y-4">
             <div className="flex gap-3">
               <Input
-                placeholder="Enter invite code (e.g., GOAL1ABC123)"
+                placeholder="Enter invite code (e.g., 0x...)"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
                 className="flex-1 rounded-2xl border-goal-border/60 bg-white/70 font-mono text-sm"

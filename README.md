@@ -1,4 +1,4 @@
-# 🎯 GoalFi - Collaborative Savings Made Simple
+# 🎯 GoalFi - Collaborative Savings Made Simple and Fun
 
 <div align="center">
 
@@ -12,11 +12,11 @@
 [![Web3](https://img.shields.io/badge/Web3-wagmi%20+%20viem-ff6b35?style=flat-square&logo=web3dotjs)](https://wagmi.sh/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[🌟 Live Demo](https://goal-finance.vercel.app) • [🏆 Hackathon Info](#hackathon-submission) • [🏗️ Architecture](#architecture) • [📖 Documentation](#documentation)
+[🌟 Live Demo](https://goal-finance.vercel.app) • [🏗️ Architecture](#architecture) • [📖 Documentation](#documentation)
 
 </div>
 
-## �🌟 What is GoalFi?
+## 🌟 What is GoalFi?
 
 GoalFi is a **decentralized savings platform** that transforms the way people save money by making it **collaborative, fun, transparent, and rewarding**. Create shared savings goals with friends, family, or community members, and watch your dreams become reality together!
 
@@ -152,7 +152,7 @@ When your goal is reached:
 - **[Component Structure](./goalpay-vault/src/components/)** - UI component organization
 - **[Web3 Integration](./goalpay-vault/src/hooks/)** - wagmi hooks and blockchain interaction
 
-### � Project Structure
+### Project Structure
 ```
 GoalFi/
 ├── goalpay-contract/          # Smart contracts (Foundry)
@@ -169,9 +169,9 @@ GoalFi/
 
 ---
 
-## � Real-World Use Cases
+## Real-World Use Cases
 
-### �‍👩‍👧‍👦 Family Goals
+### ‍👩‍👧‍👦 Family Goals
 - **Family Vacation**: Save together for that dream trip to Europe
 - **New Home**: Pool resources for a down payment on your family home
 - **Education Fund**: Collaborate with relatives to fund a child's college education
