@@ -1,46 +1,60 @@
-# GoalFi Smart Contracts
+# GoalFinance Smart Contract
 
-A complete modular smart contract system for collaborative savings goals built on Ethereum.
+A decentralized savings vault platform that enables users to create and participate in collaborative financial goals. Built with enhanced security, multi-token support, and configurable penalty mechanisms.
 
 ## 🏗️ Architecture Overview
 
-GoalFi uses a factory pattern with modular, secure smart contracts:
+GoalFinance uses a unified contract architecture with multi-token support:
 
 ```
-GoalVaultFactory (Main Factory)
-├── Creates individual GoalVault contracts
-├── Manages vault discovery and invites
-└── Handles access control and security
-
-GoalVault (Individual Vaults)
-├── Manages member contributions
-├── Tracks savings progress
-├── Handles fund distribution
-└── Implements goal completion logic
+GoalFinance (Main Contract)
+├── Vault Management
+│   ├── Create savings vaults with configurable parameters
+│   ├── Support for both native tokens (MNT, ETH, MATIC) and ERC20 tokens
+│   ├── Public/private vaults with invite code system
+│   └── Automatic goal tracking and status management
+├── Member Management
+│   ├── Join vaults with native or ERC20 token deposits
+│   ├── Add funds to existing vaults
+│   ├── Track individual member contributions and progress
+│   └── Handle withdrawals and early withdrawal penalties
+├── Security Features
+│   ├── Reentrancy protection on all state-changing functions
+│   ├── Pausable contract for emergency situations
+│   ├── Configurable penalty rates (1-10%)
+│   └── Immediate penalty release (no lock period)
+└── Multi-Chain Support
+    ├── Mantle (MNT), Base (ETH), Ethereum (ETH), Polygon (MATIC)
+    ├── Automatic native token detection
+    └── Chain-specific token support
 
 MockUSDC (Testing Token)
-├── ERC20 token with 6 decimals
-├── Faucet functionality for testing
-└── Mint/burn capabilities
+├── ERC20 token with 6 decimals (like real USDC)
+├── Mint/burn functionality for testing
+└── Owner-controlled token distribution
 ```
 
 ## 📋 Features
 
-### ✅ MVP Features (Implemented)
-- **Vault Creation**: Create savings goals with targets and deadlines
-- **Member Management**: Join/leave vaults, track contributions
-- **Fund Management**: Add USDC, automatic goal completion
-- **Invite System**: Share vaults via unique invite codes
-- **Public/Private Vaults**: Control vault visibility
-- **Progress Tracking**: Real-time progress and member stats
-- **Security**: Reentrancy protection, access controls, pausable
+### ✅ Core Features (Implemented)
+- **Multi-Token Vaults**: Support for native tokens (MNT, ETH, MATIC) and ERC20 tokens
+- **Vault Creation**: Create savings goals with configurable parameters and deadlines
+- **Flexible Deposits**: Separate functions for native token and ERC20 deposits
+- **Member Management**: Join vaults, track individual contributions, manage memberships
+- **Configurable Penalties**: 1-10% penalty rates for early withdrawals
+- **Immediate Penalty Release**: No lock period - penalties available immediately
+- **Invite System**: Share private vaults via unique invite codes
+- **Public/Private Vaults**: Control vault visibility and access
+- **Progress Tracking**: Real-time progress monitoring and goal completion
+- **Multi-Chain Support**: Deploy on Mantle, Base, Ethereum, Polygon, and more
+- **Enhanced Security**: Reentrancy protection, pausable contract, comprehensive error handling
 
-### 🔮 Future Features (Post-MVP)
-- Yield generation and distribution
-- Multiple token support (DAI, USDT)
-- Recurring contributions
-- Vault templates and categories
-- Governance and DAO features
+### 🔮 Advanced Features
+- **Platform Revenue**: Penalty funds go to GoalFinance platform
+- **Auto-Enrollment**: Vault creators automatically become members
+- **Status Management**: Automatic vault status updates (ACTIVE, SUCCESS, FAILED)
+- **Chain Detection**: Automatic native token symbol detection per chain
+- **Gas Optimization**: Custom errors, efficient storage, minimal external calls
 
 ## 🚀 Quick Start
 
@@ -59,9 +73,9 @@ cd goalpay-contract
 # Install dependencies
 make install
 
-# Setup environment
-make setup-env
-# Edit .env file with your values
+# Setup environment variables
+cp .env.example .env
+# Edit .env file with your private key and RPC URLs
 
 # Build contracts
 make build
@@ -74,14 +88,16 @@ make test
 
 ```bash
 # Start local blockchain
-make anvil
+anvil
 
 # Deploy to local network (in another terminal)
 make deploy-local
 
-# Run specific tests
-make test-factory  # Test factory contract
-make test-vault    # Test vault contract
+# Run all tests (21 tests)
+make test
+
+# Run tests with verbose output
+make test-verbose
 
 # Check gas usage
 make test-gas
@@ -91,49 +107,72 @@ make test-gas
 
 ```
 goalpay-contract/
-├── src/
-│   ├── GoalVaultFactory.sol      # Main factory contract
-│   ├── GoalVault.sol             # Individual vault contract
-│   ├── MockUSDC.sol              # Test USDC token
-│   ├── interfaces/
-│   │   ├── IVaultFactory.sol     # Factory interface
-│   │   └── IGoalVault.sol        # Vault interface
-│   └── libraries/
-│       └── VaultLibrary.sol      # Shared utilities
-├── test/
-│   ├── GoalVaultFactory.t.sol    # Factory tests
-│   └── GoalVault.t.sol           # Vault tests
-├── script/
-│   └── Deploy.s.sol              # Deployment scripts
-├── foundry.toml                  # Foundry configuration
-├── Makefile                      # Development commands
-└── README.md                     # This file
+├── 📄 README.md                          # This file
+├── 📄 Makefile                          # Build and deployment commands
+├── 📄 foundry.toml                      # Foundry configuration
+├── 📄 networks.json                     # Network configurations
+├── 📄 remappings.txt                    # Import remappings
+│
+├── 📁 src/                              # Smart contracts
+│   ├── GoalFinance.sol                  # Main GoalFinance contract
+│   └── MockUSDC.sol                     # Mock USDC for testing
+│
+├── 📁 script/                           # Deployment scripts
+│   └── Deploy.s.sol                    # Universal deployment script
+│
+├── 📁 test/                             # Test files
+│   ├── GoalFinance.t.sol               # GoalFinance tests (21 tests)
+│   └── MockUSDC.t.sol                  # MockUSDC tests
+│
+├── 📁 examples/                         # Usage examples
+│   ├── GoalFinanceExample.js           # Basic usage examples
+│   ├── AutoInviteCodeExample.js        # Invite code examples
+│   └── OffchainInviteCodeExample.js    # Off-chain examples
+│
+├── 📁 deployments/                      # Deployment records
+│   └── mantle-sepolia.json             # Mantle Sepolia deployment
+│
+├── 📁 Documentation/                    # Current documentation
+│   ├── NEW_CONTRACT_DOCUMENTATION.md   # Complete contract reference
+│   ├── NEW_QUICK_REFERENCE.md         # Quick reference guide
+│   ├── DEPLOYMENT_GUIDE_V2.md         # Universal deployment guide
+│   └── TEST_UPDATES_SUMMARY.md        # Test updates summary
+│
+└── 📁 archive/                          # Legacy files (preserved)
+    ├── scripts/                        # Old deployment scripts
+    ├── docs/                          # Legacy documentation
+    └── deployment-files/              # Legacy deployment files
 ```
 
 ## 🔧 Contract Details
 
-### GoalVaultFactory.sol
-Main factory contract that creates and manages all vaults.
+### GoalFinance.sol
+Main contract that manages all vaults and member interactions.
 
-**Key Functions:**
-- `createVault()` - Create new savings vault
-- `generateInviteCode()` - Create shareable invite codes
-- `joinVaultByInvite()` - Join vault via invite
-- `getPublicVaults()` - Discover public vaults
-- `getVaultsByCreator()` - Get user's vaults
+**Core Functions:**
+- `createVault(VaultConfig)` - Create new savings vault with configurable parameters
+- `joinVault(vaultId, inviteCode)` - Join vault with native token (payable)
+- `joinVaultWithToken(vaultId, amount, inviteCode)` - Join vault with ERC20 token
+- `addNativeFunds(vaultId)` - Add native token funds to existing vault (payable)
+- `addTokenFunds(vaultId, amount)` - Add ERC20 token funds to existing vault
+- `withdraw(vaultId)` - Withdraw funds after goal completion
+- `withdrawEarly(vaultId)` - Withdraw funds early with penalty
 
-### GoalVault.sol
-Individual vault contract for each savings goal.
+**View Functions:**
+- `getVault(vaultId)` - Get complete vault information
+- `getMember(vaultId, member)` - Get member details
+- `isNativeTokenVault(vaultId)` - Check if vault uses native token
+- `isGoalReached(vaultId)` - Check if vault reached its goal
+- `getVaultProgress(vaultId)` - Get progress in basis points
+- `getNativeTokenSymbol()` - Get native token symbol for current chain
 
-**Key Functions:**
-- `addFunds()` - Contribute USDC to vault
-- `joinVault()` / `leaveVault()` - Member management
-- `completeVault()` - Trigger completion when goal reached
-- `withdrawFunds()` - Withdraw funds if vault fails
-- `getVaultDetails()` - Get complete vault information
+**Admin Functions:**
+- `setSupportedToken(token, supported)` - Add/remove supported ERC20 tokens
+- `pause()` / `unpause()` - Emergency pause functionality
+- `emergencyWithdraw(token, amount)` - Emergency fund recovery
 
 ### MockUSDC.sol
-Test USDC token with faucet functionality.
+Test USDC token with 6 decimals (like real USDC).
 
 **Key Functions:**
 - `mint(address, amount)` - Mint tokens (owner only)
@@ -144,74 +183,99 @@ Test USDC token with faucet functionality.
 ## 🧪 Testing
 
 ```bash
-# Run all tests
+# Run all tests (21 tests)
 make test
 
 # Run with verbose output
 make test-verbose
 
-# Generate coverage report
-make test-coverage
-
-# Run specific test files
-make test-factory
-make test-vault
+# Run specific test contract
+forge test --match-contract GoalFinanceTest
 
 # Check gas usage
 make test-gas
+
+# Generate coverage report
+forge coverage
 ```
 
-### Test Coverage
-- ✅ Vault creation and validation
-- ✅ Member management (join/leave)
-- ✅ Fund contributions and withdrawals
-- ✅ Invite code system
-- ✅ Vault completion logic
-- ✅ Access control and security
-- ✅ Edge cases and error handling
+### Test Coverage (21 Tests Passing)
+- ✅ **Vault Creation**: VaultConfig struct, parameter validation, auto-enrollment
+- ✅ **Multi-Token Support**: Native token and ERC20 vault operations
+- ✅ **Member Management**: Join vaults, add funds, member tracking
+- ✅ **Configurable Penalties**: 1-10% penalty rates, immediate release
+- ✅ **Withdrawals**: Normal withdrawals, early withdrawals with penalties
+- ✅ **Invite System**: Public/private vaults, invite code validation
+- ✅ **Progress Tracking**: Goal completion, status updates, time remaining
+- ✅ **View Functions**: All getter functions and helper utilities
+- ✅ **Access Control**: Owner functions, pausable contract
+- ✅ **Error Handling**: Custom errors, edge cases, validation
+- ✅ **Security**: Reentrancy protection, input validation
 
 ## 🚀 Deployment
 
-### Local Network
+### Universal Deployment (Auto-detects Network)
 ```bash
-# Start Anvil
-make anvil
+# Deploy to any supported network
+make deploy
 
-# Deploy contracts
+# Deploy with contract verification
+make deploy-verify
+```
+
+### Specific Networks
+
+#### Testnets (Auto-deploys Mock Tokens)
+```bash
+make deploy-sepolia           # Ethereum Sepolia
+make deploy-base-sepolia      # Base Sepolia
+make deploy-mantle-sepolia    # Mantle Sepolia
+make deploy-arbitrum-sepolia  # Arbitrum Sepolia
+make deploy-optimism-sepolia  # Optimism Sepolia
+```
+
+#### Mainnets (Uses Real Tokens)
+```bash
+make deploy-ethereum    # Ethereum Mainnet
+make deploy-base        # Base Mainnet
+make deploy-arbitrum    # Arbitrum One
+make deploy-optimism    # Optimism Mainnet
+make deploy-polygon     # Polygon Mainnet
+```
+
+#### Local Development
+```bash
+# Start local blockchain
+anvil
+
+# Deploy to local network
 make deploy-local
 ```
 
-### Testnet (Sepolia)
-```bash
-# Deploy to Sepolia
-make deploy-sepolia
-
-# Verify contracts
-make verify-sepolia
-```
-
-### Mainnet
-```bash
-# Deploy to mainnet (with confirmation)
-make deploy-mainnet
-```
+### Supported Networks
+- **Testnets**: Ethereum Sepolia, Base Sepolia, Mantle Sepolia, Arbitrum Sepolia, Optimism Sepolia
+- **Mainnets**: Ethereum, Base, Arbitrum One, Optimism, Polygon
+- **Native Tokens**: ETH, MNT, MATIC (auto-detected per chain)
 
 ## 🔐 Security Features
 
-1. **Reentrancy Protection**: All state-changing functions protected
-2. **Access Control**: Role-based permissions with OpenZeppelin
-3. **Input Validation**: Comprehensive parameter checking
-4. **Pausable**: Emergency stop functionality
-5. **Custom Errors**: Gas-efficient error handling
-6. **Safe Math**: Solidity 0.8+ overflow protection
+1. **Reentrancy Protection**: All state-changing functions use `nonReentrant` modifier
+2. **Access Control**: Owner-only functions with OpenZeppelin `Ownable`
+3. **Pausable Contract**: Emergency pause functionality for critical situations
+4. **Input Validation**: Comprehensive parameter checking with custom errors
+5. **Custom Errors**: Gas-efficient error handling with descriptive names
+6. **Safe Math**: Solidity 0.8+ automatic overflow/underflow protection
+7. **Token Safety**: SafeERC20 for all token transfers
+8. **Penalty Security**: Penalties go to platform, not claimable by users
 
 ## 📊 Gas Optimization
 
-- Custom errors instead of require strings
-- Efficient storage layout and packing
-- Minimal external calls
-- Optimized loops and conditionals
-- Immutable variables where possible
+- **Custom Errors**: Gas-efficient error messages instead of require strings
+- **Efficient Storage**: Optimized struct packing and storage layout
+- **Minimal External Calls**: Reduced external contract interactions
+- **Immutable Constants**: Gas-efficient constant declarations
+- **Optimized Loops**: Efficient iteration patterns
+- **Batch Operations**: Multiple operations in single transaction where possible
 
 ## 🔗 Frontend Integration
 
@@ -222,53 +286,106 @@ Update these in your frontend configuration:
 // src/config/contracts.ts
 export const CONTRACT_ADDRESSES = {
   [chainId]: {
-    VAULT_FACTORY: "0x...", // Deployed factory address
-    USDC: "0x...",          // USDC token address
+    GOAL_FINANCE: "0x...",     // Deployed GoalFinance address
+    MOCK_USDC: "0x...",        // Mock USDC address (testnets only)
+    NATIVE_TOKEN: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // Native token constant
   }
 };
+```
+
+### Key Functions for Frontend
+```typescript
+// Create vault with VaultConfig struct
+const config = {
+  name: "My Savings Goal",
+  description: "Emergency fund savings",
+  token: isNative ? NATIVE_TOKEN : tokenAddress,
+  goalType: 1, // GROUP
+  visibility: 0, // PUBLIC
+  targetAmount: ethers.parseEther("1000"),
+  deadline: Math.floor(Date.now() / 1000) + 86400 * 30,
+  penaltyRate: 200 // 2%
+};
+
+// Join vault (different functions for native vs ERC20)
+if (isNative) {
+  await goalFinance.joinVault(vaultId, inviteCode, { value: amount });
+} else {
+  await token.approve(goalFinanceAddress, amount);
+  await goalFinance.joinVaultWithToken(vaultId, amount, inviteCode);
+}
 ```
 
 ### Key Events to Listen For
 ```typescript
 // Vault creation
-event VaultCreated(uint256 indexed vaultId, address indexed vaultAddress, ...);
+event VaultCreated(uint256 indexed vaultId, address indexed creator, address indexed token, VaultConfig config, bytes32 inviteCode);
 
-// Fund contributions
-event FundsAdded(address indexed member, uint256 amount, uint256 newTotal);
+// Member joins
+event MemberJoined(uint256 indexed vaultId, address indexed member, address indexed token, uint256 depositAmount, uint256 memberCount);
 
-// Vault completion
-event VaultCompleted(uint256 finalAmount, uint256 timestamp);
+// Fund deposits
+event FundsDeposited(uint256 indexed vaultId, address indexed member, address indexed token, uint256 amount, uint256 totalDeposited);
+
+// Goal completion
+event GoalReached(uint256 indexed vaultId, address indexed token, uint256 totalAmount);
+
+// Early withdrawals
+event EarlyWithdrawal(uint256 indexed vaultId, address indexed member, address indexed token, uint256 amount, uint256 penalty);
 ```
 
 ## 🛠️ Development Commands
 
 ```bash
 # Code formatting
-make format
-make format-check
+make format              # Format all Solidity files
+make format-check        # Check formatting without changes
 
-# Contract size analysis
-make size
+# Building and testing
+make build              # Build all contracts
+make test               # Run all tests (21 tests)
+make test-verbose       # Run tests with detailed output
+make clean              # Clean build artifacts
 
-# Gas snapshots
-make gas-snapshot
+# Gas analysis
+make test-gas           # Run tests with gas reporting
+forge snapshot          # Generate gas snapshots
 
 # Documentation
-make docs
-make docs-serve
+make help               # Show all available commands
 
-# Security analysis (requires tools)
-make slither
-make mythril
+# Security analysis (requires additional tools)
+slither .               # Static analysis with Slither
+mythril analyze src/    # Security analysis with Mythril
 ```
+
+## 📚 Documentation
+
+### Complete Documentation
+- **[Contract Documentation](NEW_CONTRACT_DOCUMENTATION.md)** - Complete technical reference
+- **[Quick Reference](NEW_QUICK_REFERENCE.md)** - Essential functions and examples
+- **[Deployment Guide](DEPLOYMENT_GUIDE_V2.md)** - Universal deployment instructions
+- **[Test Summary](TEST_UPDATES_SUMMARY.md)** - Test suite documentation
+
+### Examples
+- **[Basic Usage](examples/GoalFinanceExample.js)** - Core functionality examples
+- **[Invite Codes](examples/AutoInviteCodeExample.js)** - Invite system usage
+- **[Off-chain](examples/OffchainInviteCodeExample.js)** - Off-chain integrations
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes
-4. Run tests: `make full-test`
-5. Submit a pull request
+4. Run tests: `make test`
+5. Format code: `make format`
+6. Submit a pull request
+
+### Development Guidelines
+- Follow existing code style and patterns
+- Add tests for new functionality
+- Update documentation for API changes
+- Use custom errors for gas efficiency
 
 ## 📄 License
 
@@ -276,18 +393,26 @@ MIT License - see LICENSE file for details.
 
 ## 🆘 Support
 
-- **Documentation**: Run `make docs-serve` for detailed contract docs
+- **Documentation**: Complete docs in `NEW_CONTRACT_DOCUMENTATION.md`
+- **Quick Help**: Essential functions in `NEW_QUICK_REFERENCE.md`
 - **Issues**: Create GitHub issues for bugs or feature requests
-- **Testing**: All functions have comprehensive test coverage
+- **Testing**: 21 comprehensive tests covering all functionality
 
-## 🎯 Next Steps
+## 🎯 Roadmap
 
-1. **Deploy to testnet** and test with frontend
-2. **Security audit** before mainnet deployment
-3. **Implement yield strategies** for post-MVP
-4. **Add governance features** for community control
-5. **Multi-chain deployment** for broader access
+### ✅ Current (V2)
+- Multi-token vault support (native + ERC20)
+- Configurable penalty system (1-10%)
+- Multi-chain deployment support
+- Enhanced security and gas optimization
+
+### 🔮 Future
+- **Yield Integration**: Compound/Aave yield strategies
+- **Governance**: DAO features for platform decisions
+- **Advanced Features**: Recurring deposits, vault templates
+- **Mobile SDK**: React Native integration
+- **Analytics**: Advanced progress tracking and insights
 
 ---
 
-**Built with ❤️ for collaborative savings and financial goals!**
+**Built with ❤️ for decentralized collaborative savings! 🎯💰**
