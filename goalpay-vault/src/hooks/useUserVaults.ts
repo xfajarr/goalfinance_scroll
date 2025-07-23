@@ -32,15 +32,7 @@ export function useUserVaults(): UseUserVaultsReturn {
     refetch: refetchIds
   } = useGetVaultsByCreator(address);
 
-  // Debug logging for vault IDs
-  console.log('useUserVaults Debug - Vault IDs:', {
-    address,
-    chainId,
-    isChainSupported,
-    vaultIds: vaultIds ? vaultIds.map(id => id.toString()) : null,
-    isLoadingIds,
-    idsError: idsError?.message
-  });
+
 
   // Get detailed info for each vault (up to first 5 vaults for performance)
   // Always call hooks in the same order
@@ -52,15 +44,6 @@ export function useUserVaults(): UseUserVaultsReturn {
 
   // Combine all vault queries (no need for individual vault contract calls)
   const vaultQueries = useMemo(() => [vault1, vault2, vault3, vault4, vault5], [vault1, vault2, vault3, vault4, vault5]);
-
-  // Debug logging for individual vault queries
-  console.log('useUserVaults Debug - Vault Queries:', {
-    vault1: { data: vault1.data, isLoading: vault1.isLoading, error: vault1.error?.message },
-    vault2: { data: vault2.data, isLoading: vault2.isLoading, error: vault2.error?.message },
-    vault3: { data: vault3.data, isLoading: vault3.isLoading, error: vault3.error?.message },
-    vault4: { data: vault4.data, isLoading: vault4.isLoading, error: vault4.error?.message },
-    vault5: { data: vault5.data, isLoading: vault5.isLoading, error: vault5.error?.message },
-  });
 
   // Check if any vault details are loading
   const isLoadingDetails = vaultQueries.some(query => query.isLoading);
@@ -93,15 +76,7 @@ export function useUserVaults(): UseUserVaultsReturn {
         const vault = vaultInfo as any; // Type assertion for contract data
         const config = vault.config || {};
 
-        console.log('Processing vault data:', {
-          vaultId: id.toString(),
-          vault: JSON.parse(JSON.stringify(vault, (_key, value) =>
-            typeof value === 'bigint' ? value.toString() : value
-          )),
-          config: JSON.parse(JSON.stringify(config, (_key, value) =>
-            typeof value === 'bigint' ? value.toString() : value
-          ))
-        });
+
 
         return {
           id,

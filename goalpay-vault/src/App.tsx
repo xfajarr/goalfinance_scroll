@@ -14,16 +14,9 @@ import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import JoinVault from "./pages/JoinVault";
 import Learn from "./pages/Learn";
-import TestInviteCodes from "./pages/TestInviteCodes";
-import TestIntegration from "./pages/TestIntegration";
-import TestFindVault from "./pages/TestFindVault";
-import TestJoinVault from "./pages/TestJoinVault";
-import TestAddFunds from "./pages/TestAddFunds";
-import TestSuite from "./pages/TestSuite";
-import DebugVaultCreation from "./pages/DebugVaultCreation";
+
 import VaultCreationV2 from "./pages/VaultCreationV2";
-import TestVaultCreation from "./pages/TestVaultCreation";
-import TestVaultOperations from "./pages/TestVaultOperations";
+
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -43,16 +36,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/join/:id" element={<JoinVault />} />
           <Route path="/learn" element={<Learn />} />
-          <Route path="/test-invite-codes" element={<TestInviteCodes />} />
-          <Route path="/test-integration" element={<TestIntegration />} />
-          <Route path="/test-find-vault" element={<TestFindVault />} />
-          <Route path="/test-join-vault" element={<TestJoinVault />} />
-          <Route path="/test-add-funds" element={<TestAddFunds />} />
-          <Route path="/test-suite" element={<TestSuite />} />
-          <Route path="/debug-vault-creation" element={<DebugVaultCreation />} />
           <Route path="/vault-creation-v2" element={<VaultCreationV2 />} />
-          <Route path="/test-vault-creation" element={<TestVaultCreation />} />
-          <Route path="/test-vault-operations" element={<TestVaultOperations />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -22,10 +22,7 @@ import { JoinVaultSection } from '@/components/dashboard/join-vault-section';
 // Import constants
 import { MONTHLY_SUMMARY, MOCK_ACTIVITY } from '@/constants/dashboard';
 import { useUserVaults } from '@/hooks/useUserVaults';
-import { ContractDebug } from '@/components/debug/ContractDebug';
-import { VaultDataDebug } from '@/components/debug/VaultDataDebug';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
-import '../test-contract-connection';
 
 const Dashboard = () => {
   const [recentActivity] = useState(MOCK_ACTIVITY);
@@ -38,17 +35,7 @@ const Dashboard = () => {
   // Get user's real vaults from smart contract
   const { vaults: userVaults, isLoading: isLoadingVaults, error: vaultsError, refetch } = useUserVaults();
 
-  // Debug logging to understand what's happening with vault data
-  console.log('Dashboard Debug:', {
-    chainId,
-    isChainSupported,
-    userVaults: userVaults ? JSON.parse(JSON.stringify(userVaults, (_key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    )) : null,
-    isLoadingVaults,
-    vaultsError: vaultsError?.message,
-    vaultCount: userVaults?.length || 0
-  });
+
 
   // Calculate real statistics from user vault data
   const calculateStats = () => {
@@ -137,10 +124,7 @@ const Dashboard = () => {
                 <h2 className="text-2xl font-fredoka font-bold text-goal-text">My Vaults</h2>
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => {
-                      console.log('Manual refresh triggered');
-                      refetch();
-                    }}
+                    onClick={() => refetch()}
                     variant="outline"
                     className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka font-semibold rounded-full px-4 py-3"
                   >
@@ -249,8 +233,6 @@ const Dashboard = () => {
       </main>
 
       <BottomNavigation />
-      <ContractDebug />
-      <VaultDataDebug />
     </div>
   );
 };
