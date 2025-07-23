@@ -3,6 +3,7 @@ import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagm
 import { GOAL_FINANCE_CONTRACT } from '../config/contracts';
 import { WithdrawParams, UseWithdrawReturn } from '../contracts/types';
 import { useToast } from '@/hooks/use-toast';
+import { mantleSepolia } from '../config/wagmi';
 import GoalFinanceABI from '../contracts/abis/GoalFinance.json';
 
 export const useWithdraw = (): UseWithdrawReturn => {
@@ -71,6 +72,8 @@ export const useWithdraw = (): UseWithdrawReturn => {
         abi: GoalFinanceABI,
         functionName: 'withdraw',
         args: [params.vaultId],
+        chain: mantleSepolia,
+        account: address,
       });
 
     } catch (err) {
@@ -109,6 +112,8 @@ export const useWithdraw = (): UseWithdrawReturn => {
         abi: GoalFinanceABI,
         functionName: 'withdrawEarly',
         args: [params.vaultId],
+        chain: mantleSepolia,
+        account: address,
       });
 
       toast({

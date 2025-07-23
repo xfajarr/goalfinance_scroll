@@ -1,7 +1,7 @@
 import { createConfig, http } from 'wagmi';
 import { defineChain } from 'viem';
 
-// Define Mantle Sepolia testnet
+// Define Mantle Sepolia testnet with multiple RPC endpoints
 export const mantleSepolia = defineChain({
   id: 5003,
   name: 'Mantle Sepolia',
@@ -12,7 +12,13 @@ export const mantleSepolia = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.sepolia.mantle.xyz'],
+      http: [
+        'https://mantle-sepolia.infura.io/v3/694a8404d98e4fb5a6c806e394dc4fb3',
+        'https://rpc.sepolia.mantle.xyz',
+        'https://mantle-sepolia.drpc.org',
+        'https://mantle-sepolia-testnet.rpc.thirdweb.com',
+        'https://sepolia.mantle.xyz',
+      ],
     },
   },
   blockExplorers: {
@@ -27,11 +33,16 @@ export const mantleSepolia = defineChain({
 // Define the chains we want to support - Only Mantle Sepolia
 const chains = [mantleSepolia] as const;
 
-// Get the Wagmi configuration for Privy
+// Get the Wagmi configuration for Privy with enhanced RPC handling
 export const config = createConfig({
   chains,
   transports: {
-    [mantleSepolia.id]: http(),
+    [mantleSepolia.id]: http(undefined, {
+      // Retry configuration for rate limiting
+      retryCount: 3,
+      retryDelay: 2000, // 2 second delay between retries
+      timeout: 15000, // 15 second timeout
+    }),
   },
 });
 

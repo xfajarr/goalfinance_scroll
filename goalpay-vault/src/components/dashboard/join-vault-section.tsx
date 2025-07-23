@@ -139,7 +139,7 @@ export const JoinVaultSection = () => {
               <Button
                 onClick={handleValidateCode}
                 disabled={isValidating || !inviteCode.trim()}
-                className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-6"
+                className="bg-goal-text text-white rounded-2xl px-6"
               >
                 {isValidating ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

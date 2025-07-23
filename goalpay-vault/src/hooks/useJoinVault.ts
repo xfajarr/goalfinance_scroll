@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { GOAL_FINANCE_CONTRACT, NATIVE_TOKEN } from '@/config/contracts';
 import { JoinVaultParams, JoinVaultWithTokenParams, EMPTY_INVITE_CODE } from '@/contracts/types';
 import { useUSDCApproval } from './useUSDCApproval';
+import { mantleSepolia } from '@/config/wagmi';
 import GoalFinanceABI from '@/contracts/abis/GoalFinance.json';
 
 export interface UseJoinVaultReturn {
@@ -134,6 +135,8 @@ export const useJoinVault = (): UseJoinVaultReturn => {
         functionName: 'joinVault',
         args: [vaultId, inviteCodeBytes],
         value: value,
+        chain: mantleSepolia,
+        account: address,
       });
 
       toast({
@@ -210,6 +213,8 @@ export const useJoinVault = (): UseJoinVaultReturn => {
         abi: GoalFinanceABI,
         functionName: 'joinVaultWithToken',
         args: [vaultId, amountWei, inviteCodeBytes],
+        chain: mantleSepolia,
+        account: address,
       });
 
       toast({

@@ -41,6 +41,24 @@ export interface Vault {
   createdAt: bigint;
 }
 
+// Flattened vault data for easier frontend use
+export interface VaultData {
+  id: bigint;
+  name: string;
+  description: string;
+  creator: Address;
+  token: Address;
+  goalType: GoalType;
+  visibility: Visibility;
+  targetAmount: bigint;
+  totalDeposited: bigint;
+  deadline: bigint;
+  memberCount: bigint;
+  status: VaultStatus;
+  inviteCode: string;
+  createdAt: bigint;
+}
+
 // Member struct from the new contract
 export interface Member {
   depositedAmount: bigint;
@@ -160,6 +178,12 @@ export interface UseWithdrawReturn {
   error: Error | null;
   txHash: string | null;
   reset: () => void;
+}
+
+export interface UseShareVaultReturn {
+  generateShareData: (vaultId: bigint) => Promise<ShareVaultData>;
+  isLoading: boolean;
+  error: Error | null;
 }
 
 // Utility types for vault operations

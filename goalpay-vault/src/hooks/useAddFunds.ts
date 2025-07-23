@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi';
 import { parseUnits, Address } from 'viem';
 import { GOAL_FINANCE_CONTRACT } from '../config/contracts';
 import { AddNativeFundsParams, AddTokenFundsParams } from '../contracts/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUSDCApproval } from './useUSDCApproval';
+import { mantleSepolia } from '../config/wagmi';
 import GoalFinanceABI from '../contracts/abis/GoalFinance.json';
 
 export interface UseAddFundsReturn {
@@ -31,6 +32,7 @@ export const useAddFunds = (): UseAddFundsReturn => {
   const [currentStep, setCurrentStep] = useState<'idle' | 'checking' | 'approving' | 'adding' | 'success' | 'error'>('idle');
   const [needsApproval, setNeedsApproval] = useState(false);
   const { address } = useAccount();
+  const chainId = useChainId();
   const { toast } = useToast();
 
   const {
@@ -106,6 +108,8 @@ export const useAddFunds = (): UseAddFundsReturn => {
         functionName: 'addNativeFunds',
         args: [vaultId],
         value: value,
+        chain: mantleSepolia,
+        account: address,
       });
 
       toast({
@@ -180,6 +184,8 @@ export const useAddFunds = (): UseAddFundsReturn => {
         abi: GoalFinanceABI,
         functionName: 'addTokenFunds',
         args: [vaultId, amountWei],
+        chain: mantleSepolia,
+        account: address,
       });
 
       toast({

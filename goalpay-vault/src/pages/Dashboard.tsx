@@ -22,6 +22,7 @@ import { JoinVaultSection } from '@/components/dashboard/join-vault-section';
 // Import constants
 import { MONTHLY_SUMMARY, MOCK_ACTIVITY } from '@/constants/dashboard';
 import { useUserVaults } from '@/hooks/useUserVaults';
+import { useJoinedVaults } from '@/hooks/useJoinedVaults';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 import { InviteCodeTest } from '@/components/InviteCodeTest';
 

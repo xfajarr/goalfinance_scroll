@@ -1,16 +1,15 @@
-import { mantleSepolia, baseSepolia } from '../config/wagmi';
+import { mantleSepolia } from '../config/wagmi';
 
 export const getChainById = (chainId: number) => {
   const chains = {
-    [mantleSepolia.id]: mantleSepolia,
-    [baseSepolia.id]: baseSepolia
+    [mantleSepolia.id]: mantleSepolia
   };
   
   return chains[chainId] || mantleSepolia;
 };
 
 export const getSupportedChainIds = (): number[] => {
-  return [mantleSepolia.id, baseSepolia.id];
+  return [mantleSepolia.id];
 };
 
 export const isChainSupported = (chainId: number): boolean => {

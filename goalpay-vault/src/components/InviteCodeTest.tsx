@@ -91,10 +91,28 @@ export const InviteCodeTest = () => {
 
         {/* Validation Error */}
         {validateError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-700 text-sm">
-              <strong>Validation Error:</strong> {validateError.message}
+          <div className={`border rounded-lg p-3 ${
+            validateError.message.includes('Network is busy') || validateError.message.includes('high traffic')
+              ? 'bg-yellow-50 border-yellow-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <p className={`text-sm ${
+              validateError.message.includes('Network is busy') || validateError.message.includes('high traffic')
+                ? 'text-yellow-700'
+                : 'text-red-700'
+            }`}>
+              <strong>
+                {validateError.message.includes('Network is busy') || validateError.message.includes('high traffic')
+                  ? '⏳ Network Busy:'
+                  : '❌ Validation Error:'
+                }
+              </strong> {validateError.message}
             </p>
+            {(validateError.message.includes('Network is busy') || validateError.message.includes('high traffic')) && (
+              <p className="text-yellow-600 text-xs mt-1">
+                💡 The Mantle Sepolia network is experiencing high traffic. This is normal for testnets.
+              </p>
+            )}
           </div>
         )}
 
@@ -156,10 +174,28 @@ export const InviteCodeTest = () => {
 
         {/* Join Error */}
         {joinError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-red-700 text-sm">
-              <strong>Join Error:</strong> {joinError.message}
+          <div className={`border rounded-lg p-3 ${
+            joinError.message.includes('Network is busy') || joinError.message.includes('high traffic')
+              ? 'bg-yellow-50 border-yellow-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <p className={`text-sm ${
+              joinError.message.includes('Network is busy') || joinError.message.includes('high traffic')
+                ? 'text-yellow-700'
+                : 'text-red-700'
+            }`}>
+              <strong>
+                {joinError.message.includes('Network is busy') || joinError.message.includes('high traffic')
+                  ? '⏳ Network Busy:'
+                  : '❌ Join Error:'
+                }
+              </strong> {joinError.message}
             </p>
+            {(joinError.message.includes('Network is busy') || joinError.message.includes('high traffic')) && (
+              <p className="text-yellow-600 text-xs mt-1">
+                💡 Please wait a moment and try again. Testnet RPCs can be slow during peak usage.
+              </p>
+            )}
           </div>
         )}
 

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useChainId } from 'wagmi';
 import { parseUnits, decodeEventLog, Address } from 'viem';
 import { GOAL_FINANCE_CONTRACT, NATIVE_TOKEN, CONTRACT_CONSTANTS } from '../config/contracts';
 import { GoalType, Visibility, VaultConfig, CreateVaultResult } from '../contracts/types';
+import { mantleSepolia } from '../config/wagmi';
 import GoalFinanceABI from '../contracts/abis/GoalFinance.json';
 
 // Local interface for UI parameters (different from contract types)
@@ -19,6 +20,7 @@ export interface CreateVaultUIParams {
 
 export function useCreateVault() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const [error, setError] = useState<Error | null>(null);
   const [vaultId, setVaultId] = useState<bigint | null>(null);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function useCreateVault() {
               const vaultId = decoded.args[0] as bigint;
               const creator = decoded.args[1] as `0x${string}`;
               const token = decoded.args[2] as `0x${string}`;
-              const config = decoded.args[3] as any;
+              const config = decoded.args[3] as VaultConfig;
               const inviteCodeBytes = decoded.args[4] as `0x${string}`; // Invite code is the 5th parameter (index 4)
 
               setVaultId(vaultId);
@@ -169,6 +171,8 @@ export function useCreateVault() {
         abi: GoalFinanceABI,
         functionName: 'createVault',
         args: [vaultConfig],
+        chain: mantleSepolia,
+        account: address,
       });
 
       console.log('📝 Transaction initiated, waiting for confirmation...');
