@@ -62,13 +62,23 @@ export function useCreateVault() {
             });
 
             if (decoded.eventName === 'VaultCreated') {
+              // VaultCreated event structure: (vaultId, creator, token, config, inviteCode)
               // decoded.args is an array, so access by index
               const vaultId = decoded.args[0] as bigint;
-              const inviteCodeBytes = decoded.args[1] as `0x${string}`;
+              const creator = decoded.args[1] as `0x${string}`;
+              const token = decoded.args[2] as `0x${string}`;
+              const config = decoded.args[3] as any;
+              const inviteCodeBytes = decoded.args[4] as `0x${string}`; // Invite code is the 5th parameter (index 4)
+
               setVaultId(vaultId);
               setInviteCode(inviteCodeBytes);
 
               console.log('🎉 Vault created successfully with GoalFinance!');
+              console.log('📝 Vault ID:', vaultId.toString());
+              console.log('👤 Creator:', creator);
+              console.log('🪙 Token:', token);
+              console.log('🔑 Invite Code (bytes32):', inviteCodeBytes);
+              console.log('📋 Config:', config);
               break;
             }
           } catch (decodeError) {

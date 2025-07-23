@@ -23,6 +23,7 @@ import { JoinVaultSection } from '@/components/dashboard/join-vault-section';
 import { MONTHLY_SUMMARY, MOCK_ACTIVITY } from '@/constants/dashboard';
 import { useUserVaults } from '@/hooks/useUserVaults';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
+import { InviteCodeTest } from '@/components/InviteCodeTest';
 
 const Dashboard = () => {
   const [recentActivity] = useState(MOCK_ACTIVITY);
@@ -229,6 +230,9 @@ const Dashboard = () => {
             {/* Achievements Preview */}
             <AchievementsPreview />
           </div>
+
+          {/* Invite Code Test Component */}
+          <InviteCodeTest />
         </div>
       </main>
 

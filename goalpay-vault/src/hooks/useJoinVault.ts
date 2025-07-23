@@ -80,22 +80,22 @@ export const useJoinVault = (): UseJoinVaultReturn => {
     }
   }, [isApprovalSuccess, currentStep, toast]);
 
-  // Helper function to convert invite code
+  // Helper function to format invite code for contract calls
   const formatInviteCode = (inviteCode?: string): `0x${string}` => {
     if (!inviteCode || inviteCode.trim() === '') {
       return EMPTY_INVITE_CODE as `0x${string}`;
     }
 
-    if (inviteCode.startsWith('0x')) {
+    // If it's already a valid hex string (bytes32 from blockchain), use it directly
+    if (inviteCode.startsWith('0x') && inviteCode.length === 66) {
       return inviteCode as `0x${string}`;
     }
 
-    // Convert string to bytes32
-    const encoder = new TextEncoder();
-    const data = encoder.encode(inviteCode);
-    const bytes32 = new Uint8Array(32);
-    bytes32.set(data.slice(0, 32));
-    return `0x${Array.from(bytes32).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+    // If it's a legacy frontend-generated invite code (like GOAL123ABC4XYZ9),
+    // we need to look up the actual on-chain invite code for this vault
+    // For now, return empty invite code for legacy codes - they should be handled differently
+    console.warn('Legacy invite code format detected:', inviteCode);
+    return EMPTY_INVITE_CODE as `0x${string}`;
   };
 
   // Join vault with native token (MNT/ETH)

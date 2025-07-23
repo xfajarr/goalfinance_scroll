@@ -175,16 +175,60 @@ export const useInviteCode = (): UseInviteCodeReturn => {
         throw new Error('Public client not available');
       }
 
-      // First try to use the new getVaultByInviteCode function for on-chain invite codes
-      try {
-        const vaultId = await publicClient.readContract({
-          address: contractAddress,
-          abi: GoalFinanceABI,
-          functionName: 'getVaultByInviteCode',
-          args: [inviteCode as `0x${string}`],
-        }) as bigint;
+      // Check if this is a bytes32 invite code (on-chain) or legacy frontend code
+      const isOnChainInviteCode = inviteCode.startsWith('0x') && inviteCode.length === 66;
 
-        // Get full vault info using the vault ID
+      if (isOnChainInviteCode) {
+        // Try to use the getVaultByInviteCode function for on-chain invite codes
+        try {
+          const vaultId = await publicClient.readContract({
+            address: contractAddress,
+            abi: GoalFinanceABI,
+            functionName: 'getVaultByInviteCode',
+            args: [inviteCode as `0x${string}`],
+          }) as bigint;
+
+          // Get full vault info using the vault ID
+          const vaultInfo = await publicClient.readContract({
+            address: contractAddress,
+            abi: GoalFinanceABI,
+            functionName: 'getVault',
+            args: [vaultId],
+          }) as any;
+
+          // vaultInfo structure: { id, config: { name, description, token, goalType, visibility, targetAmount, deadline, penaltyRate }, creator, totalDeposited, memberCount, status, inviteCode, createdAt }
+          const config = vaultInfo.config || {};
+
+          if (vaultInfo && vaultInfo.creator !== '0x0000000000000000000000000000000000000000') {
+            const vaultPreview: VaultPreview = {
+              id: vaultId,
+              name: config.name || 'Unknown Vault',
+              description: config.description || 'No description',
+              targetAmount: config.targetAmount || 0n,
+              currentAmount: vaultInfo.totalDeposited || 0n,
+              deadline: config.deadline || 0n,
+              memberCount: vaultInfo.memberCount || 0n,
+              creator: vaultInfo.creator,
+              isPublic: config.visibility === 1, // 1 = PUBLIC, 0 = PRIVATE
+              status: vaultInfo.status || 0,
+              tokenSymbol: 'MNT', // Default to native token, could be enhanced
+            };
+
+            return vaultPreview;
+          }
+        } catch (onChainError) {
+          console.log('On-chain invite code lookup failed:', onChainError);
+          throw new Error('Invalid invite code - not found on blockchain');
+        }
+      } else {
+        // Handle legacy frontend-generated invite code format for backward compatibility
+        const vaultId = extractVaultIdFromInviteCode(inviteCode);
+
+        if (!vaultId) {
+          throw new Error('Invalid invite code format');
+        }
+
+        // Get vault info from GoalFinance using vault ID
         const vaultInfo = await publicClient.readContract({
           address: contractAddress,
           abi: GoalFinanceABI,
@@ -192,61 +236,29 @@ export const useInviteCode = (): UseInviteCodeReturn => {
           args: [vaultId],
         }) as any;
 
-        if (vaultInfo && vaultInfo.vaultAddress !== '0x0000000000000000000000000000000000000000') {
-          const vaultPreview: VaultPreview = {
-            id: BigInt(0), // We'll need to get this from somewhere else or modify the interface
-            name: vaultInfo.vaultName,
-            description: vaultInfo.description,
-            targetAmount: vaultInfo.targetAmount,
-            currentAmount: vaultInfo.currentAmount,
-            deadline: vaultInfo.deadline,
-            memberCount: vaultInfo.memberCount,
-            creator: vaultInfo.creator,
-            isPublic: vaultInfo.isPublic,
-            status: vaultInfo.status,
-            tokenSymbol: 'USDC', // Could be enhanced to get actual token symbol
-          };
-
-          return vaultPreview;
+        if (!vaultInfo || vaultInfo.creator === '0x0000000000000000000000000000000000000000') {
+          throw new Error('Vault not found');
         }
-      } catch (onChainError) {
-        console.log('On-chain invite code not found, trying frontend format...');
+
+        // vaultInfo structure: { id, config: { name, description, token, goalType, visibility, targetAmount, deadline, penaltyRate }, creator, totalDeposited, memberCount, status, inviteCode, createdAt }
+        const config = vaultInfo.config || {};
+
+        const vaultPreview: VaultPreview = {
+          id: vaultId,
+          name: config.name || 'Unknown Vault',
+          description: config.description || 'No description',
+          targetAmount: config.targetAmount || 0n,
+          currentAmount: vaultInfo.totalDeposited || 0n,
+          deadline: config.deadline || 0n,
+          memberCount: vaultInfo.memberCount || 0n,
+          creator: vaultInfo.creator,
+          isPublic: config.visibility === 1, // 1 = PUBLIC, 0 = PRIVATE
+          status: vaultInfo.status || 0,
+          tokenSymbol: 'MNT', // Default to native token
+        };
+
+        return vaultPreview;
       }
-
-      // Fallback to frontend-generated invite code format for backward compatibility
-      const vaultId = extractVaultIdFromInviteCode(inviteCode);
-
-      if (!vaultId) {
-        throw new Error('Invalid invite code format');
-      }
-
-      // Get vault info from GoalFinance using vault ID
-      const vaultInfo = await publicClient.readContract({
-        address: contractAddress,
-        abi: GoalFinanceABI,
-        functionName: 'getVault',
-        args: [vaultId],
-      }) as any;
-
-      if (!vaultInfo) {
-        throw new Error('Vault not found');
-      }
-
-      const vaultPreview: VaultPreview = {
-        id: vaultId,
-        name: vaultInfo.vaultName,
-        description: vaultInfo.description,
-        targetAmount: vaultInfo.targetAmount,
-        currentAmount: vaultInfo.currentAmount,
-        deadline: vaultInfo.deadline,
-        memberCount: vaultInfo.memberCount,
-        creator: vaultInfo.creator,
-        isPublic: vaultInfo.isPublic,
-        status: vaultInfo.status,
-        tokenSymbol: 'USDC',
-      };
-
-      return vaultPreview;
 
     } catch (error) {
       console.error('Error validating invite code:', error);
@@ -274,17 +286,51 @@ export const useInviteCode = (): UseInviteCodeReturn => {
         throw new Error('Amount must be greater than 0');
       }
 
-      // Get vault ID from invite code first
+      // Get vault ID from invite code
       let vaultId: bigint;
-      try {
-        vaultId = await publicClient?.readContract({
-          address: contractAddress,
-          abi: GoalFinanceABI,
-          functionName: 'getVaultByInviteCode',
-          args: [inviteCode as `0x${string}`],
-        }) as bigint;
-      } catch (error) {
-        throw new Error('Invalid invite code');
+      let actualInviteCode = inviteCode;
+
+      // Check if this is a bytes32 invite code (on-chain) or legacy frontend code
+      const isOnChainInviteCode = inviteCode.startsWith('0x') && inviteCode.length === 66;
+
+      if (isOnChainInviteCode) {
+        // Use on-chain invite code lookup
+        try {
+          vaultId = await publicClient?.readContract({
+            address: contractAddress,
+            abi: GoalFinanceABI,
+            functionName: 'getVaultByInviteCode',
+            args: [inviteCode as `0x${string}`],
+          }) as bigint;
+        } catch (error) {
+          throw new Error('Invalid invite code - not found on blockchain');
+        }
+      } else {
+        // Handle legacy frontend-generated invite code
+        const extractedVaultId = extractVaultIdFromInviteCode(inviteCode);
+        if (!extractedVaultId) {
+          throw new Error('Invalid invite code format');
+        }
+
+        vaultId = extractedVaultId;
+
+        // Get the actual on-chain invite code for this vault
+        try {
+          const vaultInfo = await publicClient?.readContract({
+            address: contractAddress,
+            abi: GoalFinanceABI,
+            functionName: 'getVault',
+            args: [vaultId],
+          }) as any;
+
+          if (vaultInfo && vaultInfo.inviteCode) {
+            actualInviteCode = vaultInfo.inviteCode;
+          } else {
+            throw new Error('Vault not found or no invite code available');
+          }
+        } catch (error) {
+          throw new Error('Could not retrieve vault information');
+        }
       }
 
       let value: bigint = 0n;
@@ -300,11 +346,11 @@ export const useInviteCode = (): UseInviteCodeReturn => {
         amountParam = parseUnits(amount, 6); // USDC has 6 decimals
       }
 
-      // Use the appropriate join function based on token type
+      // Use the appropriate join function based on token type with the actual invite code
       if (isNativeToken) {
-        await joinVaultNative(vaultId, amount, inviteCode);
+        await joinVaultNative(vaultId, amount, actualInviteCode);
       } else {
-        await joinVaultWithTokenHook(vaultId, amount, inviteCode);
+        await joinVaultWithTokenHook(vaultId, amount, actualInviteCode);
       }
 
       toast({

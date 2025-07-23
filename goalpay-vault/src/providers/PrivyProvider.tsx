@@ -15,8 +15,8 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
-// Get Privy App ID from environment variables
-const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'cmd87c3bk0063lb0mssxa5y1m';
+// Get Privy App ID
+const PRIVY_APP_ID = 'cmd87c3bk0063lb0mssxa5y1m';
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
   return (
