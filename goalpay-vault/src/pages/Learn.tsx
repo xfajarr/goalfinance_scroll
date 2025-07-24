@@ -7,11 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { FlashcardSet } from '@/components/Flashcard';
-import { 
-  BookOpen, 
-  Trophy, 
-  Zap, 
-  Target, 
+import {
+  BookOpen,
+  Trophy,
   Star,
   Coins,
   TrendingUp,
@@ -20,7 +18,6 @@ import {
   Award,
   ChevronRight,
   Clock,
-  Users,
   CheckCircle,
   Flame
 } from 'lucide-react';
@@ -45,21 +42,25 @@ const Learn = () => {
       points: 50,
       flashcards: [
         {
+          id: "stablecoin-1",
           front: "What is a stablecoin?",
           back: "A cryptocurrency designed to maintain a stable value relative to a reference asset, typically the US Dollar.",
           difficulty: "easy" as const
         },
         {
+          id: "stablecoin-2",
           front: "Why use stablecoins for savings?",
           back: "They offer the benefits of crypto (fast transfers, DeFi yields) while maintaining price stability.",
           difficulty: "medium" as const
         },
         {
+          id: "stablecoin-3",
           front: "What is USDC?",
           back: "USD Coin - a fully backed dollar stablecoin that's regulated and audited for transparency.",
           difficulty: "medium" as const
         },
         {
+          id: "stablecoin-4",
           front: "How are stablecoins backed?",
           back: "Most stablecoins are backed by reserves of fiat currency, government bonds, or other stable assets held by the issuer.",
           difficulty: "hard" as const
@@ -74,21 +75,25 @@ const Learn = () => {
       points: 75,
       flashcards: [
         {
+          id: "defi-1",
           front: "What is APY?",
           back: "Annual Percentage Yield - the real rate of return earned on an investment, taking into account compound interest.",
           difficulty: "easy" as const
         },
         {
+          id: "defi-2",
           front: "How does DeFi generate yield?",
           back: "Through lending protocols, liquidity provision, and automated market making strategies.",
           difficulty: "medium" as const
         },
         {
+          id: "defi-3",
           front: "What is compound interest?",
           back: "Earning interest on both your principal amount and previously earned interest.",
           difficulty: "easy" as const
         },
         {
+          id: "defi-4",
           front: "What is liquidity mining?",
           back: "Providing liquidity to DeFi protocols in exchange for token rewards, often in addition to trading fees.",
           difficulty: "hard" as const
@@ -103,16 +108,19 @@ const Learn = () => {
       points: 100,
       flashcards: [
         {
+          id: "risk-1",
           front: "What is diversification?",
           back: "Spreading investments across different assets to reduce risk.",
           difficulty: "easy" as const
         },
         {
+          id: "risk-2",
           front: "What is impermanent loss?",
           back: "The temporary loss of funds when providing liquidity to automated market makers due to price volatility.",
           difficulty: "hard" as const
         },
         {
+          id: "risk-3",
           front: "How to manage risk in DeFi?",
           back: "Start small, understand protocols, diversify, and never invest more than you can afford to lose.",
           difficulty: "medium" as const
@@ -238,6 +246,8 @@ const Learn = () => {
                     title={flashcardSets[activeFlashcardSet].title}
                     flashcards={flashcardSets[activeFlashcardSet].flashcards}
                     onComplete={() => handleSetComplete(activeFlashcardSet)}
+                    enableAdvancedFeatures={true}
+                    autoSave={true}
                   />
                 </div>
               )}

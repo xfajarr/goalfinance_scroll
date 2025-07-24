@@ -1,6 +1,6 @@
 {
-  "name": "GoalPay - Save Together, Win Together",
-  "short_name": "GoalPay",
+  "name": "Goal Finance - Save Together, Win Together",
+  "short_name": "Goal Finance",
   "description": "A fun and social saving platform that helps users save together toward shared financial goals",
   "start_url": "/",
   "scope": "/",
@@ -63,7 +63,7 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "GoalPay Dashboard"
+      "label": "Goal Finance Dashboard"
     }
   ]
 }

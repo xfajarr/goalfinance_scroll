@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import JoinGoal from "./pages/JoinVault";
 import Learn from "./pages/Learn";
 import GoalsHistory from "./pages/GoalsHistory";
+import FlashcardDemo from "./components/flashcard/FlashcardDemo";
 
 import GoalCreationV2 from "./pages/VaultCreationV2";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/join/:id" element={<JoinGoal />} />
             <Route path="/join/tx/:txHash" element={<JoinGoal />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/flashcard-demo" element={<FlashcardDemo />} />
             <Route path="/goals-history" element={<GoalsHistory />} />
             <Route path="/goal-creation-v2" element={<GoalCreationV2 />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
