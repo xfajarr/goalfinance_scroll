@@ -38,11 +38,11 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         appearance: {
           theme: 'light',
           accentColor: '#8B5CF6',
-          logo: '/goal-finance-logo.png',
+          logo: '/goal_finance_icon_png.png',
           showWalletLoginFirst: true,
           walletChainType: 'ethereum-only',
           landingHeader: 'Welcome to Goal Finance',
-          loginMessage: 'Sign in to create your dreams',
+          loginMessage: 'Sign in to create your dreams come true!',
         },
         embeddedWallets: {
           createOnLogin: 'users-without-wallets',
