@@ -31,7 +31,7 @@ const NotFound = () => {
               variant="outline"
               className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6"
             >
-              <Link to="/">
+              <Link to="/dashboard">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Link>

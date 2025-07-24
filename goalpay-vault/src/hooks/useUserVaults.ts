@@ -13,8 +13,8 @@ export interface UseUserVaultsReturn {
 }
 
 /**
- * Hook to get all vaults created by the current user with detailed information
- * This version fetches detailed vault info for each vault ID
+ * Hook to get all goals created by the current user with detailed information
+ * This version fetches detailed goal info for each goal ID
  */
 export function useUserVaults(): UseUserVaultsReturn {
   const { address } = useAccount();
@@ -24,7 +24,7 @@ export function useUserVaults(): UseUserVaultsReturn {
   const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
   const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
 
-  // Get vault IDs created by user
+  // Get goal IDs created by user
   const {
     data: vaultIds,
     isLoading: isLoadingIds,
@@ -34,24 +34,29 @@ export function useUserVaults(): UseUserVaultsReturn {
 
 
 
-  // Get detailed info for each vault (up to first 5 vaults for performance)
+  // Get detailed info for each goal (up to first 10 goals for better UX)
   // Always call hooks in the same order
   const vault1 = useGetVault(vaultIds?.[0]);
   const vault2 = useGetVault(vaultIds?.[1]);
   const vault3 = useGetVault(vaultIds?.[2]);
   const vault4 = useGetVault(vaultIds?.[3]);
   const vault5 = useGetVault(vaultIds?.[4]);
+  const vault6 = useGetVault(vaultIds?.[5]);
+  const vault7 = useGetVault(vaultIds?.[6]);
+  const vault8 = useGetVault(vaultIds?.[7]);
+  const vault9 = useGetVault(vaultIds?.[8]);
+  const vault10 = useGetVault(vaultIds?.[9]);
 
-  // Combine all vault queries (no need for individual vault contract calls)
-  const vaultQueries = useMemo(() => [vault1, vault2, vault3, vault4, vault5], [vault1, vault2, vault3, vault4, vault5]);
+  // Combine all goal queries (no need for individual goal contract calls)
+  const vaultQueries = useMemo(() => [vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10], [vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10]);
 
-  // Check if any vault details are loading
+  // Check if any goal details are loading
   const isLoadingDetails = vaultQueries.some(query => query.isLoading);
 
-  // Check for any errors in vault details
+  // Check for any errors in goal details
   const detailsError = vaultQueries.find(query => query.error)?.error;
 
-  // Transform vault data
+  // Transform goal data
   const vaults: VaultData[] = useMemo(() => {
     // Handle unsupported chain
     if (!isChainSupported) {
@@ -60,18 +65,18 @@ export function useUserVaults(): UseUserVaultsReturn {
 
     // Handle error cases
     if (idsError) {
-      console.warn('Error loading user vaults:', idsError.message);
+      console.warn('Error loading user goals:', idsError.message);
       return [];
     }
 
     if (!vaultIds || !Array.isArray(vaultIds)) return [];
 
-    return (vaultIds as bigint[]).slice(0, 5).map((id, index) => {
+    return (vaultIds as bigint[]).slice(0, 10).map((id, index) => {
       const vaultQuery = vaultQueries[index];
       const vaultInfo = vaultQuery?.data;
 
       if (vaultInfo) {
-        // Use VaultInfo from new GoalFinance contract
+        // Use GoalInfo from new GoalFinance contract
         // The structure is: { id, config: { name, description, token, goalType, visibility, targetAmount, deadline, penaltyRate }, creator, totalDeposited, memberCount, status, inviteCode, createdAt }
         const vault = vaultInfo as any; // Type assertion for contract data
         const config = vault.config || {};
@@ -80,7 +85,7 @@ export function useUserVaults(): UseUserVaultsReturn {
 
         return {
           id,
-          name: config.name || `Vault ${id}`,
+          name: config.name || `Goal ${id}`,
           description: config.description || 'No description',
           creator: vault.creator || address || '0x0',
           token: config.token || '0x0',
@@ -134,8 +139,8 @@ export function useUserVaults(): UseUserVaultsReturn {
 }
 
 /**
- * Hook to get detailed information for multiple vaults
- * This is a more comprehensive version that fetches full vault details
+ * Hook to get detailed information for multiple goals
+ * This is a more comprehensive version that fetches full goal details
  */
 export function useUserVaultsDetailed(): UseUserVaultsReturn {
   const { address } = useAccount();
@@ -145,7 +150,7 @@ export function useUserVaultsDetailed(): UseUserVaultsReturn {
   const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
   const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
 
-  // Get vault IDs created by user
+  // Get goal IDs created by user
   const {
     data: vaultIds,
     isLoading: isLoadingIds,
@@ -153,7 +158,7 @@ export function useUserVaultsDetailed(): UseUserVaultsReturn {
     refetch: refetchIds
   } = useGetVaultsByCreator(address);
 
-  // For basic version, just return vault IDs with minimal data
+  // For basic version, just return goal IDs with minimal data
   const vaults: VaultData[] = useMemo(() => {
     if (!isChainSupported || !vaultIds || !Array.isArray(vaultIds)) {
       return [];
@@ -161,8 +166,8 @@ export function useUserVaultsDetailed(): UseUserVaultsReturn {
 
     return (vaultIds as bigint[]).map((id) => ({
       id,
-      name: `Vault ${id}`,
-      description: 'Loading vault details...',
+      name: `Goal ${id}`,
+      description: 'Loading goal details...',
       creator: address || '0x0',
       token: '0x0',
       goalType: 0,

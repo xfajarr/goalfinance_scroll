@@ -13,8 +13,8 @@ export interface UseJoinedVaultsReturn {
 }
 
 /**
- * Hook to get vaults that the current user has joined (but not created)
- * This checks membership across all vaults and filters out user-created vaults
+ * Hook to get goals that the current user has joined (but not created)
+ * This checks membership across all goals and filters out user-created goals
  */
 export function useJoinedVaults(): UseJoinedVaultsReturn {
   const { address } = useAccount();
@@ -24,7 +24,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
   const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
   const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
 
-  // Get paginated vaults (first 50 vaults to check)
+  // Get paginated goals (first 50 goals to check)
   const {
     data: paginatedResult,
     isLoading: isLoadingPaginated,
@@ -34,7 +34,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
 
   const vaultIds = paginatedResult?.[0] || [];
 
-  // Get detailed info for each vault (up to first 10 for performance)
+  // Get detailed info for each goal (up to first 10 for performance)
   // Always call hooks in the same order
   const vault1 = useGetVault(vaultIds?.[0]);
   const vault2 = useGetVault(vaultIds?.[1]);
@@ -47,7 +47,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
   const vault9 = useGetVault(vaultIds?.[8]);
   const vault10 = useGetVault(vaultIds?.[9]);
 
-  // Get membership info for each vault
+  // Get membership info for each goal
   const member1 = useGetMemberInfo(vaultIds?.[0], address);
   const member2 = useGetMemberInfo(vaultIds?.[1], address);
   const member3 = useGetMemberInfo(vaultIds?.[2], address);
@@ -59,7 +59,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
   const member9 = useGetMemberInfo(vaultIds?.[8], address);
   const member10 = useGetMemberInfo(vaultIds?.[9], address);
 
-  // Combine all vault and member queries
+  // Combine all goal and member queries
   const vaultQueries = useMemo(() => [
     vault1, vault2, vault3, vault4, vault5,
     vault6, vault7, vault8, vault9, vault10
@@ -78,7 +78,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
   const detailsError = vaultQueries.find(query => query.error)?.error ||
                       memberQueries.find(query => query.error)?.error;
 
-  // Transform and filter vault data
+  // Transform and filter goal data
   const joinedVaults: VaultData[] = useMemo(() => {
     // Handle unsupported chain
     if (!isChainSupported || !address) {
@@ -87,7 +87,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
 
     // Handle error cases
     if (paginatedError) {
-      console.warn('Error loading vaults:', paginatedError.message);
+      console.warn('Error loading goals:', paginatedError.message);
       return [];
     }
 
@@ -100,10 +100,10 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
       const vaultInfo = vaultQuery?.data;
       const memberInfo = memberQuery?.data;
 
-      // Skip if vault data not loaded or user is not a member
+      // Skip if goal data not loaded or user is not a member
       if (!vaultInfo || !memberInfo) return null;
 
-      // Skip if user is the creator (these show in "My Vaults" section)
+      // Skip if user is the creator (these show in "My Goals" section)
       if (vaultInfo.creator?.toLowerCase() === address.toLowerCase()) return null;
 
       // Skip if user has no deposits (not really a member)
@@ -111,7 +111,7 @@ export function useJoinedVaults(): UseJoinedVaultsReturn {
 
       return {
         id,
-        name: vaultInfo.config?.name || `Vault ${id}`,
+        name: vaultInfo.config?.name || `Goal ${id}`,
         description: vaultInfo.config?.description || '',
         creator: vaultInfo.creator || '0x0',
         token: vaultInfo.config?.token || '0x0',

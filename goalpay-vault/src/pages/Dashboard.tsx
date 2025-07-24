@@ -7,7 +7,7 @@ import { useChainId } from 'wagmi';
 import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, AlertTriangle, RefreshCw, History } from 'lucide-react';
 
 // Import modular components
 import { QuickStats } from '@/components/dashboard/quick-stats';
@@ -17,12 +17,13 @@ import { MonthlySummary } from '@/components/dashboard/monthly-summary';
 import { QuickActions } from '@/components/dashboard/quick-actions';
 import { AchievementsPreview } from '@/components/dashboard/achievements-preview';
 import { SectionHeader } from '@/components/ui/section-header';
-import { JoinVaultSection } from '@/components/dashboard/join-vault-section';
+import { JoinGoalSection } from '@/components/dashboard/join-vault-section';
 
 // Import constants
 import { MONTHLY_SUMMARY, MOCK_ACTIVITY } from '@/constants/dashboard';
 import { useUserVaults } from '@/hooks/useUserVaults';
 import { useJoinedVaults } from '@/hooks/useJoinedVaults';
+import { useFilteredVaultsByStatus } from '@/hooks/useVaultStatusChecker';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 import { InviteCodeTest } from '@/components/InviteCodeTest';
 
@@ -34,19 +35,36 @@ const Dashboard = () => {
   const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
   const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
 
-  // Get user's real vaults from smart contract
+  // Get user's real goals from smart contract
   const { vaults: userVaults, isLoading: isLoadingVaults, error: vaultsError, refetch } = useUserVaults();
 
-  // Get vaults that user has joined (but not created)
+  // Get goals that user has joined (but not created)
   const { vaults: joinedVaults, isLoading: isLoadingJoined, error: joinedError, refetch: refetchJoined } = useJoinedVaults();
 
+  // Filter vaults by real-time status to ensure accurate categorization
+  const userVaultsByStatus = useFilteredVaultsByStatus(userVaults || []);
+  const joinedVaultsByStatus = useFilteredVaultsByStatus(joinedVaults || []);
+
+  // Debug logging for status filtering
+  console.log('🔍 Dashboard Status Filtering Debug:', {
+    totalUserVaults: userVaults?.length || 0,
+    activeUserVaults: userVaultsByStatus.activeVaults.length,
+    completedUserVaults: userVaultsByStatus.completedVaults.length,
+    failedUserVaults: userVaultsByStatus.failedVaults.length,
+    totalJoinedVaults: joinedVaults?.length || 0,
+    activeJoinedVaults: joinedVaultsByStatus.activeVaults.length,
+    completedJoinedVaults: joinedVaultsByStatus.completedVaults.length,
+    failedJoinedVaults: joinedVaultsByStatus.failedVaults.length,
+  });
 
 
-  // Calculate real statistics from user vault data (including joined vaults)
+
+  // Calculate real statistics from user goal data (including joined goals)
   const calculateStats = () => {
-    const allVaults = [...(userVaults || []), ...(joinedVaults || [])];
+    const allActiveGoals = [...userVaultsByStatus.activeVaults, ...joinedVaultsByStatus.activeVaults];
+    const allGoals = [...(userVaults || []), ...(joinedVaults || [])];
 
-    if (allVaults.length === 0) {
+    if (allGoals.length === 0) {
       return {
         totalSaved: 0,
         earnedYield: 0,
@@ -55,24 +73,23 @@ const Dashboard = () => {
       };
     }
 
-    const totalSaved = allVaults.reduce((sum, vault) => {
-      // Determine if this is a native token vault
-      const isNativeToken = vault.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    const totalSaved = allGoals.reduce((sum, goal) => {
+      // Determine if this is a native token goal
+      const isNativeToken = goal.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
       const decimals = isNativeToken ? 18 : 6;
-      return sum + Number(formatUnits(vault.totalDeposited || 0n, decimals));
+      return sum + Number(formatUnits(goal.totalDeposited || 0n, decimals));
     }, 0);
 
-    const activeGoals = allVaults.filter(vault =>
-      vault.status === 0 // VaultStatus.ACTIVE = 0
-    ).length;
+    // Use real-time filtered active goals count
+    const activeGoals = allActiveGoals.length;
 
     // For now, yield is 0 as it's a future feature
     const earnedYield = 0;
 
-    // Friends count - calculate total members across all vaults
+    // Friends count - calculate total members across all goals
     // This gives an approximation of social connections
-    const friends = allVaults.reduce((sum, vault) => {
-      return sum + Number(vault.memberCount);
+    const friends = allGoals.reduce((sum, goal) => {
+      return sum + Number(goal.memberCount);
     }, 0);
 
     return {
@@ -85,43 +102,43 @@ const Dashboard = () => {
 
   const stats = calculateStats();
 
-  // Transform VaultData to format expected by VaultCard
-  const myVaults = useMemo(() => {
-    return userVaults.map((vault) => {
-      // Determine if this is a native token vault
-      const isNativeToken = vault.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  // Transform GoalData to format expected by VaultCard (only active goals with real-time status)
+  const myGoals = useMemo(() => {
+    return userVaultsByStatus.activeVaults.map((goal) => {
+      // Determine if this is a native token goal
+      const isNativeToken = goal.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
       const decimals = isNativeToken ? 18 : 6;
 
       return {
-        id: Number(vault.id),
-        name: vault.name,
-        goal: Number(formatUnits(vault.targetAmount || 0n, decimals)),
-        current: Number(formatUnits(vault.totalDeposited || 0n, decimals)),
-        members: Number(vault.memberCount || 0n),
-        daysLeft: Math.max(0, Math.floor((Number(vault.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
-        status: vault.status === 0 ? "active" : vault.status === 1 ? "completed" : vault.status === 2 ? "failed" : "cancelled"
+        id: Number(goal.id),
+        name: goal.name,
+        goal: Number(formatUnits(goal.targetAmount || 0n, decimals)),
+        current: Number(formatUnits(goal.totalDeposited || 0n, decimals)),
+        members: Number(goal.memberCount || 0n),
+        daysLeft: Math.max(0, Math.floor((Number(goal.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
+        status: "active"
       };
     });
-  }, [userVaults]);
+  }, [userVaultsByStatus.activeVaults]);
 
-  // Transform joined vaults data
-  const myJoinedVaults = useMemo(() => {
-    return joinedVaults.map((vault) => {
-      // Determine if this is a native token vault
-      const isNativeToken = vault.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+  // Transform joined circles data (only active circles with real-time status)
+  const myJoinedCircles = useMemo(() => {
+    return joinedVaultsByStatus.activeVaults.map((circle) => {
+      // Determine if this is a native token circle
+      const isNativeToken = circle.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
       const decimals = isNativeToken ? 18 : 6;
 
       return {
-        id: Number(vault.id),
-        name: vault.name,
-        goal: Number(formatUnits(vault.targetAmount || 0n, decimals)),
-        current: Number(formatUnits(vault.totalDeposited || 0n, decimals)),
-        members: Number(vault.memberCount || 0n),
-        daysLeft: Math.max(0, Math.floor((Number(vault.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
-        status: vault.status === 0 ? "active" : vault.status === 1 ? "completed" : vault.status === 2 ? "failed" : "cancelled"
+        id: Number(circle.id),
+        name: circle.name,
+        goal: Number(formatUnits(circle.targetAmount || 0n, decimals)),
+        current: Number(formatUnits(circle.totalDeposited || 0n, decimals)),
+        members: Number(circle.memberCount || 0n),
+        daysLeft: Math.max(0, Math.floor((Number(circle.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
+        status: "active"
       };
     });
-  }, [joinedVaults]);
+  }, [joinedVaultsByStatus.activeVaults]);
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
@@ -148,23 +165,40 @@ const Dashboard = () => {
 
             {/* My Goals */}
             <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 lg:p-8 rounded-3xl">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-fredoka font-bold text-goal-text">My Goals</h2>
-                <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-fredoka font-bold text-goal-text">My Active Goals</h2>
+                  <p className="text-sm text-goal-text/70 font-inter">Goals currently in progress</p>
+                </div>
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  <Link to="/goals-history">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka font-semibold rounded-full"
+                    >
+                      <History className="w-4 h-4 mr-2" />
+                      View History
+                    </Button>
+                  </Link>
                   <Button
                     onClick={() => {
                       refetch();
                       refetchJoined();
                     }}
                     variant="outline"
-                    className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka font-semibold rounded-full px-4 py-3"
+                    size="sm"
+                    className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka font-semibold rounded-full"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh
                   </Button>
                   <Link to="/create-goal">
-                    <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full px-6 py-3 transition-all duration-300 hover:scale-105">
-                      <Plus className="w-5 h-5 mr-2" />
+                    <Button
+                      size="sm"
+                      className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full transition-all duration-300 hover:scale-105"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
                       Create Goal
                     </Button>
                   </Link>
@@ -175,7 +209,7 @@ const Dashboard = () => {
                 {isLoadingVaults ? (
                   <div className="col-span-full text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-goal-primary mx-auto mb-4"></div>
-                    <p className="text-goal-text/70">Loading your vaults...</p>
+                    <p className="text-goal-text/70">Loading your goals...</p>
                   </div>
                 ) : vaultsError ? (
                   <div className="col-span-full text-center py-8">
@@ -196,7 +230,7 @@ const Dashboard = () => {
                         <p className="text-blue-500 text-sm mb-4">
                           You haven't created any goals yet. Start your savings journey by creating your first goal!
                         </p>
-                        <Link to="/create-vault">
+                        <Link to="/create-goal">
                           <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-6 py-3">
                             Create Your First Goal
                           </Button>
@@ -204,7 +238,7 @@ const Dashboard = () => {
                       </div>
                     )}
                   </div>
-                ) : myVaults.length === 0 ? (
+                ) : myGoals.length === 0 ? (
                   <div className="col-span-full text-center py-12">
                     <div className="bg-goal-accent/30 rounded-2xl p-8 max-w-md mx-auto">
                       <div className="text-6xl mb-4">🎯</div>
@@ -223,7 +257,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  myVaults.map((goal) => (
+                  myGoals.map((goal) => (
                     <VaultCard key={goal.id} vault={goal} />
                   ))
                 )}
@@ -233,11 +267,13 @@ const Dashboard = () => {
             {/* Joined Circles */}
             <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 lg:p-8 rounded-3xl">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <h2 className="text-2xl font-fredoka font-bold text-goal-text">Circles I've Joined</h2>
+                <div>
+                  <h2 className="text-2xl font-fredoka font-bold text-goal-text">Active Circles I've Joined</h2>
+                  <p className="text-sm text-goal-text/70 font-inter">
+                    {myJoinedCircles.length} active circle{myJoinedCircles.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-sm text-goal-text/70 font-inter">
-                    {myJoinedVaults.length} circle{myJoinedVaults.length !== 1 ? 's' : ''}
-                  </div>
                   <Button
                     onClick={() => refetchJoined()}
                     variant="outline"
@@ -278,7 +314,7 @@ const Dashboard = () => {
                       </Button>
                     </div>
                   </div>
-                ) : myJoinedVaults.length === 0 ? (
+                ) : myJoinedCircles.length === 0 ? (
                   <div className="col-span-full text-center py-8 md:py-12">
                     <div className="bg-goal-accent/30 rounded-2xl p-6 md:p-8 max-w-sm md:max-w-md mx-auto">
                       <div className="text-4xl md:text-6xl mb-4">🤝</div>
@@ -294,7 +330,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  myJoinedVaults.map((circle) => (
+                  myJoinedCircles.map((circle) => (
                     <VaultCard key={circle.id} vault={circle} />
                   ))
                 )}
@@ -302,7 +338,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Join Circle Section */}
-            <JoinVaultSection />
+            <JoinGoalSection />
 
             {/* Recent Activity */}
             <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 lg:p-8 rounded-3xl">

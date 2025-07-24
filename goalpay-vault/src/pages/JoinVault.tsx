@@ -21,12 +21,12 @@ const JoinVault = () => {
   const [searchParams] = useSearchParams();
   const [contributionAmount, setContributionAmount] = useState('');
   const [hasJoined, setHasJoined] = useState(false);
-  const [vaultPreview, setVaultPreview] = useState<VaultPreview | null>(null);
-  const [isLoadingVault, setIsLoadingVault] = useState(true);
+  const [goalPreview, setGoalPreview] = useState<VaultPreview | null>(null);
+  const [isLoadingGoal, setIsLoadingGoal] = useState(true);
   const [isNativeToken, setIsNativeToken] = useState(false);
   const { toast } = useToast();
 
-  // Wallet guard for protecting vault joining
+  // Wallet guard for protecting goal joining
   const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
 
   // Invite code hooks
@@ -40,62 +40,62 @@ const JoinVault = () => {
 
   const inviteCode = searchParams.get('invite');
 
-  // Load vault data when component mounts
+  // Load goal data when component mounts
   useEffect(() => {
-    const loadVaultData = async () => {
+    const loadGoalData = async () => {
       if (!inviteCode) {
         toast({
           title: 'Missing Invite Code',
           description: 'No invite code provided in the URL.',
           variant: 'destructive',
         });
-        setIsLoadingVault(false);
+        setIsLoadingGoal(false);
         return;
       }
 
       try {
-        setIsLoadingVault(true);
+        setIsLoadingGoal(true);
         const preview = await validateInviteCode(inviteCode);
         if (preview) {
-          setVaultPreview(preview);
+          setGoalPreview(preview);
         } else {
           toast({
             title: 'Invalid Invite Code',
-            description: 'The invite code is invalid or the vault does not exist.',
+            description: 'The invite code is invalid or the goal does not exist.',
             variant: 'destructive',
           });
         }
       } catch (error) {
-        console.error('Error loading vault:', error);
+        console.error('Error loading goal:', error);
         toast({
-          title: 'Error Loading Vault',
-          description: 'Failed to load vault information.',
+          title: 'Error Loading Goal',
+          description: 'Failed to load goal information.',
           variant: 'destructive',
         });
       } finally {
-        setIsLoadingVault(false);
+        setIsLoadingGoal(false);
       }
     };
 
-    loadVaultData();
+    loadGoalData();
   }, [inviteCode, validateInviteCode, toast]);
 
-  // Mock vault data for fallback (will be replaced by real data)
-  const vault = vaultPreview ? {
-    id: Number(vaultPreview.id),
-    name: vaultPreview.name,
-    description: vaultPreview.description,
-    goal: Number(formatUnits(vaultPreview.targetAmount || 0n, 6)),
-    current: Number(formatUnits(vaultPreview.currentAmount || 0n, 6)),
+  // Mock goal data for fallback (will be replaced by real data)
+  const goal = goalPreview ? {
+    id: Number(goalPreview.id),
+    name: goalPreview.name,
+    description: goalPreview.description,
+    goal: Number(formatUnits(goalPreview.targetAmount || 0n, 6)),
+    current: Number(formatUnits(goalPreview.currentAmount || 0n, 6)),
     members: [], // Would need to fetch member data separately
-    daysLeft: Math.max(0, Math.floor((Number(vaultPreview.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
-    creator: vaultPreview.creator,
-    isPublic: vaultPreview.isPublic,
+    daysLeft: Math.max(0, Math.floor((Number(goalPreview.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
+    creator: goalPreview.creator,
+    isPublic: goalPreview.isPublic,
     yieldRate: "8% APY"
   } : {
     id: 1,
     name: "Loading...",
-    description: "Loading vault information...",
+    description: "Loading goal information...",
     goal: 0,
     current: 0,
     members: [],
@@ -109,11 +109,11 @@ const JoinVault = () => {
     return Math.min((current / goal) * 100, 100);
   };
 
-  const handleJoinVault = async () => {
-    if (!inviteCode || !vaultPreview) {
+  const handleJoinGoal = async () => {
+    if (!inviteCode || !goalPreview) {
       toast({
-        title: 'Cannot Join Vault',
-        description: 'Vault information is not loaded yet.',
+        title: 'Cannot Join Goal',
+        description: 'Goal information is not loaded yet.',
         variant: 'destructive',
       });
       return;
@@ -121,11 +121,11 @@ const JoinVault = () => {
 
     // Use wallet guard to check connection and show dialog if needed
     requireWalletConnection(async () => {
-      await performVaultJoin();
+      await performGoalJoin();
     });
   };
 
-  const performVaultJoin = async () => {
+  const performGoalJoin = async () => {
     if (!inviteCode) return;
 
     try {
@@ -151,23 +151,23 @@ const JoinVault = () => {
 
       setHasJoined(true);
     } catch (error) {
-      console.error('Error joining vault:', error);
+      console.error('Error joining goal:', error);
       // Error handling is done in the hook
     }
   };
 
   // Loading state
-  if (isLoadingVault) {
+  if (isLoadingGoal) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-goal-primary" />
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">
-              Loading Vault...
+              Loading Goal...
             </h2>
             <p className="font-inter text-goal-text/80">
-              Please wait while we load the vault information.
+              Please wait while we load the goal information.
             </p>
           </Card>
         </main>
@@ -176,17 +176,17 @@ const JoinVault = () => {
     );
   }
 
-  // Error state - no vault found
-  if (!vaultPreview) {
+  // Error state - no goal found
+  if (!goalPreview) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">
-              Vault Not Found
+              Goal Not Found
             </h2>
             <p className="font-inter text-goal-text/80 mb-4">
-              The invite code is invalid or the vault does not exist.
+              The invite code is invalid or the goal does not exist.
             </p>
             <Button
               onClick={() => window.location.href = '/dashboard'}
@@ -213,19 +213,19 @@ const JoinVault = () => {
             </div>
 
             <h1 className="text-2xl font-fredoka font-bold text-goal-text mb-4">
-              🎉 Welcome to the Vault!
+              🎉 Welcome to the Goal!
             </h1>
 
             <p className="font-inter text-goal-text/80 mb-6">
-              You've successfully joined "{vault.name}"!
+              You've successfully joined "{goal.name}"!
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                onClick={() => window.location.href = `/vault/${id}`}
+                onClick={() => window.location.href = `/goal/${id}`}
                 className="flex-1 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl px-6 py-3"
               >
-                View Vault
+                View Goal
               </Button>
               <Button
                 onClick={() => window.location.href = '/dashboard'}
@@ -256,14 +256,14 @@ const JoinVault = () => {
           <span className="font-inter font-medium">Back to Community</span>
         </Link>
 
-        {/* Vault Info */}
+        {/* Goal Info */}
         <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl mb-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text mb-4">
-              {vault.name}
+              {goal.name}
             </h1>
             <p className="font-inter text-goal-text/80 mb-4">
-              {vault.description}
+              {goal.description}
             </p>
 
             {inviteCode && (
@@ -285,20 +285,20 @@ const JoinVault = () => {
           <div className="space-y-3 mb-6">
             <div className="flex justify-between items-center">
               <span className="font-inter text-xl font-bold text-goal-text">
-                ${vault.current.toLocaleString()}
+                ${goal.current.toLocaleString()}
               </span>
               <span className="font-inter text-goal-text/80 font-medium">
-                of ${vault.goal.toLocaleString()}
+                of ${goal.goal.toLocaleString()}
               </span>
             </div>
             <div className="w-full bg-goal-accent rounded-full h-3">
               <div
                 className="bg-goal-primary h-3 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min(getProgressPercentage(vault.current, vault.goal), 100)}%` }}
+                style={{ width: `${Math.min(getProgressPercentage(goal.current, goal.goal), 100)}%` }}
               />
             </div>
             <p className="font-inter text-sm text-goal-text font-medium text-center">
-              {Math.round(getProgressPercentage(vault.current, vault.goal))}% complete
+              {Math.round(getProgressPercentage(goal.current, goal.goal))}% complete
             </p>
           </div>
 
@@ -308,14 +308,14 @@ const JoinVault = () => {
               <div className="w-10 h-10 bg-goal-accent rounded-2xl flex items-center justify-center mx-auto mb-2">
                 <Users className="w-5 h-5 text-goal-text" />
               </div>
-              <p className="font-inter text-lg font-bold text-goal-text">{vault.members.length}</p>
+              <p className="font-inter text-lg font-bold text-goal-text">{goal.members.length}</p>
               <p className="font-inter text-xs text-goal-text/70">Members</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 bg-goal-primary rounded-2xl flex items-center justify-center mx-auto mb-2">
                 <Calendar className="w-5 h-5 text-goal-text" />
               </div>
-              <p className="font-inter text-lg font-bold text-goal-text">{vault.daysLeft}</p>
+              <p className="font-inter text-lg font-bold text-goal-text">{goal.daysLeft}</p>
               <p className="font-inter text-xs text-goal-text/70">Days Left</p>
             </div>
             <div className="text-center">
@@ -323,7 +323,7 @@ const JoinVault = () => {
                 <Target className="w-5 h-5 text-goal-text" />
               </div>
               <p className="font-inter text-lg font-bold text-goal-text">
-                ${(vault.goal - vault.current).toLocaleString()}
+                ${(goal.goal - goal.current).toLocaleString()}
               </p>
               <p className="font-inter text-xs text-goal-text/70">Needed</p>
             </div>
@@ -333,7 +333,7 @@ const JoinVault = () => {
           <div className="mb-6">
             <h3 className="font-fredoka font-semibold text-goal-text mb-3">Current Members</h3>
             <div className="flex flex-wrap gap-2">
-              {vault.members.map((member) => (
+              {goal.members.map((member) => (
                 <div key={member.id} className="flex items-center space-x-2 bg-goal-accent/30 px-3 py-2 rounded-full">
                   <Avatar className="w-6 h-6 bg-goal-primary">
                     <AvatarFallback className="text-goal-text font-fredoka font-semibold text-xs">
@@ -351,7 +351,7 @@ const JoinVault = () => {
         {/* Join Form */}
         <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
           <h2 className="font-fredoka font-bold text-goal-text text-xl mb-6 text-center">
-            Join This Vault
+            Join This Goal
           </h2>
           
           <div className="space-y-4">
@@ -404,25 +404,25 @@ const JoinVault = () => {
                 <h4 className="font-inter font-semibold text-goal-text">Savings Information</h4>
               </div>
               <p className="font-inter text-sm text-goal-text/70">
-                Join this collaborative savings vault and work together to reach the goal.
+                Join this collaborative savings goal and work together to reach the target.
                 Yield features are coming soon to help grow your savings even more!
               </p>
             </div>
 
             <Button
-              onClick={handleJoinVault}
+              onClick={handleJoinGoal}
               disabled={!contributionAmount || parseFloat(contributionAmount) <= 0 || isJoining}
               className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold text-lg py-4 rounded-2xl transition-all duration-200 hover:scale-[1.02] disabled:hover:scale-100 shadow-lg"
             >
               {isJoining ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
-                  <span>Joining Vault...</span>
+                  <span>Joining Goal...</span>
                 </div>
               ) : (
                 <>
                   <Plus className="w-5 h-5 mr-2" />
-                  Join Vault with {contributionAmount || '0'} {isNativeToken ? 'ETH/MNT' : 'USDC'}
+                  Join Goal with {contributionAmount || '0'} {isNativeToken ? 'ETH/MNT' : 'USDC'}
                 </>
               )}
             </Button>
@@ -436,9 +436,9 @@ const JoinVault = () => {
       <WalletGuardDialog
         isOpen={showConnectDialog}
         onOpenChange={setShowConnectDialog}
-        title="Connect Wallet to Join Vault"
-        description="You need to connect your wallet to join this savings vault. Connect now to start contributing to your shared goal!"
-        actionText="Join Vault"
+        title="Connect Wallet to Join Goal"
+        description="You need to connect your wallet to join this savings goal. Connect now to start contributing to your shared goal!"
+        actionText="Join Goal"
       />
     </div>
   );

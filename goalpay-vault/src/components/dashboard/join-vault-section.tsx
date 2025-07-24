@@ -12,9 +12,9 @@ import { Users, Target, Calendar, Loader2, Search, UserPlus } from 'lucide-react
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
 
-export const JoinVaultSection = () => {
+export const JoinGoalSection = () => {
   const [inviteCode, setInviteCode] = useState('');
-  const [vaultPreview, setVaultPreview] = useState<VaultPreview | null>(null);
+  const [goalPreview, setGoalPreview] = useState<VaultPreview | null>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [isNativeToken, setIsNativeToken] = useState(false);
   
@@ -43,8 +43,8 @@ export const JoinVaultSection = () => {
     try {
       const preview = await validateInviteCode(inviteCode.trim());
       if (preview) {
-        setVaultPreview(preview);
-        // Show personal goal input for PERSONAL type vaults (you'd need to check vault type)
+        setGoalPreview(preview);
+        // Show personal goal input for PERSONAL type goals (you'd need to check goal type)
         // For now, we'll show it if targetAmount is 0 (indicating PERSONAL type)
         setShowPersonalGoal(preview.targetAmount === 0n);
       } else {
@@ -59,9 +59,9 @@ export const JoinVaultSection = () => {
     }
   };
 
-  const handleJoinVault = () => {
+  const handleJoinGoal = () => {
     requireWalletConnection(async () => {
-      if (!vaultPreview) return;
+      if (!goalPreview) return;
 
       if (!depositAmount || parseFloat(depositAmount) <= 0) {
         toast({
@@ -85,12 +85,12 @@ export const JoinVaultSection = () => {
 
         // Reset form
         setInviteCode('');
-        setVaultPreview(null);
+        setGoalPreview(null);
         setDepositAmount('');
         setIsNativeToken(false);
 
       } catch (error) {
-        console.error('Error joining vault:', error);
+        console.error('Error joining goal:', error);
       }
     });
   };
@@ -168,17 +168,17 @@ export const JoinVaultSection = () => {
           </div>
 
           {/* Circle Preview */}
-          {vaultPreview && (
+          {goalPreview && (
             <Card className="bg-goal-accent/20 border-goal-border/40 p-6 rounded-2xl">
               <div className="space-y-4">
                 {/* Circle Header */}
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-fredoka font-bold text-lg text-goal-text">
-                      {vaultPreview.name}
+                      {goalPreview.name}
                     </h3>
                     <p className="text-goal-text/70 text-sm mt-1">
-                      {vaultPreview.description}
+                      {goalPreview.description}
                     </p>
                   </div>
                   <Badge className="bg-green-100 text-green-800 border-green-200">
@@ -193,8 +193,8 @@ export const JoinVaultSection = () => {
                       <Target className="w-4 h-4" />
                     </div>
                     <div className="text-sm font-bold text-goal-text">
-                      {vaultPreview.targetAmount > 0n 
-                        ? formatCurrency(vaultPreview.targetAmount)
+                      {goalPreview.targetAmount > 0n
+                        ? formatCurrency(goalPreview.targetAmount)
                         : 'Personal Goals'
                       }
                     </div>
@@ -206,7 +206,7 @@ export const JoinVaultSection = () => {
                       <Users className="w-4 h-4" />
                     </div>
                     <div className="text-sm font-bold text-goal-text">
-                      {Number(vaultPreview.memberCount)}
+                      {Number(goalPreview.memberCount)}
                     </div>
                     <div className="text-xs text-goal-text/60">Members</div>
                   </div>
@@ -216,23 +216,23 @@ export const JoinVaultSection = () => {
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div className="text-sm font-bold text-goal-text">
-                      {getDaysLeft(vaultPreview.deadline)}
+                      {getDaysLeft(goalPreview.deadline)}
                     </div>
                     <div className="text-xs text-goal-text/60">Days Left</div>
                   </div>
                 </div>
 
                 {/* Progress Bar (only for GROUP type circles) */}
-                {vaultPreview.targetAmount > 0n && (
+                {goalPreview.targetAmount > 0n && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-goal-text/70">Progress</span>
                       <span className="font-medium text-goal-text">
-                        {formatCurrency(vaultPreview.currentAmount)} / {formatCurrency(vaultPreview.targetAmount)}
+                        {formatCurrency(goalPreview.currentAmount)} / {formatCurrency(goalPreview.targetAmount)}
                       </span>
                     </div>
-                    <Progress 
-                      value={calculateProgress(vaultPreview.currentAmount, vaultPreview.targetAmount)} 
+                    <Progress
+                      value={calculateProgress(goalPreview.currentAmount, goalPreview.targetAmount)}
                       className="h-2 bg-goal-accent/30"
                     />
                   </div>
@@ -281,9 +281,9 @@ export const JoinVaultSection = () => {
 
                 {/* Join Button */}
                 <Button
-                  onClick={handleJoinVault}
+                  onClick={handleJoinGoal}
                   disabled={isJoining || !depositAmount}
-                  className="w-full bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold rounded-2xl py-3"
+                  className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-text-primary font-fredoka font-semibold rounded-2xl py-3"
                 >
                   {isJoining ? (
                     <>

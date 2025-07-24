@@ -12,7 +12,7 @@ export const MONTHLY_SUMMARY = {
   goalsReached: 2
 };
 
-export const MOCK_VAULTS = [
+export const MOCK_GOALS = [
   {
     id: 1,
     name: "Summer Vacation Fund 🏖️",

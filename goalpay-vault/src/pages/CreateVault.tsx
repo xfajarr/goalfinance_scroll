@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
+import { useAccount, useQueryClient } from 'wagmi';
 import { parseUnits } from 'viem';
 
 import BottomNavigation from '@/components/BottomNavigation';
@@ -32,7 +32,7 @@ const CreateVault = () => {
     reset
   } = useCreateVault();
 
-  // Wallet guard for protecting vault creation
+  // Wallet guard for protecting goal creation
   const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
 
   const [formData, setFormData] = useState({
@@ -45,32 +45,32 @@ const CreateVault = () => {
     goalType: 'group', // Changed from apyTier to goalType
     tokenType: 'usdc' // 'usdc' or 'native'
   });
-  const [vaultCreated, setVaultCreated] = useState(false);
+  const [goalCreated, setGoalCreated] = useState(false);
   const [shareLink, setShareLink] = useState('');
 
-  // Watch for successful vault creation
+  // Watch for successful goal creation
   useEffect(() => {
     console.log('🔍 Success state check:', { isSuccess, vaultId, txHash, inviteCode });
 
     if (isSuccess && txHash) {
-      // Show immediate success notification even if vault ID is not yet available
-      if (!vaultCreated) {
+      // Show immediate success notification even if goal ID is not yet available
+      if (!goalCreated) {
         console.log('🎉 Transaction confirmed! Setting up success state...');
 
-        // Set vault created state immediately
-        setVaultCreated(true);
+        // Set goal created state immediately
+        setGoalCreated(true);
 
-        // Generate share link (use vault ID if available, otherwise use transaction hash)
+        // Generate share link (use goal ID if available, otherwise use transaction hash)
         const link = vaultId
           ? `${window.location.origin}/join/${vaultId}`
-          : `${window.location.origin}/vault/tx/${txHash}`;
+          : `${window.location.origin}/join/tx/${txHash}`;
         setShareLink(link);
 
         // Show success toast with transaction info
-        toast('🎉 Vault Created Successfully!', {
+        toast('🎉 Goal Created Successfully!', {
           description: (
             <div className="space-y-3">
-              <p className="font-semibold text-green-800">Your vault has been created and is ready to use!</p>
+              <p className="font-semibold text-green-800">Your goal has been created and is ready to use!</p>
               {vaultId && (
                 <div className="text-sm text-gray-600">
                   <strong>Vault ID:</strong> {vaultId.toString()}
@@ -85,7 +85,7 @@ const CreateVault = () => {
                     {inviteCode}
                   </div>
                   <div className="text-xs text-blue-600 mt-1">
-                    💡 Friends can use this code to join your vault!
+                    💡 Friends can use this code to join your goal!
                   </div>
                 </div>
               )}
@@ -126,16 +126,16 @@ const CreateVault = () => {
         }, 500);
       }
     }
-  }, [isSuccess, vaultId, txHash, inviteCode, vaultCreated]);
+  }, [isSuccess, vaultId, txHash, inviteCode, goalCreated]);
 
   // Watch for errors and display them
   useEffect(() => {
     if (error) {
-      console.error('❌ Vault creation error:', error);
-      toast('❌ Vault Creation Failed', {
+      console.error('❌ Goal creation error:', error);
+      toast('❌ Goal Creation Failed', {
         description: (
           <div className="space-y-2">
-            <p className="font-medium">Failed to create vault</p>
+            <p className="font-medium">Failed to create goal</p>
             <p className="text-sm text-gray-600">{error.message}</p>
             <p className="text-xs text-gray-500">Please check your wallet connection and try again.</p>
           </div>
@@ -147,17 +147,17 @@ const CreateVault = () => {
 
   // Debug logging for state changes
   useEffect(() => {
-    console.log('🔍 CreateVault state update:', {
+    console.log('🔍 CreateGoal state update:', {
       isLoading,
       isConfirming,
       isSuccess,
-      vaultCreated,
+      goalCreated,
       txHash: txHash ? `${txHash.slice(0, 10)}...` : null,
       vaultId: vaultId?.toString(),
       inviteCode: inviteCode ? `${inviteCode.slice(0, 10)}...` : null,
       error: error?.message
     });
-  }, [isLoading, isConfirming, isSuccess, vaultCreated, txHash, vaultId, inviteCode, error]);
+  }, [isLoading, isConfirming, isSuccess, goalCreated, txHash, vaultId, inviteCode, error]);
 
   const categories = [
     { value: 'travel', label: 'Travel & Adventure', emoji: '✈️' },
@@ -202,11 +202,11 @@ const CreateVault = () => {
 
     // Use wallet guard to check connection and show dialog if needed
     requireWalletConnection(async () => {
-      await performVaultCreation();
+      await performGoalCreation();
     });
   };
 
-  const performVaultCreation = async () => {
+  const performGoalCreation = async () => {
     try {
       const deadlineDate = new Date(formData.deadline);
       const goalType = getGoalTypeFromString(formData.goalType);
@@ -231,8 +231,8 @@ const CreateVault = () => {
         throw new Error(`${formData.tokenType === 'native' ? 'Native token' : 'USDC'} is not supported on this chain`);
       }
 
-      console.log('🚀 Starting vault creation with params:', {
-        vaultName: formData.name,
+      console.log('🚀 Starting goal creation with params:', {
+        goalName: formData.name,
         description: formData.description,
         targetAmount: formData.goal || '0',
         deadline: deadlineDate,
@@ -243,10 +243,10 @@ const CreateVault = () => {
       });
 
       // Show immediate feedback that transaction is being processed
-      toast('🚀 Creating Your Vault...', {
-        description: 'Please confirm the transaction in your wallet and wait for confirmation.',
-        duration: 5000,
-      });
+      // toast('🚀 Creating Your Goal...', {
+      //   description: 'Please confirm the transaction in your wallet and wait for confirmation.',
+      //   duration: 5000,
+      // });
 
       await createVault({
         vaultName: formData.name,
@@ -259,20 +259,20 @@ const CreateVault = () => {
         penaltyRate: 2 // Default 2% penalty rate
       });
 
-      console.log('✅ Vault creation transaction submitted successfully!');
+      console.log('✅ Goal creation transaction submitted successfully!');
 
     } catch (error) {
-      console.error('Failed to create vault:', error);
+      console.error('Failed to create goal:', error);
 
       // Show error toast
-      toast('❌ Vault Creation Failed', {
-        description: error instanceof Error ? error.message : 'Failed to create vault. Please try again.',
+      toast('❌ Goal Creation Failed', {
+        description: error instanceof Error ? error.message : 'Failed to create goal. Please try again.',
         duration: 8000,
       });
     }
   };
 
-  if (vaultCreated) {
+  if (goalCreated) {
     
     return (
       <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
@@ -284,20 +284,20 @@ const CreateVault = () => {
             </div>
 
             <h1 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-heading mb-4">
-              🎉 Vault Created Successfully!
+              🎉 Goal Created Successfully!
             </h1>
 
             <p className="font-inter text-base md:text-lg text-goal-text-secondary mb-6 leading-relaxed">
-              Your "{formData.name}" vault is ready! Start inviting friends to save together.
+              Your "{formData.name}" goal is ready! Start inviting friends to save together.
             </p>
 
-            {/* Vault Details */}
+            {/* Goal Details */}
             <div className="bg-goal-accent/10 p-4 rounded-2xl mb-6 text-left">
-              <h3 className="font-fredoka font-bold text-goal-text mb-3">📊 Vault Details</h3>
+              <h3 className="font-fredoka font-bold text-goal-text mb-3">📊 Goal Details</h3>
               <div className="space-y-2 text-sm">
                 {vaultId && (
                   <div className="flex justify-between">
-                    <span className="text-goal-text/70">Vault ID:</span>
+                    <span className="text-goal-text/70">Goal ID:</span>
                     <span className="font-mono font-semibold text-goal-text">{vaultId.toString()}</span>
                   </div>
                 )}
@@ -361,10 +361,16 @@ const CreateVault = () => {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                onClick={() => navigate(`/vault/${vaultId}`)}
+                onClick={() => {
+                  if (vaultId) {
+                    navigate(`/goal/${vaultId}`);
+                  } else {
+                    navigate('/dashboard');
+                  }
+                }}
                 className="flex-1 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-2xl px-6 py-3"
               >
-                View My Vault
+                View My Goal
               </Button>
               <Button
                 onClick={() => navigate('/dashboard')}
@@ -375,7 +381,7 @@ const CreateVault = () => {
               </Button>
               <Button
                 onClick={() => {
-                  setVaultCreated(false);
+                  setGoalCreated(false);
                   setFormData({
                     name: '',
                     description: '',
@@ -419,7 +425,7 @@ const CreateVault = () => {
          
 
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-fredoka font-bold text-goal-text leading-tight mb-4">
-            Create Your Dream Vault
+            Create Your Dream Goal
           </h1>
           <p className="font-inter text-base md:text-lg text-goal-text/70 max-w-2xl mx-auto leading-relaxed">
             Turn your dreams into reality! Set your goal, invite friends, and watch your savings grow together
@@ -444,7 +450,7 @@ const CreateVault = () => {
           {/* Cute background decorations */}
 
           <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-            {/* Vault Name */}
+            {/* Goal Name */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
@@ -468,7 +474,7 @@ const CreateVault = () => {
 
               </div>
               <p className="font-inter text-xs text-goal-text/60 ml-8">
-                Give your vault a fun, memorable name that inspires you!
+                Give your goal a fun, memorable name that inspires you!
               </p>
             </div>
 
@@ -785,19 +791,19 @@ const CreateVault = () => {
                       {formData.isPublic ? (
                         <>
                           <Globe className="w-5 h-5 mr-2 text-blue-500" />
-                          Public Vault - Everyone can join!
+                          Public Goal - Everyone can join!
                         </>
                       ) : (
                         <>
                           <Lock className="w-5 h-5 mr-2 text-gray-500" />
-                          Private Vault - Invite only
+                          Private Goal - Invite only
                         </>
                       )}
                     </label>
                     <p className="font-inter text-sm text-goal-text/70 leading-relaxed">
                       {formData.isPublic
-                        ? "Your vault will appear in the community page for others to discover and join!"
-                        : "Only people with your special invite link can join your vault."
+                        ? "Your goal will appear in the community page for others to discover and join!"
+                        : "Only people with your special invite link can join your goal."
                       }
                     </p>
                   </div>
@@ -864,7 +870,7 @@ const CreateVault = () => {
                   ) : isLoading ? (
                     <div className="flex items-center justify-center space-x-2">
                       <div className="w-5 h-5 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
-                      <span>Creating your vault...</span>
+                      <span>Creating your goal...</span>
                     </div>
                   ) : isConfirming ? (
                     <div className="flex items-center justify-center space-x-2">
@@ -874,7 +880,7 @@ const CreateVault = () => {
                   ) : (
                     <div className="flex items-center justify-center">
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Create My Dream Vault!
+                      Create My Dream Goal!
                     </div>
                   )}
                 </div>
@@ -896,7 +902,7 @@ const CreateVault = () => {
                   Ready to invite friends?
                 </h3>
                 <p className="font-inter text-goal-text/70 text-sm leading-relaxed">
-                  After creating your vault, you'll get a magical shareable link!
+                  After creating your goal, you'll get a magical shareable link!
                   Invite friends and family to join your savings adventure!
                 </p>
               </div>
@@ -916,7 +922,7 @@ const CreateVault = () => {
                   Watch your savings grow!
                 </h3>
                 <p className="font-inter text-goal-text/70 text-sm leading-relaxed">
-                  Your vault will earn yield while you save! Track progress together
+                  Your goal will earn yield while you save! Track progress together
                   and celebrate milestones as a team!
                 </p>
               </div>
@@ -931,9 +937,9 @@ const CreateVault = () => {
       <WalletGuardDialog
         isOpen={showConnectDialog}
         onOpenChange={setShowConnectDialog}
-        title="Connect Wallet to Create Vault"
-        description="You need to connect your wallet to create a savings vault. Connect now to start building your financial goals!"
-        actionText="Create Vault"
+        title="Connect Wallet to Create Goal"
+        description="You need to connect your wallet to create a savings goal. Connect now to start building your financial goals!"
+        actionText="Create Goal"
       />
     </div>
   );

@@ -56,7 +56,7 @@ class VaultErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
                 Something went wrong
               </h2>
               <p className="font-inter text-goal-text/70 mb-6">
-                We're sorry, but there was an error loading this vault.
+                We're sorry, but there was an error loading this goal.
                 Please try refreshing the page.
               </p>
               <Button 
@@ -77,9 +77,11 @@ class VaultErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 }
 
 const VaultDetailContent = () => {
-  const { id } = useParams();
-  if (!id) {
-    throw new Error('No vault ID provided');
+  const { id, txHash } = useParams();
+
+  // Handle both goal ID and transaction hash routes
+  if (!id && !txHash) {
+    throw new Error('No goal ID or transaction hash provided');
   }
 
   const [newMessage, setNewMessage] = useState('');
@@ -90,22 +92,46 @@ const VaultDetailContent = () => {
     { id: 4, user: "Emma", message: "Can't wait to hit the beaches!", timestamp: "3 days ago", avatar: "E" }
   ]);
 
-  // Parse vault ID from URL params
+  // Parse goal ID from URL params (if txHash is provided, we'll need to look up the goal ID)
   const vaultId = id ? BigInt(id) : 0n;
 
-  // Fetch vault data using the hook
+  // Fetch goal data using the hook
   const { vault, members, isLoading, error, refetch } = useVaultData(vaultId);
 
-  // Get real-time vault status using checkVaultStatus function
+  // Get real-time goal status using checkVaultStatus function
   const {
     data: realTimeStatus,
     isLoading: isLoadingStatus,
     error: statusError
   } = useCheckVaultStatus(vaultId > 0n ? vaultId : undefined);
 
-  // Handle vault loading errors gracefully
+  // TODO: If txHash is provided, we should look up the goal ID from the transaction
+  // For now, show a message that the goal is being loaded
+  if (txHash && !id) {
+    return (
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
+            <div className="w-12 h-12 border-2 border-goal-primary/30 border-t-goal-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-xl font-fredoka font-bold text-goal-text mb-4">
+              Loading Goal...
+            </h2>
+            <p className="font-inter text-goal-text/70 mb-6">
+              We're looking up your goal from the transaction hash. This may take a moment.
+            </p>
+            <p className="font-mono text-sm text-goal-text/50 break-all">
+              Transaction: {txHash}
+            </p>
+          </Card>
+        </main>
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  // Handle goal loading errors gracefully
   if (error) {
-    console.error('Vault loading error:', error.message);
+    console.error('Goal loading error:', error.message);
   }
 
   // Debug logging for status checking
@@ -118,7 +144,7 @@ const VaultDetailContent = () => {
   const safeVault = vault ?? {
     id: vaultId,
     name: "Loading...",
-    description: "Loading vault details...",
+    description: "Loading goal details...",
     creator: "0x0000000000000000000000000000000000000000",
     token: "0x0000000000000000000000000000000000000000",
     goalType: 0,
@@ -134,7 +160,7 @@ const VaultDetailContent = () => {
 
   const safeMembers = members ?? [];
 
-  // Cast to proper vault type
+  // Cast to proper goal type
   const vaultData = safeVault as any;
   const isNativeToken = vaultData.config?.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
   const decimals = isNativeToken ? 18 : 6;
@@ -148,7 +174,7 @@ const VaultDetailContent = () => {
       realTimeStatus,
       storedStatus: safeVault.status,
       currentStatus,
-      vaultId: Number(vaultData.id)
+      goalId: Number(vaultData.id)
     });
 
     // Map contract status enum to display status
@@ -165,9 +191,9 @@ const VaultDetailContent = () => {
     }
   };
 
-  const displayVault = {
+  const displayGoal = {
     id: Number(vaultData.id),
-    name: vaultData.config?.name || 'Unknown Vault',
+    name: vaultData.config?.name || 'Unknown Goal',
     description: vaultData.config?.description || 'No description',
     goal: Number(formatUnits(vaultData.config?.targetAmount || 0n, decimals)),
     current: Number(formatUnits(vaultData.totalDeposited || 0n, decimals)),
@@ -219,11 +245,11 @@ const VaultDetailContent = () => {
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-4">
-              Vault Not Found
+              Goal Not Found
             </h2>
             <p className="font-inter text-goal-text/70 mb-6">
-              This vault may have been created with an older contract version or doesn't exist.
-              Please create a new vault or check the vault ID.
+              This goal may have been created with an older contract version or doesn't exist.
+              Please create a new goal or check the goal ID.
             </p>
             <Button onClick={refetch} className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3">
               Try Again
@@ -264,7 +290,7 @@ const VaultDetailContent = () => {
 
 
 
-        {/* Vault Header */}
+        {/* Goal Header */}
         <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl p-6 md:p-8 mb-6 md:mb-8">
           <div className="space-y-6">
             {/* Title and Status */}
@@ -272,26 +298,26 @@ const VaultDetailContent = () => {
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-3">
                   <h1 className="text-2xl md:text-3xl lg:text-4xl font-fredoka font-bold text-goal-text">
-                    {displayVault.name}
+                    {displayGoal.name}
                   </h1>
                   <div className="flex items-center gap-2">
-                    <VaultStatusBadge status={displayVault.status} size="md" />
+                    <VaultStatusBadge status={displayGoal.status} size="md" />
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
                         refetch();
-                        console.log('🔄 Refreshing vault status...');
+                        console.log('🔄 Refreshing goal status...');
                       }}
                       className="h-8 w-8 p-0 text-goal-text/60 hover:text-goal-text hover:bg-goal-accent/20"
-                      title="Refresh vault status"
+                      title="Refresh goal status"
                     >
                       <RefreshCw className={`h-4 w-4 ${isLoadingStatus ? 'animate-spin' : ''}`} />
                     </Button>
                   </div>
                 </div>
                 <p className="font-inter text-goal-text/80 text-base md:text-lg leading-relaxed">
-                  {displayVault.description}
+                  {displayGoal.description}
                 </p>
               </div>
 
@@ -302,26 +328,26 @@ const VaultDetailContent = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-baseline">
                   <span className="font-inter text-2xl md:text-3xl font-bold text-goal-text">
-                    ${displayVault.current.toLocaleString()}
+                    ${displayGoal.current.toLocaleString()}
                   </span>
                   <span className="font-inter text-goal-text/70 text-base md:text-lg font-medium">
-                    of ${displayVault.goal.toLocaleString()}
+                    of ${displayGoal.goal.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="w-full bg-goal-accent/50 rounded-full h-3 md:h-4">
                   <div
                     className="bg-gradient-to-r from-goal-primary to-goal-primary/80 h-3 md:h-4 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${Math.min(getProgressPercentage(displayVault.current, displayVault.goal), 100)}%` }}
+                    style={{ width: `${Math.min(getProgressPercentage(displayGoal.current, displayGoal.goal), 100)}%` }}
                   />
                 </div>
 
                 <div className="flex justify-between items-center">
                   <p className="font-inter text-sm md:text-base text-goal-text/70 font-medium">
-                    {Math.round(getProgressPercentage(displayVault.current, displayVault.goal))}% complete
+                    {Math.round(getProgressPercentage(displayGoal.current, displayGoal.goal))}% complete
                   </p>
                   <p className="font-inter text-sm md:text-base text-goal-text/70 font-medium">
-                    ${(displayVault.goal - displayVault.current).toLocaleString()} to go
+                    ${(displayGoal.goal - displayGoal.current).toLocaleString()} to go
                   </p>
                 </div>
               </div>
@@ -331,10 +357,10 @@ const VaultDetailContent = () => {
               <div className="flex flex-col sm:flex-row gap-3 sm:ml-6">
                 <AddFundsDialog
                   vaultId={vaultId}
-                  vaultName={displayVault.name}
-                  currentAmount={displayVault.current}
-                  goalAmount={displayVault.goal}
-                  yieldRate={displayVault.yieldRate}
+                  vaultName={displayGoal.name}
+                  currentAmount={displayGoal.current}
+                  goalAmount={displayGoal.goal}
+                  yieldRate={displayGoal.yieldRate}
                 >
                   <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3 transition-all duration-300 hover:scale-105 shadow-sm">
                     <Plus className="w-5 h-5 mr-2" />
@@ -344,7 +370,7 @@ const VaultDetailContent = () => {
 
                 <WithdrawDialog
                   vaultId={vaultId}
-                  vaultName={displayVault.name}
+                  vaultName={displayGoal.name}
                 >
                   <Button variant="outline" className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 py-3 transition-all duration-300 hover:scale-105">
                     <ArrowDownToLine className="w-5 h-5 mr-2" />
@@ -354,8 +380,8 @@ const VaultDetailContent = () => {
 
                 <ShareVaultDialog
                   vaultId={vaultId}
-                  vaultName={displayVault.name}
-                  vaultDescription={displayVault.description}
+                  vaultName={displayGoal.name}
+                  vaultDescription={displayGoal.description}
                 >
                   <Button variant="outline" className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 py-3 transition-all duration-300 hover:scale-105">
                     <Share2 className="w-5 h-5 mr-2" />
@@ -374,7 +400,7 @@ const VaultDetailContent = () => {
                 <Calendar className="w-4 h-4 md:w-6 md:h-6 text-goal-text" />
               </div>
               <div className="text-center md:text-left">
-                <p className="font-inter text-lg md:text-2xl font-bold text-goal-text">{displayVault.daysLeft}</p>
+                <p className="font-inter text-lg md:text-2xl font-bold text-goal-text">{displayGoal.daysLeft}</p>
                 <p className="font-inter text-xs md:text-sm text-goal-text font-medium">Days Left</p>
               </div>
             </div>
@@ -386,7 +412,7 @@ const VaultDetailContent = () => {
                 <Users className="w-4 h-4 md:w-6 md:h-6 text-goal-text" />
               </div>
               <div className="text-center md:text-left">
-                <p className="font-inter text-lg md:text-2xl font-bold text-goal-text">{displayVault.members.length}</p>
+                <p className="font-inter text-lg md:text-2xl font-bold text-goal-text">{displayGoal.members.length}</p>
                 <p className="font-inter text-xs md:text-sm text-goal-text font-medium">Members</p>
               </div>
             </div>
@@ -399,7 +425,7 @@ const VaultDetailContent = () => {
               </div>
               <div className="text-center md:text-left">
                 <p className="font-inter text-base md:text-2xl font-bold text-goal-text">
-                  ${(displayVault.goal - displayVault.current).toLocaleString()}
+                  ${(displayGoal.goal - displayGoal.current).toLocaleString()}
                 </p>
                 <p className="font-inter text-xs md:text-sm text-goal-text font-medium">To Goal</p>
               </div>
@@ -430,11 +456,11 @@ const VaultDetailContent = () => {
             
             <TabsContent value="members" className="p-6 md:p-8">
               <h2 className="text-xl md:text-2xl font-fredoka font-bold text-goal-text mb-6">
-                Vault Members
+                Goal Members
               </h2>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
-                {displayVault.members.map((member) => (
+                {displayGoal.members.map((member) => (
                   <Card key={member.id} className="bg-goal-accent/20 border-goal-border/20 p-4 md:p-5 rounded-2xl hover:shadow-md transition-all duration-300">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">

@@ -11,7 +11,7 @@ export interface InviteCodeComponents {
 
 /**
  * Generate a readable invite code instantly on frontend
- * Format: GOAL{vaultId}{timestamp_base36}{random_suffix}
+ * Format: GOAL{goalId}{timestamp_base36}{random_suffix}
  * Example: GOAL123ABC4XYZ9
  */
 export function generateFrontendInviteCode(vaultId: bigint): string {
@@ -23,7 +23,7 @@ export function generateFrontendInviteCode(vaultId: bigint): string {
 }
 
 /**
- * Extract vault ID from frontend-generated invite code
+ * Extract goal ID from frontend-generated invite code
  * Returns null if invalid format
  */
 export function extractVaultIdFromInviteCode(inviteCode: string): bigint | null {
@@ -35,7 +35,7 @@ export function extractVaultIdFromInviteCode(inviteCode: string): bigint | null 
     
     const codeWithoutPrefix = inviteCode.slice(4); // Remove 'GOAL'
     
-    // Extract vault ID (numeric part at the beginning)
+    // Extract goal ID (numeric part at the beginning)
     let vaultIdStr = '';
     for (let i = 0; i < codeWithoutPrefix.length; i++) {
       const char = codeWithoutPrefix[i];
@@ -67,7 +67,7 @@ export function parseInviteCode(inviteCode: string): InviteCodeComponents | null
     
     const codeWithoutPrefix = inviteCode.slice(4);
     
-    // Extract vault ID
+    // Extract goal ID
     let vaultIdStr = '';
     let i = 0;
     for (; i < codeWithoutPrefix.length; i++) {
@@ -130,7 +130,7 @@ export function generateQRCodeData(shareUrl: string): string {
 }
 
 /**
- * Create complete share data for a vault
+ * Create complete share data for a goal
  */
 export interface ShareData {
   vaultId: bigint;

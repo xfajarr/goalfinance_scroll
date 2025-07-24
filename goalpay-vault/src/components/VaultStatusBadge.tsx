@@ -2,12 +2,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Clock, CheckCircle, XCircle, Users } from 'lucide-react';
 
-interface VaultStatusBadgeProps {
+interface GoalStatusBadgeProps {
   status: 'active' | 'completed' | 'failed' | 'pending';
   size?: 'sm' | 'md' | 'lg';
 }
 
-export const VaultStatusBadge = ({ status, size = 'md' }: VaultStatusBadgeProps) => {
+export const VaultStatusBadge = ({ status, size = 'md' }: GoalStatusBadgeProps) => {
   const getStatusConfig = () => {
     switch (status) {
       case 'active':
