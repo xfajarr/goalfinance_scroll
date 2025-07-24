@@ -126,7 +126,7 @@ export function ChainSwitcher({
               <div className="flex flex-col">
                 <span className="font-medium text-red-600">Unsupported Network</span>
                 <span className="text-xs text-muted-foreground">
-                  Please switch to Mantle Sepolia
+                  Please switch to a supported network
                 </span>
               </div>
             </DropdownMenuItem>
@@ -137,7 +137,7 @@ export function ChainSwitcher({
                   <div className="text-xs">
                     <p className="font-medium text-orange-800 mb-1">Network Warning</p>
                     <p className="text-orange-700">
-                      Goal Finance only supports Mantle Sepolia. Please switch to continue using the platform.
+                      Goal Finance supports Mantle Sepolia and Base Sepolia. Please switch to a supported network to continue.
                     </p>
                   </div>
                 </div>

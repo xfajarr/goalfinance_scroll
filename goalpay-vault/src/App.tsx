@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PrivyProvider } from '@/providers/PrivyProvider';
 import Layout from '@/components/Layout';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { PWAUpdatePrompt } from '@/components/PWAUpdatePrompt';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import GoalDetail from "./pages/VaultDetail";
@@ -26,7 +28,14 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      {/* <PWAUpdatePrompt /> */}
+      <PWAInstallPrompt />
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Layout>
           <Routes>
             <Route path="/" element={<Index />} />

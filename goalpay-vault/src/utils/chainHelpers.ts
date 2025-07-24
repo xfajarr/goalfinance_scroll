@@ -1,4 +1,4 @@
-import { mantleSepolia } from '../config/wagmi';
+import { mantleSepolia, baseSepolia } from '../config/wagmi';
 import type { Chain } from 'viem';
 
 // Types for chain display information
@@ -25,12 +25,21 @@ export const SUPPORTED_CHAINS: readonly ChainDisplayInfo[] = [
     logoUrl: '/mantle-mnt-logo.svg',
     nativeCurrency: mantleSepolia.nativeCurrency,
   },
+  {
+    id: baseSepolia.id,
+    name: baseSepolia.name,
+    displayName: 'Base Sepolia',
+    isTestnet: true,
+    logoUrl: '/base-logo.svg',
+    nativeCurrency: baseSepolia.nativeCurrency,
+  },
 ] as const;
 
 // Chain utilities
 export const getChainById = (chainId: number): Chain => {
   const chains = {
-    [mantleSepolia.id]: mantleSepolia
+    [mantleSepolia.id]: mantleSepolia,
+    [baseSepolia.id]: baseSepolia,
   };
 
   return chains[chainId] || mantleSepolia;

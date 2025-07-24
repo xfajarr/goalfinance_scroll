@@ -34,8 +34,8 @@ export const NetworkWarning = ({ className = '' }: NetworkWarningProps) => {
               Unsupported Network
             </h3>
             <p className="font-inter text-xs text-goal-text/80 mt-1">
-              Goal Finance is currently only available on Mantle Sepolia testnet. 
-              Please switch your network to continue using the platform.
+              Goal Finance is available on Mantle Sepolia and Base Sepolia testnets.
+              Please switch to a supported network to continue using the platform.
             </p>
           </div>
           
@@ -53,7 +53,7 @@ export const NetworkWarning = ({ className = '' }: NetworkWarningProps) => {
             ) : (
               <div className="flex items-center gap-2">
                 <Network className="w-3 h-3" />
-                <span>Switch to Mantle Sepolia</span>
+                <span>Switch Network</span>
               </div>
             )}
           </Button>

@@ -1,0 +1,69 @@
+{
+  "name": "GoalPay - Save Together, Win Together",
+  "short_name": "GoalPay",
+  "description": "A fun and social saving platform that helps users save together toward shared financial goals",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#4c1d95",
+  "background_color": "#ffffff",
+  "categories": ["finance", "productivity", "social"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/goal_finance_icon_png.png",
+      "sizes": "34x34",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/goal_finance_icon_png.png",
+      "sizes": "34x34",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your savings goals and progress",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/goal_finance_icon_png.png",
+          "sizes": "34x34",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Create Goal",
+      "short_name": "Create",
+      "description": "Start a new savings goal",
+      "url": "/create-goal",
+      "icons": [
+        {
+          "src": "/goal_finance_icon_png.png",
+          "sizes": "34x34",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/goal_finance_logo_transparent.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "GoalPay Dashboard"
+    }
+  ]
+}

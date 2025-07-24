@@ -1,28 +1,18 @@
 import React from 'react';
 import { PrivyProvider as PrivyProviderCore } from '@privy-io/react-auth';
-import { WagmiProvider, createConfig } from '@privy-io/wagmi';
-import { http } from 'wagmi';
+import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { mantleSepolia } from '@/config/wagmi';
-import { mainnet, sepolia, polygon, arbitrum, optimism, base, avalanche } from 'viem/chains';
+import { config, mantleSepolia, baseSepolia } from '@/config/wagmi';
 
-// Create wagmi config for Privy integration
-// Include multiple chains so wagmi can detect network changes, but only Mantle Sepolia is supported by the app
-const config = createConfig({
-  chains: [mantleSepolia, mainnet, sepolia, polygon, arbitrum, optimism, base, avalanche],
-  transports: {
-    [mantleSepolia.id]: http(),
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-    [polygon.id]: http(),
-    [arbitrum.id]: http(),
-    [optimism.id]: http(),
-    [base.id]: http(),
-    [avalanche.id]: http(),
+// Create a single QueryClient instance to avoid duplicate initialization
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 3,
+    },
   },
 });
-
-const queryClient = new QueryClient();
 
 // Get Privy App ID
 const PRIVY_APP_ID = 'cmd87c3bk0063lb0mssxa5y1m';
@@ -33,7 +23,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
       appId={PRIVY_APP_ID}
       config={{
         loginMethods: ['wallet', 'email', 'google', 'telegram', 'farcaster'],
-        
+
         // Customize Privy's appearance
         appearance: {
           theme: 'light',
@@ -48,8 +38,19 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           createOnLogin: 'users-without-wallets',
           requireUserPasswordOnCreate: false,
         },
-        supportedChains: [mantleSepolia],
+        supportedChains: [mantleSepolia, baseSepolia],
         defaultChain: mantleSepolia,
+
+        // Wallet configuration to handle unsupported chains gracefully
+        walletConnectCloudProjectId: undefined, // Disable WalletConnect to prevent duplicate initialization
+
+        // Configure external wallets to handle chain compatibility
+        externalWallets: {
+          coinbaseWallet: {
+            // Use eoaOnly to avoid Smart Wallet issues with unsupported chains
+            connectionOptions: 'eoaOnly',
+          },
+        },
       }}
     >
       <QueryClientProvider client={queryClient}>

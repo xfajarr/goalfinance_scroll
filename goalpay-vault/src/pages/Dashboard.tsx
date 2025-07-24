@@ -46,16 +46,16 @@ const Dashboard = () => {
   const joinedVaultsByStatus = useFilteredVaultsByStatus(joinedVaults || []);
 
   // Debug logging for status filtering
-  console.log('🔍 Dashboard Status Filtering Debug:', {
-    totalUserVaults: userVaults?.length || 0,
-    activeUserVaults: userVaultsByStatus.activeVaults.length,
-    completedUserVaults: userVaultsByStatus.completedVaults.length,
-    failedUserVaults: userVaultsByStatus.failedVaults.length,
-    totalJoinedVaults: joinedVaults?.length || 0,
-    activeJoinedVaults: joinedVaultsByStatus.activeVaults.length,
-    completedJoinedVaults: joinedVaultsByStatus.completedVaults.length,
-    failedJoinedVaults: joinedVaultsByStatus.failedVaults.length,
-  });
+  // console.log('🔍 Dashboard Status Filtering Debug:', {
+  //   totalUserVaults: userVaults?.length || 0,
+  //   activeUserVaults: userVaultsByStatus.activeVaults.length,
+  //   completedUserVaults: userVaultsByStatus.completedVaults.length,
+  //   failedUserVaults: userVaultsByStatus.failedVaults.length,
+  //   totalJoinedVaults: joinedVaults?.length || 0,
+  //   activeJoinedVaults: joinedVaultsByStatus.activeVaults.length,
+  //   completedJoinedVaults: joinedVaultsByStatus.completedVaults.length,
+  //   failedJoinedVaults: joinedVaultsByStatus.failedVaults.length,
+  // });
 
 
 

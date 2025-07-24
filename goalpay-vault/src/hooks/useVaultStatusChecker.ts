@@ -69,13 +69,13 @@ export function useFilteredVaultsByStatus(vaults: VaultData[]) {
       // Use real-time status if available, otherwise fall back to stored status
       const currentStatus = realTimeStatus !== undefined ? realTimeStatus : vault.status;
 
-      console.log(`🔍 Vault ${vault.id} status check:`, {
-        vaultId: vault.id,
-        storedStatus: vault.status,
-        realTimeStatus,
-        finalStatus: currentStatus,
-        displayStatus: statusChecker.displayStatus
-      });
+      // console.log(`🔍 Vault ${vault.id} status check:`, {
+      //   vaultId: vault.id,
+      //   storedStatus: vault.status,
+      //   realTimeStatus,
+      //   finalStatus: currentStatus,
+      //   displayStatus: statusChecker.displayStatus
+      // });
 
       // Categorize based on real-time status
       switch (currentStatus) {
