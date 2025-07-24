@@ -231,7 +231,7 @@ const Dashboard = () => {
                           You haven't created any goals yet. Start your savings journey by creating your first goal!
                         </p>
                         <Link to="/create-goal">
-                          <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-6 py-3">
+                          <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text rounded-2xl px-6 py-3">
                             Create Your First Goal
                           </Button>
                         </Link>
@@ -249,7 +249,7 @@ const Dashboard = () => {
                         Create a goal to start saving towards your dreams with friends or on your own.
                       </p>
                       <Link to="/create-goal">
-                        <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200">
+                        <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200">
                           <Plus className="w-5 h-5 mr-2" />
                           Create Your First Goal
                         </Button>
