@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Navigation from '@/components/Navigation';
+
 import BottomNavigation from '@/components/BottomNavigation';
 import { VaultStatusBadge } from '@/components/VaultStatusBadge';
 import { AddFundsDialog } from '@/components/vault/AddFundsDialog';
@@ -49,7 +49,6 @@ class VaultErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-          <Navigation />
           <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
@@ -203,7 +202,6 @@ const VaultDetailContent = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-        <Navigation />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-goal-primary/30 border-t-goal-primary rounded-full animate-spin" />
@@ -218,7 +216,6 @@ const VaultDetailContent = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-        <Navigation />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="p-8 bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl text-center">
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-4">
@@ -254,7 +251,6 @@ const VaultDetailContent = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-      <Navigation />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 max-w-6xl">
         {/* Back Button */}

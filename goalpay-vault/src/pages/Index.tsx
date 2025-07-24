@@ -2,13 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Navigation from '@/components/Navigation';
+
 import FloatingDecorations from '@/components/FloatingDecorations';
 import OnboardingWelcome from '@/components/OnboardingWelcome';
 import { CloudMoneyIcon } from '@/components/CloudMoneyIcon';
 import { CardVaultSection } from '@/components/CardVaultSection';
 import { ProtocolPartners } from '@/components/ProtocolPartners';
-import { TrendingUp } from 'lucide-react';
+
 
 const Index = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -33,15 +33,30 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-goal-bg relative">
       <FloatingDecorations />
-      <Navigation />
 
       {/* Hero Section */}
       <main className={`relative z-10 container-narrow pt-16 pb-24 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="text-center">
           {/* Cloud Money Icon */}
-          <div className={`flex justify-center transition-all duration-700 delay-200 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+          {/* <div className={`flex justify-center transition-all duration-700 delay-200 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
             <CloudMoneyIcon size={120} />
+          </div> */}
+
+          {/* Goal Finance Icon */}
+          <div className={`flex justify-center mt-6 mb-8 transition-all duration-700 delay-300 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+            <div className="relative">
+              <img
+                src="/goal_finance_icon_png.png"
+                alt="Goal Finance"
+                className="w-24 h-24 object-contain hover:scale-110 transition-all duration-300 drop-shadow-lg"
+                style={{ animation: 'bounce 1s infinite' }}
+              />
+              {/* Floating glow effect */}
+              <div className="absolute inset-0 w-24 h-24 bg-goal-primary/20 rounded-full blur-xl"></div>
+            </div>
           </div>
+
+
 
           {/* Mascot */}
           {/* <div className={`flex justify-center mb-12 transition-all duration-700 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -120,14 +135,12 @@ const Index = () => {
                 Set Goals Together
               </h3>
               <p className="font-inter text-goal-text/70 text-sm">
-                Create savings vaults with friends and family for shared dreams
+                Create savings goals with friends and family for shared dreams
               </p>
             </div>
 
             <div className="bg-white/40 backdrop-blur-sm rounded-3xl p-6 border border-goal-border/30 hover:scale-105 transition-all duration-300">
-              <div className="w-12 h-12 bg-goal-primary/20 rounded-2xl flex items-center justify-center mb-4">
-                <TrendingUp className="w-6 h-6 text-goal-primary" />
-              </div>
+              <div className="text-4xl mb-4">📈</div>
               <h3 className="font-fredoka font-semibold text-goal-text text-lg mb-2">
                 Earn While You Save
               </h3>
@@ -152,7 +165,7 @@ const Index = () => {
 
       {/* Wide Sections Container */}
       <div className="relative z-10 container-page py-8">
-        {/* Card Vault Section */}
+        {/* Card Goals Section */}
         <div className={`transition-all duration-700 delay-800 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <CardVaultSection />
         </div>

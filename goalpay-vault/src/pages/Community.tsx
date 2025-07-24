@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import Navigation from '@/components/Navigation';
+
 import BottomNavigation from '@/components/BottomNavigation';
 import {
   Users,
@@ -75,7 +75,6 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-      <Navigation />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Coming Soon Header */}
@@ -95,11 +94,11 @@ const Community = () => {
           </Badge>
 
           <h1 className="text-4xl md:text-5xl font-fredoka font-bold text-goal-text mb-4">
-            Explore Community Vaults
+            Discover Savings Circles
           </h1>
           <p className="font-inter text-goal-text/70 max-w-3xl mx-auto text-lg leading-relaxed">
             Discover and join public savings goals from around the world. Save together with like-minded people,
-            earn yield, and achieve your dreams faster through the power of community!
+            earn yield, and achieve your dreams faster through the power of circles!
           </p>
         </div>
 
@@ -119,7 +118,7 @@ const Community = () => {
             <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Users className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-fredoka font-bold text-goal-text text-xl mb-2">Global Community</h3>
+            <h3 className="font-fredoka font-bold text-goal-text text-xl mb-2">Global Circles</h3>
             <p className="font-inter text-goal-text/70 text-sm">
               Connect with savers worldwide and achieve goals together
             </p>
@@ -176,7 +175,7 @@ const Community = () => {
             </h2>
             <p className="font-inter text-goal-text/70 max-w-2xl mx-auto">
               Browse vaults organized by your interests and goals. From travel adventures to emergency funds,
-              find your community of savers.
+              find your circle of savers.
             </p>
           </div>
 

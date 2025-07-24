@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import Navigation from '@/components/Navigation';
+
 import BottomNavigation from '@/components/BottomNavigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -145,7 +145,6 @@ const Learn = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-      <Navigation />
       
       <main className="container-content py-8">
         <div className="text-center space-component mb-8">

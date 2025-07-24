@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useChainId, useSwitchChain } from 'wagmi';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,22 +7,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Check, AlertCircle } from 'lucide-react';
-import { mantleSepolia } from '@/config/wagmi';
-import { sepolia, baseSepolia, arbitrumSepolia } from 'viem/chains';
-
-// Define supported chains with their display information
-const SUPPORTED_CHAINS = [
-  {
-    ...mantleSepolia,
-    displayName: 'Mantle Sepolia',
-    isTestnet: true,
-  },
-  {
-    ...baseSepolia,
-    displayName: 'Base Sepolia',
-    isTestnet: true,
-  },
-] as const;
+import { useChainManagement } from '@/hooks/useChainManagement';
+import { SUPPORTED_CHAINS } from '@/utils/chainHelpers';
+import { cn } from '@/lib/utils';
 
 interface ChainSwitcherProps {
   className?: string;
@@ -31,24 +17,34 @@ interface ChainSwitcherProps {
   size?: 'default' | 'sm' | 'lg';
 }
 
-export function ChainSwitcher({ 
-  className = '', 
+export function ChainSwitcher({
+  className = '',
   variant = 'outline',
-  size = 'default' 
+  size = 'default'
 }: ChainSwitcherProps) {
-  const currentChainId = useChainId();
-  const { switchChain, isPending } = useSwitchChain();
   const [isOpen, setIsOpen] = useState(false);
+  const {
+    currentChain,
+    isSupported,
+    isConnected,
+    switchToChain,
+    isSwitching,
+  } = useChainManagement();
 
-  const currentChain = SUPPORTED_CHAINS.find(chain => chain.id === currentChainId);
-  const isUnsupportedChain = !currentChain;
+  // Don't show anything if wallet is not connected
+  if (!isConnected) {
+    return null;
+  }
+
+  const isUnsupportedChain = !isSupported;
 
   const handleChainSwitch = async (chainId: number) => {
     try {
-      await switchChain({ chainId });
+      await switchToChain(chainId);
       setIsOpen(false);
     } catch (error) {
-      console.error('Failed to switch chain:', error);
+      // Error is already logged in the hook
+      // Could add toast notification here if needed
     }
   };
 
@@ -58,40 +54,53 @@ export function ChainSwitcher({
         <Button
           variant={variant}
           size={size}
-          className={`${className} ${isUnsupportedChain ? 'border-red-500 text-red-600' : ''}`}
-          disabled={isPending}
+          className={cn(
+            className,
+            isUnsupportedChain && 'border-red-500 text-red-600 bg-red-50 hover:bg-red-100'
+          )}
+          disabled={isSwitching}
         >
           <div className="flex items-center space-x-2">
             {isUnsupportedChain ? (
               <>
-                <AlertCircle className="w-4 h-4" />
-                <span>Unsupported</span>
+                <AlertCircle className="w-4 h-4 text-red-500" />
+                <span className="font-medium">Wrong Network</span>
               </>
-            ) : (
+            ) : currentChain ? (
               <>
-                <span className="text-lg">{currentChain.icon}</span>
+                <img
+                  src={currentChain.logoUrl}
+                  alt={currentChain.displayName}
+                  className="w-5 h-5"
+                />
                 <span className="hidden sm:inline">{currentChain.displayName}</span>
                 <span className="sm:hidden">{currentChain.name}</span>
               </>
+            ) : (
+              <span className="font-medium">Select Network</span>
             )}
             <ChevronDown className="w-4 h-4" />
           </div>
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="end" className="w-56">
         {SUPPORTED_CHAINS.map((chain) => {
-          const isCurrentChain = chain.id === currentChainId;
-          
+          const isCurrentChain = currentChain?.id === chain.id;
+
           return (
             <DropdownMenuItem
               key={chain.id}
               onClick={() => handleChainSwitch(chain.id)}
               className="flex items-center justify-between cursor-pointer"
-              disabled={isPending}
+              disabled={isSwitching}
             >
               <div className="flex items-center space-x-3">
-                <span className="text-lg">{chain.icon}</span>
+                <img
+                  src={chain.logoUrl}
+                  alt={chain.displayName}
+                  className="w-5 h-5"
+                />
                 <div className="flex flex-col">
                   <span className="font-medium">{chain.displayName}</span>
                   {chain.isTestnet && (
@@ -99,14 +108,14 @@ export function ChainSwitcher({
                   )}
                 </div>
               </div>
-              
+
               {isCurrentChain && (
                 <Check className="w-4 h-4 text-green-600" />
               )}
             </DropdownMenuItem>
           );
         })}
-        
+
         {isUnsupportedChain && (
           <>
             <div className="px-2 py-1.5 text-xs text-muted-foreground border-t">
@@ -117,10 +126,23 @@ export function ChainSwitcher({
               <div className="flex flex-col">
                 <span className="font-medium text-red-600">Unsupported Network</span>
                 <span className="text-xs text-muted-foreground">
-                  Chain ID: {currentChainId}
+                  Please switch to Mantle Sepolia
                 </span>
               </div>
             </DropdownMenuItem>
+            <div className="px-2 py-2 border-t">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-2">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs">
+                    <p className="font-medium text-orange-800 mb-1">Network Warning</p>
+                    <p className="text-orange-700">
+                      Goal Finance only supports Mantle Sepolia. Please switch to continue using the platform.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </DropdownMenuContent>
@@ -131,7 +153,7 @@ export function ChainSwitcher({
 // Compact version for mobile/small spaces
 export function ChainSwitcherCompact({ className = '' }: { className?: string }) {
   return (
-    <ChainSwitcher 
+    <ChainSwitcher
       className={className}
       variant="ghost"
       size="sm"

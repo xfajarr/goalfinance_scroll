@@ -7,7 +7,7 @@ import { Users, Calendar, ChevronRight } from 'lucide-react';
 import { formatCurrency, calculateProgress } from '@/utils/formatters';
 import { getStatusColor, getStatusText } from '@/utils/status-helpers';
 
-interface VaultCardProps {
+interface GoalCardProps {
   vault: {
     id: number;
     name: string;
@@ -19,7 +19,7 @@ interface VaultCardProps {
   };
 }
 
-export const VaultCard = ({ vault }: VaultCardProps) => {
+export const VaultCard = ({ vault }: GoalCardProps) => {
   return (
     <Link to={`/vault/${vault.id}`}>
       <Card className="p-4 md:p-6 bg-goal-accent/30 border-goal-border/30 rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer group min-h-[180px] flex flex-col">

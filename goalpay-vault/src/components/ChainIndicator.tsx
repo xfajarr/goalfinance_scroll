@@ -1,31 +1,15 @@
 import React from 'react';
-import { useChainId } from 'wagmi';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import { mantleSepolia } from '@/config/wagmi';
-import { sepolia, baseSepolia, arbitrumSepolia, mantleSepoliaTestnet } from 'viem/chains';
+import { useChainManagement } from '@/hooks/useChainManagement';
 
-// Define supported chains with their display information
-const SUPPORTED_CHAINS = [
-  {
-    ...mantleSepolia,
-    displayName: 'Mantle Sepolia',
+// Extended chain info for display purposes
+const CHAIN_DISPLAY_EXTRAS = {
+  [5003]: { // Mantle Sepolia
     icon: '🔷',
     color: 'bg-blue-500',
   },
-  {
-    ...baseSepolia,
-    displayName: 'Base Sepolia',
-    icon: '🔵',
-    color: 'bg-blue-600',
-  },
-  {
-    ...arbitrumSepolia,
-    displayName: 'Arbitrum Sepolia',
-    icon: '🔺',
-    color: 'bg-blue-400',
-  },
-] as const;
+} as const;
 
 interface ChainIndicatorProps {
   className?: string;
@@ -34,15 +18,14 @@ interface ChainIndicatorProps {
   variant?: 'default' | 'outline' | 'secondary' | 'destructive';
 }
 
-export function ChainIndicator({ 
+export function ChainIndicator({
   className = '',
   showIcon = true,
   showName = true,
   variant = 'outline'
 }: ChainIndicatorProps) {
-  const currentChainId = useChainId();
-  const currentChain = SUPPORTED_CHAINS.find(chain => chain.id === currentChainId);
-  const isUnsupportedChain = !currentChain;
+  const { currentChain, isSupported } = useChainManagement();
+  const isUnsupportedChain = !isSupported;
 
   if (isUnsupportedChain) {
     return (
@@ -53,10 +36,16 @@ export function ChainIndicator({
     );
   }
 
+  if (!currentChain) {
+    return null;
+  }
+
+  const chainExtras = CHAIN_DISPLAY_EXTRAS[currentChain.id as keyof typeof CHAIN_DISPLAY_EXTRAS];
+
   return (
     <Badge variant={variant} className={`${className} flex items-center space-x-1`}>
       <CheckCircle className="w-3 h-3 text-green-500" />
-      {showIcon && <span>{currentChain.icon}</span>}
+      {showIcon && chainExtras && <span>{chainExtras.icon}</span>}
       {showName && <span>{currentChain.displayName}</span>}
     </Badge>
   );
@@ -64,9 +53,8 @@ export function ChainIndicator({
 
 // Compact version that only shows the icon and status
 export function ChainIndicatorCompact({ className = '' }: { className?: string }) {
-  const currentChainId = useChainId();
-  const currentChain = SUPPORTED_CHAINS.find(chain => chain.id === currentChainId);
-  const isUnsupportedChain = !currentChain;
+  const { currentChain, isSupported } = useChainManagement();
+  const isUnsupportedChain = !isSupported;
 
   if (isUnsupportedChain) {
     return (
@@ -77,22 +65,16 @@ export function ChainIndicatorCompact({ className = '' }: { className?: string }
     );
   }
 
+  if (!currentChain) {
+    return null;
+  }
+
+  const chainExtras = CHAIN_DISPLAY_EXTRAS[currentChain.id as keyof typeof CHAIN_DISPLAY_EXTRAS];
+
   return (
     <div className={`${className} flex items-center space-x-1 text-green-500`}>
       <CheckCircle className="w-4 h-4" />
-      <span className="text-lg">{currentChain.icon}</span>
+      {chainExtras && <span className="text-lg">{chainExtras.icon}</span>}
     </div>
   );
-}
-
-// Hook to get current chain information
-export function useCurrentChain() {
-  const currentChainId = useChainId();
-  const currentChain = SUPPORTED_CHAINS.find(chain => chain.id === currentChainId);
-  
-  return {
-    chain: currentChain,
-    isSupported: !!currentChain,
-    chainId: currentChainId,
-  };
 }

@@ -16,7 +16,7 @@ export const DesktopNavigation = () => {
     { label: 'Home', path: '/' },
     { label: 'How it Works', path: '/how-it-works' },
     { label: 'FAQ', path: '/faq' },
-    { label: 'Community', path: '/community' },
+    { label: 'Discover Circles', path: '/community' },
     { label: 'Learn', path: '/learn' },
   ];
 
@@ -68,7 +68,7 @@ export const DesktopNavigation = () => {
         className="bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full px-6 py-2 text-sm transition-all duration-200 hover:scale-105"
       >
         <Link to="/dashboard">
-          {isWalletConnected ? 'Dashboard' : 'Start Saving'}
+          {isWalletConnected ? 'Launch App' : 'Start Saving'}
         </Link>
       </Button>
     </div>

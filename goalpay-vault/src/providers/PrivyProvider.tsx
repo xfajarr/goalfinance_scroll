@@ -4,12 +4,21 @@ import { WagmiProvider, createConfig } from '@privy-io/wagmi';
 import { http } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { mantleSepolia } from '@/config/wagmi';
+import { mainnet, sepolia, polygon, arbitrum, optimism, base, avalanche } from 'viem/chains';
 
-// Create wagmi config for Privy integration - Only Mantle Sepolia
+// Create wagmi config for Privy integration
+// Include multiple chains so wagmi can detect network changes, but only Mantle Sepolia is supported by the app
 const config = createConfig({
-  chains: [mantleSepolia],
+  chains: [mantleSepolia, mainnet, sepolia, polygon, arbitrum, optimism, base, avalanche],
   transports: {
     [mantleSepolia.id]: http(),
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [polygon.id]: http(),
+    [arbitrum.id]: http(),
+    [optimism.id]: http(),
+    [base.id]: http(),
+    [avalanche.id]: http(),
   },
 });
 

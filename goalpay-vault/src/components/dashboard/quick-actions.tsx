@@ -13,14 +13,14 @@ export const QuickActions = () => {
         <Link to="/create-vault">
           <Button variant="outline" className="w-full rounded-2xl">
             <Plus className="w-4 h-4 mr-2" />
-            Create New Vault
+            Create New Goal
           </Button>
         </Link>
 
         <Link to="/community">
           <Button variant="outline" className="w-full rounded-2xl mt-2">
             <Users className="w-4 h-4 mr-2" />
-            Browse Community
+            Discover Circles
           </Button>
         </Link>
 

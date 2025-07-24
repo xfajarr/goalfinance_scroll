@@ -119,10 +119,10 @@ export const JoinVaultSection = () => {
           <div className="text-center">
             <div className="text-4xl mb-3">🎯</div>
             <h2 className="text-2xl font-fredoka font-bold text-goal-text mb-2">
-              Join a Vault
+              Join a Circle
             </h2>
             <p className="text-goal-text/70 text-sm">
-              Enter an invite code to join a savings vault with friends
+              Enter an invite code to join a savings circle with friends
             </p>
           </div>
 
@@ -152,11 +152,11 @@ export const JoinVaultSection = () => {
             {/* Real Invite Codes Info */}
             <div className="bg-goal-accent/10 rounded-2xl p-4">
               <p className="text-xs text-goal-text/60 mb-2 font-medium">
-                💡 Enter a real invite code from a vault creator to join their savings goal
+                💡 Enter a real invite code from a circle creator to join their savings goal
               </p>
               <p className="text-xs text-goal-text/50">
-                Invite codes are generated when vault creators share their vaults.
-                Ask friends for their invite codes or create your own vault to generate codes!
+                Invite codes are generated when circle creators share their goals.
+                Ask friends for their invite codes or create your own goal to generate codes!
               </p>
             </div>
 
@@ -167,11 +167,11 @@ export const JoinVaultSection = () => {
             )}
           </div>
 
-          {/* Vault Preview */}
+          {/* Circle Preview */}
           {vaultPreview && (
             <Card className="bg-goal-accent/20 border-goal-border/40 p-6 rounded-2xl">
               <div className="space-y-4">
-                {/* Vault Header */}
+                {/* Circle Header */}
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="font-fredoka font-bold text-lg text-goal-text">
@@ -186,7 +186,7 @@ export const JoinVaultSection = () => {
                   </Badge>
                 </div>
 
-                {/* Vault Stats */}
+                {/* Circle Stats */}
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="flex items-center justify-center text-goal-primary mb-1">
@@ -222,7 +222,7 @@ export const JoinVaultSection = () => {
                   </div>
                 </div>
 
-                {/* Progress Bar (only for GROUP type vaults) */}
+                {/* Progress Bar (only for GROUP type circles) */}
                 {vaultPreview.targetAmount > 0n && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -275,7 +275,7 @@ export const JoinVaultSection = () => {
                     </div>
                   </div>
                   <p className="text-xs text-goal-text/60">
-                    Choose your deposit token and enter the amount to join the vault
+                    Choose your deposit token and enter the amount to join the circle
                   </p>
                 </div>
 
@@ -288,12 +288,12 @@ export const JoinVaultSection = () => {
                   {isJoining ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Joining Vault...
+                      Joining Circle...
                     </>
                   ) : (
                     <>
                       <UserPlus className="w-4 h-4 mr-2" />
-                      Join Vault
+                      Join Circle
                     </>
                   )}
                 </Button>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import Navigation from '@/components/Navigation';
+
 import BottomNavigation from '@/components/BottomNavigation';
 import { ArrowLeft, Users, Target, Calendar, Plus, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -160,7 +160,6 @@ const JoinVault = () => {
   if (isLoadingVault) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-        <Navigation />
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-goal-primary" />
@@ -181,7 +180,6 @@ const JoinVault = () => {
   if (!vaultPreview) {
     return (
       <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-        <Navigation />
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">
@@ -207,7 +205,6 @@ const JoinVault = () => {
   if (hasJoined) {
     return (
       <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
-        <Navigation />
 
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl text-center">
@@ -248,7 +245,6 @@ const JoinVault = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-      <Navigation />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}

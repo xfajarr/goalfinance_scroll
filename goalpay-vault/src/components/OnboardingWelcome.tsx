@@ -123,7 +123,7 @@ const OnboardingWelcome = ({ onComplete }: OnboardingWelcomeProps) => {
                   <Users className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <h4 className="font-fredoka font-bold text-green-800">Join a Community Vault</h4>
+                  <h4 className="font-fredoka font-bold text-green-800">Join a Savings Circle</h4>
                   <p className="text-sm text-green-600">Save with other GoalPay users</p>
                 </div>
               </div>

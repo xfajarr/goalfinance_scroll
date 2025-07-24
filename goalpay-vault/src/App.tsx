@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PrivyProvider } from '@/providers/PrivyProvider';
+import Layout from '@/components/Layout';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import VaultDetail from "./pages/VaultDetail";
@@ -25,21 +26,23 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/vault/:id" element={<VaultDetail />} />
-          <Route path="/create-vault" element={<CreateVault />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/join/:id" element={<JoinVault />} />
-          <Route path="/learn" element={<Learn />} />
-          <Route path="/vault-creation-v2" element={<VaultCreationV2 />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/vault/:id" element={<VaultDetail />} />
+            <Route path="/create-vault" element={<CreateVault />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/join/:id" element={<JoinVault />} />
+            <Route path="/learn" element={<Learn />} />
+            <Route path="/vault-creation-v2" element={<VaultCreationV2 />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </TooltipProvider>
   </PrivyProvider>

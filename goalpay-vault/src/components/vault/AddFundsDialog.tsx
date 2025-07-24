@@ -23,11 +23,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Plus, DollarSign, TrendingUp, Clock, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Plus, DollarSign, TrendingUp, Clock, AlertCircle, CheckCircle, Loader2, Wallet } from 'lucide-react';
 
 import { useAddFunds } from '@/hooks/useAddFunds';
 import { useGetVault, useGetMemberInfo } from '@/hooks/useVaultReads';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectWalletDialog } from '@/components/ConnectWalletDialog';
 import { formatCurrency } from '@/utils/formatters';
 import { useAccount } from 'wagmi';
 import { Address, parseUnits } from 'viem';
@@ -220,7 +220,12 @@ export const AddFundsDialog = ({
               </div>
             </Card>
             <div className="flex justify-center">
-              <ConnectButton />
+              <ConnectWalletDialog>
+                <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-inter rounded-xl py-3 px-6">
+                  <Wallet className="w-4 h-4 mr-2" />
+                  Connect Wallet
+                </Button>
+              </ConnectWalletDialog>
             </div>
           </div>
         ) : isLoadingVault || isLoadingMember ? (

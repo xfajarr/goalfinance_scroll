@@ -19,7 +19,7 @@ const Navigation = () => {
   
   const navItems = [
     { label: 'Home', path: '/' },
-    { label: 'Explore Savings Goals', path: '/community' },
+    { label: 'Discover Circles', path: '/community' },
     { label: 'How it Works', path: '/how-it-works' },
     { label: 'FAQ', path: '/faq' },
     { label: 'Learn', path: '/learn' },
@@ -35,7 +35,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text-primary hover:text-goal-text transition-colors">
+            <span className="text-2xl md:text-2xl font-fredoka font-bold text-goal-text-primary hover:text-goal-text transition-colors">
               Goal Finance
             </span>
           </Link>

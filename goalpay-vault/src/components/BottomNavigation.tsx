@@ -14,7 +14,7 @@ const BottomNavigation = () => {
     },
     {
       icon: Search,
-      label: 'Explore Vaults',
+      label: 'Discover',
       path: '/community',
       active: location.pathname === '/community'
     },

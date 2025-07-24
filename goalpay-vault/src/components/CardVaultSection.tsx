@@ -53,7 +53,7 @@ export const CardVaultSection = () => {
     <div className={`mt-16 space-y-6 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
       <div className="text-center">
         <h2 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-text-primary mb-3">
-          Choose Your Vault
+          Choose Your Goals Vault
         </h2>
         <p className="text-base font-inter text-goal-text-secondary max-w-xl mx-auto">
           Different vaults for different goals. Start with any amount and watch your savings grow.

@@ -1,5 +1,5 @@
 
-import Navigation from '@/components/Navigation';
+
 import BottomNavigation from '@/components/BottomNavigation';
 import {
   Accordion,
@@ -54,7 +54,6 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-20 md:pb-0">
-      <Navigation />
       
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
