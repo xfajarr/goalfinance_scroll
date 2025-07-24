@@ -25,7 +25,7 @@ const OnboardingWelcome = ({ onComplete }: OnboardingWelcomeProps) => {
 
   const steps = [
     {
-      title: "Welcome to GoalPay! 👋",
+      title: "Welcome to Goal Finance! 👋",
       subtitle: "The fun way to save with friends",
       content: (
         <div className="text-center space-y-6">
@@ -124,7 +124,7 @@ const OnboardingWelcome = ({ onComplete }: OnboardingWelcomeProps) => {
                 </div>
                 <div>
                   <h4 className="font-fredoka font-bold text-green-800">Join a Savings Circle</h4>
-                  <p className="text-sm text-green-600">Save with other GoalPay users</p>
+                  <p className="text-sm text-green-600">Save with other Goal Finance users</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-green-600" />
@@ -158,7 +158,7 @@ const OnboardingWelcome = ({ onComplete }: OnboardingWelcomeProps) => {
         <div className="text-center space-y-6">
           <div className="text-6xl mb-4">🚀</div>
           <p className="text-goal-text/80 leading-relaxed">
-            Welcome to the GoalPay family! Remember, every small step counts towards your big dreams.
+            Welcome to the Goal Finance family! Remember, every small step counts towards your big dreams.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-goal-accent/20 p-4 rounded-2xl">

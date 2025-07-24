@@ -37,7 +37,7 @@ const HowItWorks = () => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
           <h1 className="text-3xl md:text-4xl font-fredoka font-bold text-goal-text mb-4">
-            How GoalPay Works
+            How Goal Finance Works
           </h1>
           <p className="font-inter text-goal-text/70 text-lg">
             Learn how to create, join, and achieve your savings goals with our platform.

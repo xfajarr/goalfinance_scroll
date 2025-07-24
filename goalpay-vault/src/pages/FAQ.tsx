@@ -11,24 +11,24 @@ import {
 const FAQ = () => {
   const faqs = [
     {
-      question: "What is GoalPay?",
-      answer: "GoalPay is a decentralized savings platform that allows you to create and join shared savings goals with friends, family, or community members. Earn yield while saving together!"
+      question: "What is Goal Finance?",
+      answer: "Goal Finance is a decentralized savings platform that allows you to create and join shared savings goals with friends, family, or community members. Earn yield while saving together!"
     },
     {
-      question: "How does GoalPay work?",
+      question: "How does Goal Finance work?",
       answer: "Create a vault, set a goal amount and deadline, invite members, and start saving! Funds are locked in a smart contract and earn yield. If the goal is reached by the deadline, everyone receives their contribution + yield. If not, contributions are returned."
     },
     {
-      question: "What are the benefits of saving with GoalPay?",
+      question: "What are the benefits of saving with Goal Finance?",
       answer: "Earn yield on your savings, stay motivated with shared goals, build community, and achieve financial success together!"
     },
     {
-      question: "Is GoalPay secure?",
-      answer: "Yes, GoalPay uses audited smart contracts and decentralized technology to ensure the security of your funds."
+      question: "Is Goal Finance secure?",
+      answer: "Yes, Goal Finance uses audited smart contracts and decentralized technology to ensure the security of your funds."
     },
     {
-      question: "What cryptocurrencies does GoalPay support?",
-      answer: "Currently, GoalPay supports saving in USDC on the Ethereum network. More cryptocurrencies and networks will be added soon!"
+      question: "What cryptocurrencies does Goal Finance support?",
+      answer: "Currently, Goal Finance supports saving in USDC on the Ethereum network. More cryptocurrencies and networks will be added soon!"
     },
     {
       question: "How do I create a vault?",
@@ -43,8 +43,8 @@ const FAQ = () => {
       answer: "If the goal is not reached by the deadline, all contributions are automatically returned to the members."
     },
     {
-      question: "Are there any fees for using GoalPay?",
-      answer: "GoalPay charges a small fee on the yield earned to support the platform's development and maintenance."
+      question: "Are there any fees for using Goal Finance?",
+      answer: "Goal Finance charges a small fee on the yield earned to support the platform's development and maintenance."
     },
     {
       question: "How do I withdraw my funds?",
@@ -61,7 +61,7 @@ const FAQ = () => {
             Frequently Asked Questions
           </h1>
           <p className="font-inter text-goal-text/70">
-            Everything you need to know about saving together with GoalPay
+            Everything you need to know about saving together with Goal Finance
           </p>
         </div>
 

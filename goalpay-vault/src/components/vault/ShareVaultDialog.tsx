@@ -94,7 +94,7 @@ export const ShareVaultDialog = ({
   const shareOnSocial = (platform: string) => {
     if (!shareData) return;
 
-    const text = `🚀 Join my savings squad for "${vaultName}"! 💰 Let's crush our financial goals together with GoalPay! 🎯✨`;
+    const text = `🚀 Join my savings squad for "${vaultName}"! 💰 Let's crush our financial goals together with Goal Finance! 🎯✨`;
     const url = shareData.shareUrl;
 
     const shareUrls = {
