@@ -21,7 +21,7 @@ interface GoalCardProps {
 
 export const VaultCard = ({ vault }: GoalCardProps) => {
   return (
-    <Link to={`/vault/${vault.id}`}>
+    <Link to={`/goal/${vault.id}`}>
       <Card className="p-4 md:p-6 bg-goal-accent/30 border-goal-border/30 rounded-2xl hover:scale-[1.02] hover:shadow-lg transition-all duration-200 cursor-pointer group min-h-[180px] flex flex-col">
         <div className="flex flex-col h-full space-y-4">
           <div className="flex justify-between items-start gap-3">

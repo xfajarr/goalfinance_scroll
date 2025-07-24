@@ -15,14 +15,14 @@ const BottomNavigation = () => {
     {
       icon: Search,
       label: 'Discover',
-      path: '/community',
-      active: location.pathname === '/community'
+      path: '/discover-circles',
+      active: location.pathname === '/discover-circles'
     },
     { 
       icon: Plus, 
       label: 'Create', 
-      path: '/create-vault',
-      active: location.pathname === '/create-vault'
+      path: '/create-goal',
+      active: location.pathname === '/create-goal'
     },
     { 
       icon: BookOpen, 
@@ -59,7 +59,7 @@ const BottomNavigation = () => {
                     ? 'bg-goal-primary text-goal-text'
                     : 'bg-goal-primary text-goal-text hover:bg-goal-primary/90'
                 }`}
-                aria-label={`${item.label} - Create a new vault`}
+                aria-label={`${item.label} - Create a new goal`}
                 aria-current={item.active ? 'page' : undefined}
               >
                 <item.icon className="w-6 h-6" />

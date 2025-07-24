@@ -121,7 +121,7 @@ export const JoinVaultSection = () => {
             <h2 className="text-2xl font-fredoka font-bold text-goal-text mb-2">
               Join a Circle
             </h2>
-            <p className="text-goal-text/70 text-sm">
+            <p className="text-goal-text/90 text-sm">
               Enter an invite code to join a savings circle with friends
             </p>
           </div>
@@ -151,10 +151,10 @@ export const JoinVaultSection = () => {
 
             {/* Real Invite Codes Info */}
             <div className="bg-goal-accent/10 rounded-2xl p-4">
-              <p className="text-xs text-goal-text/60 mb-2 font-medium">
+              <p className="text-xs text-goal-text mb-2 font-medium">
                 💡 Enter a real invite code from a circle creator to join their savings goal
               </p>
-              <p className="text-xs text-goal-text/50">
+              <p className="text-xs text-goal-text">
                 Invite codes are generated when circle creators share their goals.
                 Ask friends for their invite codes or create your own goal to generate codes!
               </p>

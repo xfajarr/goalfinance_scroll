@@ -129,8 +129,8 @@ const Dashboard = () => {
       <main className="container-content py-8">
         {/* Welcome Section */}
         <SectionHeader
-          title="Hi, Welcome back 👋"
-          subtitle="You're making great progress on your savings goals!"
+          title="Ready to crush your goals?"
+          subtitle="Your financial dreams are getting closer every day!"
           className="mb-8"
         />
 
@@ -162,7 +162,7 @@ const Dashboard = () => {
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh
                   </Button>
-                  <Link to="/create-vault">
+                  <Link to="/create-goal">
                     <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full px-6 py-3 transition-all duration-300 hover:scale-105">
                       <Plus className="w-5 h-5 mr-2" />
                       Create Goal
@@ -214,7 +214,7 @@ const Dashboard = () => {
                       <p className="text-goal-text/70 mb-6">
                         Create a goal to start saving towards your dreams with friends or on your own.
                       </p>
-                      <Link to="/create-vault">
+                      <Link to="/create-goal">
                         <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold rounded-full px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-200">
                           <Plus className="w-5 h-5 mr-2" />
                           Create Your First Goal
@@ -332,8 +332,6 @@ const Dashboard = () => {
             <AchievementsPreview />
           </div>
 
-          {/* Invite Code Test Component */}
-          <InviteCodeTest />
         </div>
       </main>
 

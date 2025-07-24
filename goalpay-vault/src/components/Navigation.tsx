@@ -16,10 +16,10 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isWalletConnected = authenticated && isConnected;
-  
+
   const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Discover Circles', path: '/community' },
+    { label: 'Home', path: isWalletConnected ? '/dashboard' : '/' },
+    { label: 'Discover Circles', path: '/discover-circles' },
     { label: 'How it Works', path: '/how-it-works' },
     { label: 'FAQ', path: '/faq' },
     { label: 'Learn', path: '/learn' },
@@ -34,7 +34,7 @@ const Navigation = () => {
       <div className="container-page">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to={'/'} className="flex items-center">
             <span className="text-2xl md:text-2xl font-fredoka font-bold text-goal-text-primary hover:text-goal-text transition-colors">
               Goal Finance
             </span>

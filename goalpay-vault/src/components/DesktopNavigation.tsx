@@ -12,15 +12,15 @@ export const DesktopNavigation = () => {
   const { authenticated } = usePrivy();
   const { isConnected, address } = useAccount();
 
+  const isWalletConnected = authenticated && isConnected;
+
   const navItems = [
-    { label: 'Home', path: '/' },
+    { label: 'Home', path: isWalletConnected ? '/dashboard' : '/' },
+    { label: 'Discover Circles', path: '/discover-circles' },
+    { label: 'Learn', path: '/learn' },
     { label: 'How it Works', path: '/how-it-works' },
     { label: 'FAQ', path: '/faq' },
-    { label: 'Discover Circles', path: '/community' },
-    { label: 'Learn', path: '/learn' },
   ];
-
-  const isWalletConnected = authenticated && isConnected;
 
   return (
     <div className="hidden md:flex items-center space-x-8">
@@ -63,14 +63,14 @@ export const DesktopNavigation = () => {
         </Button>
       </ConnectWalletDialog>
 
-      <Button
+      {/* <Button
         asChild
         className="bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full px-6 py-2 text-sm transition-all duration-200 hover:scale-105"
       >
         <Link to="/dashboard">
           {isWalletConnected ? 'Launch App' : 'Start Saving'}
         </Link>
-      </Button>
+      </Button> */}
     </div>
   );
 };

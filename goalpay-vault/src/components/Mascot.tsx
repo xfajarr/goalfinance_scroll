@@ -2,16 +2,16 @@
 const Mascot = ({ className = "" }: { className?: string }) => {
   return (
     <div className={`relative ${className}`}>
-      {/* Main vault mascot */}
+      {/* Main goal mascot */}
       <div className="w-32 h-32 md:w-40 md:h-40 relative animate-bounce-gentle">
-        {/* Vault body */}
-        <div 
+        {/* Goal body */}
+        <div
           className="w-full h-full rounded-3xl bg-goal-primary shadow-lg relative overflow-hidden"
           style={{
             boxShadow: '0 8px 32px rgba(163, 125, 206, 0.3)'
           }}
         >
-          {/* Vault lock */}
+          {/* Goal lock */}
           <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-8 h-6 bg-goal-text rounded-t-full border-2 border-goal-text">
             <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-goal-primary rounded-full"></div>
           </div>

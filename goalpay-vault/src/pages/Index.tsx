@@ -83,7 +83,7 @@ const Index = () => {
             <div className={`pt-8 flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <Button
                 asChild
-                variant="goal"
+                variant="default"
                 size="lg"
                 className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md hover:shadow-lg hover:scale-[1.02]"
               >

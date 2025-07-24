@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import Navigation from '@/components/Navigation';
 import BottomNavigation from '@/components/BottomNavigation';
 import { Settings, Trophy, Target, Users, Copy, Check, DollarSign } from 'lucide-react';
 
@@ -41,7 +40,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-      <Navigation />
       
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}

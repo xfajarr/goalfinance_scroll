@@ -17,7 +17,7 @@ export const QuickActions = () => {
           </Button>
         </Link>
 
-        <Link to="/community">
+        <Link to="/discover-circles">
           <Button variant="outline" className="w-full rounded-2xl mt-2">
             <Users className="w-4 h-4 mr-2" />
             Discover Circles

@@ -115,7 +115,7 @@ const OnboardingWelcome = ({ onComplete }: OnboardingWelcomeProps) => {
           
           <Card 
             className="p-4 rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-green-200 cursor-pointer hover:scale-105 transition-all"
-            onClick={() => navigate('/community')}
+            onClick={() => navigate('/discover-circles')}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
