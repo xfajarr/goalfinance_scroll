@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Download } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -15,6 +16,7 @@ export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check if app is already installed
@@ -84,7 +86,9 @@ export const PWAInstallPrompt = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mx-auto max-w-sm">
+    <div className={`fixed left-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 mx-auto max-w-sm ${
+      isMobile ? 'bottom-24' : 'bottom-4'
+    }`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center mb-2">
