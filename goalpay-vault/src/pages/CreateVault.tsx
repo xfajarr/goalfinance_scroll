@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccount } from 'wagmi';
-import { useQueryClient } from '@tanstack/react-query';
+import { useAccount, useQueryClient } from 'wagmi';
 import { parseUnits } from 'viem';
 
 import BottomNavigation from '@/components/BottomNavigation';
@@ -21,7 +20,6 @@ const CreateVault = () => {
   const navigate = useNavigate();
   const { isConnected } = useAccount();
   const chainId = useChainId();
-  const queryClient = useQueryClient();
   const {
     createVault,
     isLoading,
@@ -61,9 +59,6 @@ const CreateVault = () => {
 
         // Set goal created state immediately
         setGoalCreated(true);
-
-        // Invalidate user vaults cache so Dashboard updates immediately
-        queryClient.invalidateQueries(); // Invalidate all, or use a more specific key if available
 
         // Generate share link (use goal ID if available, otherwise use transaction hash)
         const link = vaultId
