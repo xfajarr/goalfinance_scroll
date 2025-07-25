@@ -618,8 +618,8 @@ const CreateVault = () => {
                 <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
                   <span className="text-goal-text text-xs font-bold">5</span>
                 </div>
-                <label className="font-fredoka font-bold text-goal-heading text-lg">
-                  Choose your adventure style
+                <label className="font-fredoka font-bold text-goal-text text-lg">
+                  Choose your Goal type
                 </label>
               </div>
 
@@ -675,7 +675,7 @@ const CreateVault = () => {
                 <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
                   <span className="text-goal-text text-xs font-bold">6</span>
                 </div>
-                <label className="font-fredoka font-bold text-goal-heading text-lg">
+                <label className="font-fredoka font-bold text-goal-text text-lg">
                   Token Type
                 </label>
               </div>
