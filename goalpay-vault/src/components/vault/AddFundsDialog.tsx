@@ -559,14 +559,14 @@ export const AddFundsDialog = ({
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
                       <span>
-                        Approve USDC First
+                        {selectedToken === 'usdc' ? 'Deposit USDC' : selectedToken === 'mnt' ? 'Deposit MNT' : 'Deposit'}
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
                       <span>
-                        Add {contributionAmount} {isNativeToken ? 'MNT' : 'USDC'}
+                        Approve USDC First
                       </span>
                     </div>
                   )}

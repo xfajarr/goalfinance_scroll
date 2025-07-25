@@ -112,10 +112,10 @@ export const useAddFunds = (): UseAddFundsReturn => {
         account: address,
       });
 
-      toast({
-        title: '💰 Funds Added Successfully!',
-        description: `Added ${amount} native tokens to your vault`,
-      });
+      // toast({
+      //   title: '💰 Funds Added Successfully!',
+      //   description: `Added ${amount} native tokens to your vault`,
+      // });
 
     } catch (err) {
       setCurrentStep('error');
@@ -188,10 +188,10 @@ export const useAddFunds = (): UseAddFundsReturn => {
         account: address,
       });
 
-      toast({
-        title: '💰 Funds Added Successfully!',
-        description: `Added ${amount} USDC to your vault`,
-      });
+      // toast({
+      //   title: '💰 Funds Added Successfully!',
+      //   description: `Added ${amount} USDC to your vault`,
+      // });
 
     } catch (err) {
       setCurrentStep('error');

@@ -211,7 +211,7 @@ const Dashboard = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-goal-primary mx-auto mb-4"></div>
                     <p className="text-goal-text/70">Loading your goals...</p>
                   </div>
-                ) : vaultsError ? (
+                ) : (vaultsError && !isLoadingVaults) ? (
                   <div className="col-span-full text-center py-8">
                     {!isChainSupported ? (
                       <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 max-w-md mx-auto">
@@ -224,21 +224,9 @@ const Dashboard = () => {
                           Current chain ID: {chainId}
                         </p>
                       </div>
-                    ) : (
-                      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 max-w-md mx-auto">
-                        <p className="text-blue-600 font-medium mb-2">Welcome to Goal Finance! 🎯</p>
-                        <p className="text-blue-500 text-sm mb-4">
-                          You haven't created any goals yet. Start your savings journey by creating your first goal!
-                        </p>
-                        <Link to="/create-goal">
-                          <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text rounded-2xl px-6 py-3">
-                            Create Your First Goal
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
-                ) : myGoals.length === 0 ? (
+                ) : (!vaultsError && myGoals.length === 0 && !isLoadingVaults) ? (
                   <div className="col-span-full text-center py-12">
                     <div className="bg-goal-accent/30 rounded-2xl p-8 max-w-md mx-auto">
                       <div className="text-6xl mb-4">🎯</div>

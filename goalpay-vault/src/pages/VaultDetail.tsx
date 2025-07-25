@@ -119,7 +119,7 @@ const VaultDetailContent = () => {
                 abi: GOAL_FINANCE_CONTRACT.abi,
                 functionName: 'getMember',
                 args: [vaultId, address],
-              });
+              }) as { depositedAmount: bigint };
               return [address, data?.depositedAmount ?? 0n];
             } catch {
               return [address, 0n];
@@ -315,6 +315,35 @@ const VaultDetailContent = () => {
     }
   };
 
+  // Add a function to fully refresh vault and member contributions
+  const handleFullRefresh = async () => {
+    refetch();
+    // Wait a tick to ensure members are up to date
+    setTimeout(() => {
+      // re-fetch member contributions
+      if (!members || members.length === 0 || !vaultId) return;
+      setIsContribLoading(true);
+      Promise.all(
+        members.map(async (address) => {
+          try {
+            const data = await publicClient.readContract({
+              address: GOAL_FINANCE_CONTRACT.address,
+              abi: GOAL_FINANCE_CONTRACT.abi,
+              functionName: 'getMember',
+              args: [vaultId, address],
+            }) as { depositedAmount: bigint };
+            return [address, data?.depositedAmount ?? 0n];
+          } catch {
+            return [address, 0n];
+          }
+        })
+      ).then(results => {
+        setMemberContributions(Object.fromEntries(results));
+        setIsContribLoading(false);
+      });
+    }, 250);
+  };
+
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
       
@@ -345,10 +374,7 @@ const VaultDetailContent = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        refetch();
-                        console.log('🔄 Refreshing goal status...');
-                      }}
+                      onClick={handleFullRefresh}
                       className="h-8 w-8 p-0 text-goal-text/60 hover:text-goal-text hover:bg-goal-accent/20"
                       title="Refresh goal status"
                     >
