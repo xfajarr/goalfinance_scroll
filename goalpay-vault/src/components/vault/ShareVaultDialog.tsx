@@ -263,7 +263,7 @@ export const ShareVaultDialog = ({
                   <Input
                     value={shareData.inviteCode}
                     readOnly
-                    className="font-mono text-sm bg-white/70 border-goal-border/60 rounded-2xl flex-1 font-bold text-goal-primary"
+                    className="font-mono text-sm bg-white/70 border-goal-border/60 rounded-2xl flex-1 font-bold text-goal-text"
                   />
                   <Button
                     onClick={() => copyToClipboard(shareData.inviteCode, 'Code')}
