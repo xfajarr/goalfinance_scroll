@@ -14,6 +14,7 @@ export const mantleSepolia = defineChain({
   rpcUrls: {
     default: {
       http: [
+        'https://mantle-sepolia.infura.io/v3/694a8404d98e4fb5a6c806e394dc4fb3',
         'https://rpc.sepolia.mantle.xyz',
         'https://mantle-sepolia.drpc.org',
         'https://mantle-sepolia-testnet.rpc.thirdweb.com',
