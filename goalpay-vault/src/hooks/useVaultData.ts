@@ -55,7 +55,7 @@ export const useVaultData = (vaultId: bigint): UseVaultDataReturn => {
     ? (vaultMembers as Address[])
     : [];
 
-  // Create member data map - for now just include the current user's data
+  // Only include current user's data in memberData
   const memberData: Record<Address, Member> = {};
   if (address && userMemberInfo) {
     memberData[address] = userMemberInfo as Member;

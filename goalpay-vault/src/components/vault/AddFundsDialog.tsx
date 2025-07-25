@@ -29,9 +29,10 @@ import { useAddFunds } from '@/hooks/useAddFunds';
 import { useGetVault, useGetMemberInfo } from '@/hooks/useVaultReads';
 import { ConnectWalletDialog } from '@/components/ConnectWalletDialog';
 import { formatCurrency } from '@/utils/formatters';
-import { useAccount } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
 import { Address, parseUnits } from 'viem';
 import { Vault, Member } from '@/contracts/types';
+import { ERC20ABI } from '@/contracts/abis/ERC20';
 
 // Form validation schema
 const addFundsSchema = z.object({
@@ -65,6 +66,8 @@ export const AddFundsDialog = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isNativeToken, setIsNativeToken] = useState(false);
   const { isConnected, address } = useAccount();
+  const publicClient = usePublicClient();
+  const [usdcBalance, setUsdcBalance] = useState<bigint | null>(null);
 
   // Get vault info from new GoalFinance contract
   const { data: vaultInfo, isLoading: isLoadingVault } = useGetVault(vaultId);
@@ -114,16 +117,36 @@ export const AddFundsDialog = ({
   const canAddFunds = isActiveMember || isVaultCreator;
 
   // Debug logging for membership status
-  console.log('AddFundsDialog Debug:', {
-    address,
-    vaultCreator: vaultData?.creator,
-    isVaultCreator,
-    memberInfo,
-    isActiveMember,
-    canAddFunds,
-    isLoadingMember
-  });
+  // console.log('AddFundsDialog Debug:', {
+  //   address,
+  //   vaultCreator: vaultData?.creator,
+  //   isVaultCreator,
+  //   memberInfo,
+  //   isActiveMember,
+  //   canAddFunds,
+  //   isLoadingMember
+  // });
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!address || isNativeToken) {
+        setUsdcBalance(null);
+        return;
+      }
+      try {
+        const bal = await publicClient.readContract({
+          address: '0x77B2693ea846571259FA89CBe4DD8e18f3F61787',
+          abi: ERC20ABI,
+          functionName: 'balanceOf',
+          args: [address],
+        });
+        setUsdcBalance(bal as bigint);
+      } catch {
+        setUsdcBalance(null);
+      }
+    };
+    fetchBalance();
+  }, [address, isNativeToken, publicClient]);
 
 
   const onSubmit = async (data: AddFundsFormData) => {
@@ -336,6 +359,13 @@ export const AddFundsDialog = ({
                   </FormItem>
                 )}
               />
+
+              {/* USDC Balance Display */}
+              {!isNativeToken && (
+                <div className="mb-2 text-xs text-goal-text/70">
+                  USDC Balance: {usdcBalance !== null ? (Number(usdcBalance) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 6 }) : '...'}
+                </div>
+              )}
 
               {/* Token Selection */}
               <div className="space-y-3">

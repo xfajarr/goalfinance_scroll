@@ -15,6 +15,9 @@ import { useVaultData } from '@/hooks/useVaultData';
 import { useCheckVaultStatus } from '@/hooks/useVaultReads';
 import { formatUnits } from 'viem';
 import { ArrowLeft, Share2, Plus, Calendar, Users, Target, MessageCircle, Activity, Send, AlertCircle, ArrowDownToLine, RefreshCw } from 'lucide-react';
+import { useEffect } from 'react';
+import { usePublicClient } from 'wagmi';
+import { GOAL_FINANCE_CONTRACT } from '@/config/contracts';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -96,7 +99,40 @@ const VaultDetailContent = () => {
   const vaultId = id ? BigInt(id) : 0n;
 
   // Fetch goal data using the hook
-  const { vault, members, isLoading, error, refetch } = useVaultData(vaultId);
+  const { vault, members, memberData, isLoading, error, refetch } = useVaultData(vaultId);
+
+  // State for all member contributions
+  const [memberContributions, setMemberContributions] = useState<Record<string, bigint>>({});
+  const [isContribLoading, setIsContribLoading] = useState(false);
+  const publicClient = usePublicClient();
+
+  useEffect(() => {
+    const fetchContributions = async () => {
+      if (!members || members.length === 0 || !vaultId) return;
+      setIsContribLoading(true);
+      try {
+        const results = await Promise.all(
+          members.map(async (address) => {
+            try {
+              const data = await publicClient.readContract({
+                address: GOAL_FINANCE_CONTRACT.address,
+                abi: GOAL_FINANCE_CONTRACT.abi,
+                functionName: 'getMember',
+                args: [vaultId, address],
+              });
+              return [address, data?.depositedAmount ?? 0n];
+            } catch {
+              return [address, 0n];
+            }
+          })
+        );
+        setMemberContributions(Object.fromEntries(results));
+      } finally {
+        setIsContribLoading(false);
+      }
+    };
+    fetchContributions();
+  }, [members, vaultId, publicClient]);
 
   // Get real-time goal status using checkVaultStatus function
   const {
@@ -200,7 +236,9 @@ const VaultDetailContent = () => {
     members: safeMembers.map((memberAddress, index) => ({
       id: index + 1,
       name: `${memberAddress.slice(0, 6)}...${memberAddress.slice(-4)}`,
-      contributed: 0, // We'd need to fetch individual member data for this
+      contributed: memberContributions[memberAddress]
+        ? Number(formatUnits(memberContributions[memberAddress], decimals))
+        : 0,
       avatar: memberAddress.slice(2, 3).toUpperCase()
     })),
     daysLeft: Math.max(0, Math.floor((Number(vaultData.config?.deadline || 0n) * 1000 - Date.now()) / (1000 * 60 * 60 * 24))),
@@ -215,7 +253,9 @@ const VaultDetailContent = () => {
     id: index + 1,
     user: `${memberAddress.slice(0, 6)}...${memberAddress.slice(-4)}`,
     action: "contributed",
-    amount: 0, // We'd need to fetch individual member data for this
+    amount: memberContributions[memberAddress]
+      ? Number(formatUnits(memberContributions[memberAddress], decimals))
+      : 0,
     timestamp: 'Recently',
     avatar: memberAddress.slice(2, 3).toUpperCase()
   }));
