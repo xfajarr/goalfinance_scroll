@@ -16,7 +16,7 @@ interface TouchPosition {
   time: number;
 }
 
-export const useSwipeGestures = (options: SwipeGestureOptions) => {
+export const useSwipeGestures = (options: SwipeGestureOptions): React.RefObject<HTMLDivElement> => {
   const {
     onSwipeLeft,
     onSwipeRight,
@@ -29,7 +29,7 @@ export const useSwipeGestures = (options: SwipeGestureOptions) => {
 
   const touchStartRef = useRef<TouchPosition | null>(null);
   const touchEndRef = useRef<TouchPosition | null>(null);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     if (preventDefault) {

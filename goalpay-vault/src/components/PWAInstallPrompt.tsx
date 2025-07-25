@@ -100,7 +100,7 @@ export const PWAInstallPrompt = () => {
             <h3 className="font-semibold text-gray-900">Install Goal Finance</h3>
           </div>
           <p className="text-sm text-gray-600 mb-3">
-            Install our app for a better experience with offline access and quick launch.
+            Install our app for a better experience and quick launch.
           </p>
           <div className="flex gap-2">
             <Button 

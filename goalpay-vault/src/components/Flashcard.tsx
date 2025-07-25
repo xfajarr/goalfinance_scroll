@@ -186,9 +186,13 @@ export const FlashcardSet = ({
   }
 
   return (
-    <div className="space-component">
-      <div className="text-center space-element">
-        <h3 className="text-2xl md:text-3xl font-fredoka font-bold text-goal-heading">{title}</h3>
+    <div className="space-y-8">
+      <div className="text-center space-y-6">
+        <h3 className={`font-fredoka font-bold text-goal-heading ${
+          isMobile ? 'text-xl sm:text-2xl' : 'text-2xl md:text-3xl'
+        }`}>
+          {title}
+        </h3>
 
         <FlashcardProgress
           currentIndex={currentIndex}
@@ -224,28 +228,42 @@ export const FlashcardSet = ({
       />
 
       {isComplete && (
-        <div className="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-3xl border border-green-200">
-          <Trophy className="w-12 h-12 text-green-600 mx-auto mb-4" />
-          <h4 className="text-xl font-fredoka font-bold text-green-700 mb-2">
+        <div className={`text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-3xl border border-green-200 ${
+          isMobile ? 'p-6' : 'p-8'
+        }`}>
+          <Trophy className={`text-green-600 mx-auto mb-4 ${
+            isMobile ? 'w-10 h-10' : 'w-12 h-12'
+          }`} />
+          <h4 className={`font-fredoka font-bold text-green-700 mb-3 ${
+            isMobile ? 'text-lg' : 'text-xl'
+          }`}>
             Congratulations! 🎉
           </h4>
-          <p className="font-inter text-green-600">
+          <p className={`font-inter text-green-600 mb-4 ${
+            isMobile ? 'text-sm' : 'text-base'
+          }`}>
             You've completed all {totalCards} flashcards in this set!
           </p>
           {enableAdvancedFeatures && (
-            <div className="mt-4 space-x-3">
-              <button
+            <div className={`flex justify-center gap-4 ${
+              isMobile ? 'flex-col' : 'flex-row'
+            }`}>
+              <Button
                 onClick={restartSet}
-                className="text-sm text-green-600 hover:text-green-700 underline"
+                variant="outline"
+                size={isMobile ? "default" : "sm"}
+                className="text-green-600 border-green-300 hover:bg-green-50 rounded-full"
               >
                 Study again
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={shuffleCards}
-                className="text-sm text-green-600 hover:text-green-700 underline"
+                variant="outline"
+                size={isMobile ? "default" : "sm"}
+                className="text-green-600 border-green-300 hover:bg-green-50 rounded-full"
               >
                 Shuffle & restart
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -1,73 +1,104 @@
-# Welcome to your Lovable project
+# GoalFi Frontend
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/2ccfe746-ae8e-41c1-a853-50923cb3424f
+GoalFi is a decentralized savings platform that transforms the way people save money by making it collaborative, fun, transparent, and rewarding. This is the frontend application built with React, TypeScript, and modern Web3 technologies.
 
-## How can I edit this code?
+## How to run this project locally
 
-There are several ways of editing your application.
+**Prerequisites**
 
-**Use Lovable**
+You need Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2ccfe746-ae8e-41c1-a853-50923cb3424f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+**Installation & Setup**
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Step 1: Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project directory
+cd goalpay-vault
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install dependencies (using pnpm)
+pnpm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Step 4: Start the development server
+pnpm dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8081`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Development
 
-**Use GitHub Codespaces**
+**Local Development**
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Edit files directly in your IDE and save them. You'll see changes reflected in the browser with hot reload.
 
-## What technologies are used for this project?
+**GitHub Codespaces**
 
-This project is built with:
+- Navigate to the main page of your repository
+- Click on the "Code" button (green button) near the top right
+- Select the "Codespaces" tab
+- Click on "New codespace" to launch a new Codespace environment
+- Edit files directly within the Codespace and commit and push your changes once you're done
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Technologies Used
 
-## How can I deploy this project?
+This project is built with modern web technologies:
 
-Simply open [Lovable](https://lovable.dev/projects/2ccfe746-ae8e-41c1-a853-50923cb3424f) and click on Share -> Publish.
+### Frontend
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe JavaScript for better development experience
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful and accessible UI components
 
-## Can I connect a custom domain to my Lovable project?
+### Web3 Integration
+- **wagmi** - React hooks for Ethereum
+- **viem** - TypeScript interface for Ethereum
+- **RainbowKit** - Wallet connection library
 
-Yes, you can!
+### State Management & Utils
+- **React Query** - Data fetching and caching
+- **React Router** - Client-side routing
+- **Lucide React** - Beautiful icons
+- **Sonner** - Toast notifications
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Project Structure
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```
+goalpay-vault/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Page components
+│   ├── hooks/         # Custom React hooks
+│   ├── lib/           # Utility functions
+│   └── types/         # TypeScript type definitions
+├── public/            # Static assets
+└── contracts/         # Smart contract ABIs
+```
+
+## Features
+
+- 🎯 **Goal-based Savings** - Create and track savings goals
+- 🤝 **Community Savings** - Join savings circles with others
+- 📚 **Learn & Earn** - Interactive flashcard learning system
+- 🏆 **Gamification** - Points, achievements, and streaks
+- 📱 **Mobile-First** - Responsive design for all devices
+- 🔐 **Web3 Native** - Connect with any Ethereum wallet
+
+## Deployment
+
+This project can be deployed to any static hosting service:
+
+- **Vercel** (Recommended)
+- **Netlify**
+- **GitHub Pages**
+- **AWS S3 + CloudFront**
+
+Build the project with:
+```sh
+pnpm build
+```
+
+The `dist` folder will contain the production-ready files.

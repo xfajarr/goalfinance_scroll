@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import BottomNavigation from '@/components/BottomNavigation';
 import { Card } from '@/components/ui/card';
@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { FlashcardSet } from '@/components/Flashcard';
+import { useLearnProgress } from '@/hooks/useLearnProgress';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/components/ui/sonner';
 import {
   BookOpen,
   Trophy,
@@ -19,19 +22,21 @@ import {
   ChevronRight,
   Clock,
   CheckCircle,
-  Flame
+  Flame,
+  Target,
+  Zap,
+  Users,
+  Calendar,
+  BarChart3,
+  Gift,
+  Lightbulb
 } from 'lucide-react';
 
 const Learn = () => {
-  const [userStats] = useState({
-    level: 3,
-    totalPoints: 1250,
-    streak: 7,
-    completedLessons: 12,
-    achievements: 5,
-    weeklyGoal: 50,
-    weeklyProgress: 35
-  });
+  const isMobile = useIsMobile();
+  const { progress, awardPoints, completeSet, updateDailyChallenge } = useLearnProgress();
+  const [activeFlashcardSet, setActiveFlashcardSet] = useState<number | null>(null);
+  const [studyStartTime, setStudyStartTime] = useState<Date | null>(null);
 
   const flashcardSets = [
     {
@@ -129,27 +134,58 @@ const Learn = () => {
     }
   ];
 
-  const [activeFlashcardSet, setActiveFlashcardSet] = useState<number | null>(null);
-  const [completedSets, setCompletedSets] = useState<Set<number>>(new Set());
-
+  // Enhanced completion handler with progress tracking
   const handleSetComplete = (setIndex: number) => {
-    setCompletedSets(prev => new Set([...prev, setIndex]));
-    // Award points and update stats here
+    if (!studyStartTime) return;
+
+    const timeSpent = Math.floor((Date.now() - studyStartTime.getTime()) / 1000);
+    const set = flashcardSets[setIndex];
+    const setId = set.title.toLowerCase().replace(/\s+/g, '-');
+
+    // Calculate accuracy (simplified - in real app, track individual card performance)
+    const accuracy = Math.floor(Math.random() * 20) + 80; // 80-100% for demo
+
+    // Complete the set
+    completeSet(setIndex, setId, accuracy, timeSpent);
+
+    // Award points based on set difficulty
+    const points = set.points || 50;
+    awardPoints(points, setId.includes('defi') ? 'defi' : setId.includes('risk') ? 'risk' : 'general');
+
+    // Update daily challenges
+    updateDailyChallenge('lessons', 1);
+    updateDailyChallenge('flashcards', set.flashcards.length);
+
+    // Show success toast
+    toast.success(`🎉 Completed ${set.title}!`, {
+      description: `Earned ${points} points • ${accuracy}% accuracy`,
+    });
+
+    // Reset study timer
+    setStudyStartTime(null);
+    setActiveFlashcardSet(null);
   };
 
-  const achievements = [
-    { name: "First Steps", icon: Star, description: "Complete your first lesson", unlocked: true, points: 25 },
-    { name: "Streak Master", icon: Flame, description: "7-day learning streak", unlocked: true, points: 50 },
-    { name: "DeFi Explorer", icon: TrendingUp, description: "Learn about yield farming", unlocked: true, points: 75 },
-    { name: "Risk Aware", icon: Shield, description: "Complete risk management course", unlocked: false, points: 100 },
-    { name: "Crypto Guru", icon: Award, description: "Reach level 10", unlocked: false, points: 200 }
-  ];
+  // Helper function to start studying a set
+  const handleStartSet = (setIndex: number) => {
+    setActiveFlashcardSet(setIndex);
+    setStudyStartTime(new Date());
+    updateDailyChallenge('streak', 1);
+  };
 
-  const dailyChallenges = [
-    { task: "Study 3 flashcards", progress: 3, target: 3, points: 20, completed: true },
-    { task: "Complete a lesson", progress: 0, target: 1, points: 50, completed: false },
-    { task: "Maintain streak", progress: 7, target: 1, points: 15, completed: true }
-  ];
+  // Get icon component from string
+  const getIconComponent = (iconName: string) => {
+    const icons: Record<string, any> = {
+      star: Star,
+      flame: Flame,
+      'trending-up': TrendingUp,
+      shield: Shield,
+      award: Award,
+      target: Target,
+      zap: Zap,
+    };
+    return icons[iconName] || Star;
+  };
 
   return (
     <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
@@ -180,57 +216,96 @@ const Learn = () => {
               </div>
 
               {activeFlashcardSet === null ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {flashcardSets.map((set, index) => (
-                    <Card 
-                      key={index}
-                      className={`p-6 border-goal-border/30 rounded-2xl cursor-pointer hover:scale-[1.02] transition-all duration-200 ${
-                        completedSets.has(index) 
-                          ? 'bg-green-50/60 border-green-200' 
-                          : 'bg-goal-accent/30 hover:bg-goal-accent/40'
-                      }`}
-                      onClick={() => setActiveFlashcardSet(index)}
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className={`px-3 py-1 rounded-full text-xs font-fredoka font-semibold ${
-                          set.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' :
-                          set.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
+                <div className={`grid gap-4 sm:gap-6 ${
+                  isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
+                }`}>
+                  {flashcardSets.map((set, index) => {
+                    const isCompleted = progress.completedSets.has(index);
+                    const setId = set.title.toLowerCase().replace(/\s+/g, '-');
+                    const setProgress = progress.setProgress[setId];
+
+                    return (
+                      <Card
+                        key={index}
+                        className={`p-4 sm:p-6 border-goal-border/30 rounded-2xl cursor-pointer transition-all duration-200 ${
+                          isMobile ? 'active:scale-95' : 'hover:scale-[1.02]'
+                        } ${
+                          isCompleted
+                            ? 'bg-green-50/60 border-green-200'
+                            : 'bg-goal-accent/30 hover:bg-goal-accent/40'
+                        }`}
+                        onClick={() => handleStartSet(index)}
+                      >
+                        <div className="flex justify-between items-start mb-3 sm:mb-4">
+                          <div className={`px-2 sm:px-3 py-1 rounded-full font-fredoka font-semibold ${
+                            isMobile ? 'text-xs' : 'text-xs sm:text-sm'
+                          } ${
+                            set.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' :
+                            set.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {set.difficulty}
+                          </div>
+                          {isCompleted && (
+                            <div className="flex items-center space-x-1">
+                              {setProgress?.accuracy && (
+                                <span className={`text-green-600 font-fredoka font-semibold ${
+                                  isMobile ? 'text-xs' : 'text-sm'
+                                }`}>
+                                  {setProgress.accuracy}%
+                                </span>
+                              )}
+                              <CheckCircle className={`text-green-600 ${
+                                isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                              }`} />
+                            </div>
+                          )}
+                        </div>
+
+                        <h3 className={`font-fredoka font-semibold text-goal-text mb-2 ${
+                          isMobile ? 'text-base' : 'text-base sm:text-lg'
                         }`}>
-                          {set.difficulty}
+                          {set.title}
+                        </h3>
+                        <p className={`font-inter text-goal-text/70 mb-3 sm:mb-4 ${
+                          isMobile ? 'text-sm' : 'text-sm'
+                        }`}>
+                          {set.description}
+                        </p>
+
+                        <div className={`flex items-center justify-between text-goal-text/60 mb-3 sm:mb-4 ${
+                          isMobile ? 'text-xs' : 'text-xs sm:text-sm'
+                        }`}>
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <Clock className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                            <span>{set.estimatedTime}</span>
+                          </div>
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            <Coins className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+                            <span>{set.points} points</span>
+                          </div>
                         </div>
-                        {completedSets.has(index) && (
-                          <CheckCircle className="w-6 h-6 text-green-600" />
-                        )}
-                      </div>
-                      
-                      <h3 className="font-fredoka font-semibold text-goal-text mb-2">{set.title}</h3>
-                      <p className="font-inter text-sm text-goal-text/70 mb-4">{set.description}</p>
-                      
-                      <div className="flex items-center justify-between text-xs text-goal-text/60 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4" />
-                          <span>{set.estimatedTime}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Coins className="w-4 h-4" />
-                          <span>{set.points} points</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="font-inter text-sm text-goal-text/70">
-                          {set.flashcards.length} cards
-                        </span>
-                        <div className="flex items-center text-goal-text/60">
-                          <span className="font-inter text-sm">
-                            {completedSets.has(index) ? 'Review' : 'Start Learning'}
+
+                        <div className="flex items-center justify-between">
+                          <span className={`font-inter text-goal-text/70 ${
+                            isMobile ? 'text-sm' : 'text-sm'
+                          }`}>
+                            {set.flashcards.length} cards
                           </span>
-                          <ChevronRight className="w-4 h-4 ml-2" />
+                          <div className="flex items-center text-goal-text/60">
+                            <span className={`font-inter ${
+                              isMobile ? 'text-sm' : 'text-sm'
+                            }`}>
+                              {isCompleted ? 'Review' : 'Start Learning'}
+                            </span>
+                            <ChevronRight className={`ml-1 sm:ml-2 ${
+                              isMobile ? 'w-4 h-4' : 'w-4 h-4'
+                            }`} />
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <div>
@@ -257,44 +332,59 @@ const Learn = () => {
             <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl">
               <h2 className="text-2xl font-fredoka font-bold text-goal-text mb-6">Achievements</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievements.map((achievement, index) => (
-                  <div 
-                    key={index}
-                    className={`flex items-center space-x-4 p-4 rounded-2xl ${
-                      achievement.unlocked 
-                        ? 'bg-goal-primary/20 border border-goal-border/50' 
-                        : 'bg-goal-accent/10 border border-goal-border/20'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                      achievement.unlocked ? 'bg-goal-primary' : 'bg-goal-border/50'
-                    }`}>
-                      <achievement.icon className={`w-6 h-6 ${
-                        achievement.unlocked ? 'text-goal-text' : 'text-goal-text/40'
-                      }`} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className={`font-fredoka font-semibold ${
-                          achievement.unlocked ? 'text-goal-text' : 'text-goal-text/60'
-                        }`}>
-                          {achievement.name}
-                        </h3>
-                        {achievement.unlocked && (
-                          <Badge className="bg-goal-primary/20 text-goal-text border-goal-border/30">
-                            +{achievement.points}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className={`font-inter text-sm ${
-                        achievement.unlocked ? 'text-goal-text/70' : 'text-goal-text/50'
+              <div className={`grid gap-3 sm:gap-4 ${
+                isMobile ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
+              }`}>
+                {progress.achievements.map((achievement, index) => {
+                  const IconComponent = getIconComponent(achievement.icon);
+                  return (
+                    <div
+                      key={achievement.id}
+                      className={`flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 rounded-2xl transition-all duration-200 ${
+                        achievement.unlocked
+                          ? 'bg-goal-primary/20 border border-goal-border/50'
+                          : 'bg-goal-accent/10 border border-goal-border/20'
+                      }`}
+                    >
+                      <div className={`rounded-2xl flex items-center justify-center ${
+                        isMobile ? 'w-10 h-10' : 'w-12 h-12'
+                      } ${
+                        achievement.unlocked ? 'bg-goal-primary' : 'bg-goal-border/50'
                       }`}>
-                        {achievement.description}
-                      </p>
+                        <IconComponent className={`${
+                          isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                        } ${
+                          achievement.unlocked ? 'text-goal-text' : 'text-goal-text/40'
+                        }`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className={`font-fredoka font-semibold truncate ${
+                            isMobile ? 'text-sm' : 'text-base'
+                          } ${
+                            achievement.unlocked ? 'text-goal-text' : 'text-goal-text/60'
+                          }`}>
+                            {achievement.name}
+                          </h3>
+                          {achievement.unlocked && (
+                            <Badge className={`bg-goal-primary/20 text-goal-text border-goal-border/30 ${
+                              isMobile ? 'text-xs px-2 py-0.5' : 'text-xs'
+                            }`}>
+                              +{achievement.points}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className={`font-inter ${
+                          isMobile ? 'text-xs' : 'text-sm'
+                        } ${
+                          achievement.unlocked ? 'text-goal-text/70' : 'text-goal-text/50'
+                        }`}>
+                          {achievement.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           </div>
@@ -302,80 +392,150 @@ const Learn = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* User Stats - Compact */}
-            <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-goal-primary rounded-3xl flex items-center justify-center mx-auto mb-3">
-                  <Trophy className="w-8 h-8 text-goal-text" />
+            <Card className={`bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl ${
+              isMobile ? 'p-4' : 'p-6'
+            }`}>
+              <div className={`text-center ${isMobile ? 'mb-3' : 'mb-4'}`}>
+                <div className={`bg-goal-primary rounded-3xl flex items-center justify-center mx-auto mb-3 ${
+                  isMobile ? 'w-12 h-12' : 'w-16 h-16'
+                }`}>
+                  <Trophy className={`text-goal-text ${
+                    isMobile ? 'w-6 h-6' : 'w-8 h-8'
+                  }`} />
                 </div>
-                <h3 className="font-fredoka font-bold text-goal-text">Level {userStats.level}</h3>
-                <p className="font-inter text-sm text-goal-text/70">{userStats.totalPoints.toLocaleString()} points</p>
+                <h3 className={`font-fredoka font-bold text-goal-text ${
+                  isMobile ? 'text-base' : 'text-lg'
+                }`}>
+                  Level {progress.userStats.level}
+                </h3>
+                <p className={`font-inter text-goal-text/70 ${
+                  isMobile ? 'text-xs' : 'text-sm'
+                }`}>
+                  {progress.userStats.totalPoints.toLocaleString()} points
+                </p>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-center">
+
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 text-center">
                 <div>
                   <div className="flex items-center justify-center space-x-1 mb-1">
-                    <Flame className="w-4 h-4 text-orange-500" />
-                    <span className="font-fredoka font-bold text-goal-text">{userStats.streak}</span>
+                    <Flame className={`text-orange-500 ${
+                      isMobile ? 'w-3 h-3' : 'w-4 h-4'
+                    }`} />
+                    <span className={`font-fredoka font-bold text-goal-text ${
+                      isMobile ? 'text-sm' : 'text-base'
+                    }`}>
+                      {progress.userStats.streak}
+                    </span>
                   </div>
-                  <p className="font-inter text-xs text-goal-text/70">Day Streak</p>
+                  <p className={`font-inter text-goal-text/70 ${
+                    isMobile ? 'text-xs' : 'text-xs'
+                  }`}>
+                    Day Streak
+                  </p>
                 </div>
                 <div>
                   <div className="flex items-center justify-center space-x-1 mb-1">
-                    <BookOpen className="w-4 h-4 text-goal-text/60" />
-                    <span className="font-fredoka font-bold text-goal-text">{userStats.completedLessons}</span>
+                    <BookOpen className={`text-goal-text/60 ${
+                      isMobile ? 'w-3 h-3' : 'w-4 h-4'
+                    }`} />
+                    <span className={`font-fredoka font-bold text-goal-text ${
+                      isMobile ? 'text-sm' : 'text-base'
+                    }`}>
+                      {progress.userStats.completedLessons}
+                    </span>
                   </div>
-                  <p className="font-inter text-xs text-goal-text/70">Lessons</p>
+                  <p className={`font-inter text-goal-text/70 ${
+                    isMobile ? 'text-xs' : 'text-xs'
+                  }`}>
+                    Lessons
+                  </p>
                 </div>
               </div>
             </Card>
 
             {/* Weekly Goal */}
-            <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
-              <h3 className="font-fredoka font-semibold text-goal-text mb-4">Weekly Goal</h3>
-              <div className="space-y-3">
+            <Card className={`bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl ${
+              isMobile ? 'p-4' : 'p-6'
+            }`}>
+              <h3 className={`font-fredoka font-semibold text-goal-text mb-3 sm:mb-4 ${
+                isMobile ? 'text-base' : 'text-lg'
+              }`}>
+                Weekly Goal
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="font-inter text-sm text-goal-text/70">Progress</span>
-                  <span className="font-fredoka font-semibold text-goal-text">
-                    {userStats.weeklyProgress}/{userStats.weeklyGoal}
+                  <span className={`font-inter text-goal-text/70 ${
+                    isMobile ? 'text-xs' : 'text-sm'
+                  }`}>
+                    Progress
+                  </span>
+                  <span className={`font-fredoka font-semibold text-goal-text ${
+                    isMobile ? 'text-sm' : 'text-base'
+                  }`}>
+                    {progress.userStats.weeklyProgress}/{progress.userStats.weeklyGoal}
                   </span>
                 </div>
-                <Progress 
-                  value={(userStats.weeklyProgress / userStats.weeklyGoal) * 100} 
-                  className="h-2 bg-goal-accent/30"
+                <Progress
+                  value={(progress.userStats.weeklyProgress / progress.userStats.weeklyGoal) * 100}
+                  className={`bg-goal-accent/30 ${isMobile ? 'h-2' : 'h-2'}`}
                 />
-                <p className="font-inter text-xs text-goal-text/60">
-                  {userStats.weeklyGoal - userStats.weeklyProgress} points to go!
+                <p className={`font-inter text-goal-text/60 ${
+                  isMobile ? 'text-xs' : 'text-xs'
+                }`}>
+                  {progress.userStats.weeklyGoal - progress.userStats.weeklyProgress} points to go!
                 </p>
               </div>
             </Card>
 
             {/* Daily Challenges */}
-            <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
-              <h3 className="font-fredoka font-semibold text-goal-text mb-4">Daily Challenges</h3>
-              <div className="space-y-3">
-                {dailyChallenges.map((challenge, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-goal-accent/20 rounded-xl">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+            <Card className={`bg-white/60 backdrop-blur-sm border-goal-border/30 rounded-3xl ${
+              isMobile ? 'p-4' : 'p-6'
+            }`}>
+              <h3 className={`font-fredoka font-semibold text-goal-text mb-3 sm:mb-4 ${
+                isMobile ? 'text-base' : 'text-lg'
+              }`}>
+                Daily Challenges
+              </h3>
+              <div className="space-y-2 sm:space-y-3">
+                {progress.dailyChallenges.map((challenge) => (
+                  <div key={challenge.id} className={`flex items-center justify-between rounded-xl bg-goal-accent/20 ${
+                    isMobile ? 'p-2.5' : 'p-3'
+                  }`}>
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                      <div className={`rounded-full flex items-center justify-center ${
+                        isMobile ? 'w-5 h-5' : 'w-6 h-6'
+                      } ${
                         challenge.completed ? 'bg-green-100' : 'bg-goal-border/30'
                       }`}>
                         {challenge.completed ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className={`text-green-600 ${
+                            isMobile ? 'w-3 h-3' : 'w-4 h-4'
+                          }`} />
                         ) : (
-                          <div className="w-2 h-2 bg-goal-text/40 rounded-full" />
+                          <div className={`bg-goal-text/40 rounded-full ${
+                            isMobile ? 'w-1.5 h-1.5' : 'w-2 h-2'
+                          }`} />
                         )}
                       </div>
-                      <div>
-                        <p className="font-inter text-sm text-goal-text">{challenge.task}</p>
-                        <p className="font-inter text-xs text-goal-text/60">
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-inter text-goal-text truncate ${
+                          isMobile ? 'text-xs' : 'text-sm'
+                        }`}>
+                          {challenge.task}
+                        </p>
+                        <p className={`font-inter text-goal-text/60 ${
+                          isMobile ? 'text-xs' : 'text-xs'
+                        }`}>
                           {challenge.progress}/{challenge.target}
                         </p>
                       </div>
                     </div>
                     <Badge className={`${
-                      challenge.completed 
-                        ? 'bg-green-100 text-green-700 border-green-200' 
+                      challenge.completed
+                        ? 'bg-green-100 text-green-700 border-green-200'
                         : 'bg-goal-primary/20 text-goal-text border-goal-border/30'
+                    } ${
+                      isMobile ? 'text-xs px-2 py-0.5' : 'text-xs'
                     }`}>
                       +{challenge.points}
                     </Badge>

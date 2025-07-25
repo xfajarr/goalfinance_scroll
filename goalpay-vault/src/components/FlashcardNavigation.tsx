@@ -29,45 +29,59 @@ export const FlashcardNavigation = ({
   const [showShortcuts, setShowShortcuts] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-6">
       {/* Main Navigation */}
-      <div className={`flex justify-center items-center ${isMobile ? 'space-x-3' : 'space-x-4'}`}>
+      <div className={`flex justify-center items-center gap-4 sm:gap-6`}>
         <Button
           onClick={onPrevious}
           variant="outline"
-          size={isMobile ? "default" : "sm"}
-          className={`rounded-full ${isMobile ? 'px-4 py-2' : 'px-6'}`}
+          size="lg"
+          className={`rounded-full font-fredoka font-medium transition-all duration-200 ${
+            isMobile
+              ? 'px-6 py-3 text-base min-h-[48px] min-w-[100px]'
+              : 'px-8 py-3 text-base min-h-[48px] min-w-[120px]'
+          }`}
           disabled={currentIndex === 0}
         >
-          <ChevronLeft className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} mr-2`} />
-          {!isMobile && 'Previous'}
-          {isMobile && 'Prev'}
+          <ChevronLeft className={`${isMobile ? 'w-5 h-5' : 'w-5 h-5'} mr-2`} />
+          <span>
+            {isMobile ? 'Prev' : 'Previous'}
+          </span>
         </Button>
 
         <Button
           onClick={onNext}
           variant={currentIndex === totalCards - 1 ? "goal" : "outline"}
-          size={isMobile ? "default" : "sm"}
-          className={`rounded-full ${isMobile ? 'px-4 py-2' : 'px-6'}`}
+          size="lg"
+          className={`rounded-full font-fredoka font-medium transition-all duration-200 ${
+            isMobile
+              ? 'px-6 py-3 text-base min-h-[48px] min-w-[100px]'
+              : 'px-8 py-3 text-base min-h-[48px] min-w-[120px]'
+          }`}
           disabled={currentIndex === totalCards - 1 && !isComplete}
         >
-          {currentIndex === totalCards - 1 ? 'Complete' : 'Next'}
-          <ChevronRight className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} ml-2`} />
+          <span>
+            {currentIndex === totalCards - 1 ? 'Complete' : 'Next'}
+          </span>
+          <ChevronRight className={`${isMobile ? 'w-5 h-5' : 'w-5 h-5'} ml-2`} />
         </Button>
       </div>
 
       {/* Secondary Actions */}
-      <div className={`flex justify-center items-center ${isMobile ? 'space-x-2' : 'space-x-3'}`}>
+      <div className={`flex justify-center items-center flex-wrap gap-3 sm:gap-4`}>
         {onShuffle && (
           <Button
             onClick={onShuffle}
             variant="outline"
-            size="sm"
-            className="rounded-full px-4 py-2 text-xs"
+            size="default"
+            className={`rounded-full font-fredoka font-medium transition-all duration-200 ${
+              isMobile
+                ? 'px-4 py-2 text-sm min-h-[40px]'
+                : 'px-5 py-2 text-sm min-h-[40px]'
+            }`}
           >
-            <Shuffle className="w-3 h-3 mr-1" />
-            {!isMobile && 'Shuffle'}
-            {isMobile && 'Mix'}
+            <Shuffle className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'} mr-2`} />
+            <span>{isMobile ? 'Mix' : 'Shuffle'}</span>
           </Button>
         )}
 
@@ -75,11 +89,15 @@ export const FlashcardNavigation = ({
           <Button
             onClick={onRestart}
             variant="outline"
-            size="sm"
-            className="rounded-full px-4 py-2 text-xs"
+            size="default"
+            className={`rounded-full font-fredoka font-medium transition-all duration-200 ${
+              isMobile
+                ? 'px-4 py-2 text-sm min-h-[40px]'
+                : 'px-5 py-2 text-sm min-h-[40px]'
+            }`}
           >
-            <RotateCcw className="w-3 h-3 mr-1" />
-            Restart
+            <RotateCcw className={`${isMobile ? 'w-4 h-4' : 'w-4 h-4'} mr-2`} />
+            <span>Restart</span>
           </Button>
         )}
 
@@ -87,11 +105,11 @@ export const FlashcardNavigation = ({
           <Button
             onClick={() => setShowShortcuts(!showShortcuts)}
             variant="ghost"
-            size="sm"
-            className="rounded-full px-3 py-2 text-xs text-goal-text-secondary"
+            size="default"
+            className="rounded-full px-4 py-2 text-sm text-goal-text-secondary hover:text-goal-text hover:bg-goal-accent/20 min-h-[40px]"
           >
-            <Keyboard className="w-3 h-3 mr-1" />
-            Shortcuts
+            <Keyboard className="w-4 h-4 mr-2" />
+            <span>Shortcuts</span>
           </Button>
         )}
       </div>
