@@ -39,12 +39,7 @@ const chains = [mantleSepolia, baseSepolia] as const;
 export const config = createConfig({
   chains,
   transports: {
-    [mantleSepolia.id]: http(undefined, {
-      // Retry configuration for rate limiting
-      retryCount: 3,
-      retryDelay: 2000, // 2 second delay between retries
-      timeout: 15000, // 15 second timeout
-    }),
+    [mantleSepolia.id]: http(),
     [baseSepolia.id]: http(undefined, {
       retryCount: 3,
       retryDelay: 2000,

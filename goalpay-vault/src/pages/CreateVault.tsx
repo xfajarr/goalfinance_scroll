@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAccount, useQueryClient } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { parseUnits } from 'viem';
 
 import BottomNavigation from '@/components/BottomNavigation';
