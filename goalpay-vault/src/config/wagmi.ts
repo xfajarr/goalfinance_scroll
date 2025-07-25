@@ -14,9 +14,9 @@ export const mantleSepolia = defineChain({
   rpcUrls: {
     default: {
       http: [
+        'https://rpc.sepolia.mantle.xyz',
         'https://mantle-sepolia.g.alchemy.com/public',
         'https://endpoints.omniatech.io/v1/mantle/sepolia/public',
-        'https://rpc.sepolia.mantle.xyz',
         'https://mantle-sepolia.drpc.org',
         'https://mantle-sepolia-testnet.rpc.thirdweb.com',
         'https://sepolia.mantle.xyz',
