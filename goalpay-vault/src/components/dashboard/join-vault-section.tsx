@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useInviteCode, VaultPreview } from '@/hooks/useInviteCode';
-import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import { formatUnits, parseUnits } from 'viem';
 import { Users, Target, Calendar, Loader2, Search, UserPlus } from 'lucide-react';
@@ -17,6 +17,7 @@ export const JoinGoalSection = () => {
   const [goalPreview, setGoalPreview] = useState<VaultPreview | null>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [isNativeToken, setIsNativeToken] = useState(false);
+  const [showPersonalGoal, setShowPersonalGoal] = useState(false);
   
   const { 
     validateInviteCode, 

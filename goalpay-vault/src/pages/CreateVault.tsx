@@ -10,7 +10,7 @@ import { ArrowLeft, ArrowRight, Calendar, DollarSign, Users, Lock, Share2, Trend
 import confetti from 'canvas-confetti';
 import { useCreateVault, getGoalTypeFromString } from '@/hooks/useCreateVault';
 import { GoalType } from '@/contracts/types';
-import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { CONTRACT_ADDRESSES, NATIVE_TOKEN } from '@/config/contracts';
 import { useChainId } from 'wagmi';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
@@ -413,7 +413,7 @@ const CreateVault = () => {
 
       <main className="container-narrow py-8">
         <Link
-          to="/dashboard"
+          to="/app/dashboard"
           className="inline-flex items-center space-x-2 text-goal-text-primary hover:text-goal-heading transition-colors mb-6 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />

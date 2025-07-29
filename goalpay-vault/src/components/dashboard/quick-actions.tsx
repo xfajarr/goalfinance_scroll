@@ -10,21 +10,21 @@ export const QuickActions = () => {
       <h3 className="font-fredoka font-bold text-lg text-goal-text-primary mb-4">Quick Actions</h3>
 
       <div className="space-tight">
-        <Link to="/create-goal">
+        <Link to="/app/create-goal">
           <Button variant="outline" className="w-full rounded-2xl">
             <Plus className="w-4 h-4 mr-2" />
             Create New Goal
           </Button>
         </Link>
 
-        <Link to="/discover-circles">
+        <Link to="/app/discover-circles">
           <Button variant="outline" className="w-full rounded-2xl mt-2">
             <Users className="w-4 h-4 mr-2" />
             Discover Circles
           </Button>
         </Link>
 
-        <Link to="/learn">
+        <Link to="/app/learn">
           <Button variant="outline" className="w-full rounded-2xl mt-2">
             <BookOpen className="w-4 h-4 mr-2" />
             Learn & Earn

@@ -247,7 +247,7 @@ const Community = () => {
                 asChild
                 className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-bold text-lg px-8 py-4 rounded-2xl"
               >
-                <Link to="/create-goal">
+                <Link to="/app/create-goal">
                   <Target className="w-5 h-5 mr-2" />
                   Create Your Goal
                 </Link>

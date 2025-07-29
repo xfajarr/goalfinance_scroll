@@ -5,19 +5,40 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { config, mantleSepolia, baseSepolia } from '@/config/wagmi';
 
 // Create a single QueryClient instance to avoid duplicate initialization
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 3,
-    },
-  },
-});
+let queryClientInstance: QueryClient | null = null;
 
-// Get Privy App ID
-const PRIVY_APP_ID = 'cmd87c3bk0063lb0mssxa5y1m';
+const getQueryClient = () => {
+  if (!queryClientInstance) {
+    queryClientInstance = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 1000 * 60 * 5, // 5 minutes
+          retry: 3,
+        },
+      },
+    });
+  }
+  return queryClientInstance;
+};
+
+// Get Privy App ID from environment or fallback
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'cmd87c3bk0063lb0mssxa5y1m';
+
+// WalletConnect Project ID (only set if explicitly provided)
+const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+
+// Create singleton flag to prevent double initialization
+let privyInitialized = false;
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient();
+  
+  // Prevent double initialization
+  if (privyInitialized) {
+    console.warn('PrivyProvider already initialized, using existing instance');
+  }
+  privyInitialized = true;
+  
   return (
     <PrivyProviderCore
       appId={PRIVY_APP_ID}
@@ -41,8 +62,11 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         supportedChains: [mantleSepolia, baseSepolia],
         defaultChain: mantleSepolia,
 
-        // Wallet configuration to handle unsupported chains gracefully
-        walletConnectCloudProjectId: undefined, // Disable WalletConnect to prevent duplicate initialization
+        // Only include WalletConnect config if project ID is provided
+        // This prevents duplicate initialization warnings
+        ...(WALLETCONNECT_PROJECT_ID ? {
+          walletConnectCloudProjectId: WALLETCONNECT_PROJECT_ID,
+        } : {}),
 
         // Configure external wallets to handle chain compatibility
         externalWallets: {

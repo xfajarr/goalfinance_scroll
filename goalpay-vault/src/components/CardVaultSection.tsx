@@ -71,9 +71,13 @@ export const CardVaultSection = () => {
         <div className="flex animate-scroll-left space-x-6 pl-6" style={{ width: 'max-content' }}>
           {duplicatedVaults.map((vault, index) => {
             const Icon = vault.icon;
+            // Create unique key by combining title with index and whether it's first or second copy
+            const isSecondCopy = index >= vaultCards.length;
+            const uniqueKey = `${vault.title}-${index}-${isSecondCopy ? 'copy' : 'original'}`;
+            
             return (
               <div
-                key={`${vault.title}-${index}`}
+                key={uniqueKey}
                 className="flex-shrink-0 min-w-[320px] md:min-w-[380px] lg:min-w-[420px] hover:scale-[1.02] transition-all duration-200"
               >
                 <Card className="bg-goal-accent/60 backdrop-blur-sm border border-goal-border/50 p-6 rounded-3xl h-full">

@@ -32,9 +32,13 @@ export default defineConfig(({ mode }) => ({
   define: {
     global: 'globalThis',
     'process.env': {},
+    // Fix Lit dev mode warning
+    'process.env.NODE_ENV': JSON.stringify(mode),
+    // Define for Lit compatibility
+    'process.env.DEV': mode === 'development',
   },
   optimizeDeps: {
-    include: ['buffer'],
+    include: ['buffer', 'lit', 'lit-html', '@lit/reactive-element'],
   },
   build: {
     rollupOptions: {

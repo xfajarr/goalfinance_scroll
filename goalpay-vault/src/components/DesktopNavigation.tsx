@@ -1,25 +1,24 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { usePrivy } from '@privy-io/react-auth';
-import { useAccount } from 'wagmi';
+import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { Button } from '@/components/ui/button';
-import { ConnectWalletDialog } from './ConnectWalletDialog';
+import { WalletButton } from './wallet/WalletButton';
 import { ChainSwitcher } from './ChainSwitcher';
-import { Wallet, Check } from 'lucide-react';
 
 export const DesktopNavigation = () => {
   const location = useLocation();
-  const { authenticated } = usePrivy();
-  const { isConnected, address } = useAccount();
-
-  const isWalletConnected = authenticated && isConnected;
+  const { isConnected } = useWalletGuard();
 
   const navItems = [
-    { label: 'Home', path: isWalletConnected ? '/dashboard' : '/' },
-    { label: 'Discover Circles', path: '/discover-circles' },
-    { label: 'Learn', path: '/learn' },
-    { label: 'How it Works', path: '/how-it-works' },
-    { label: 'FAQ', path: '/faq' },
+    { label: 'Home', path: isConnected ? '/app/dashboard' : '/' },
+    ...(isConnected ? [
+      { label: 'Split Bills', path: '/app/split-bills' },
+      { label: 'Debts', path: '/app/debts' },
+      { label: 'Profile', path: '/app/profile' },
+    ] : [
+      { label: 'How it Works', path: '/how-it-works' },
+      { label: 'FAQ', path: '/faq' },
+    ]),
   ];
 
   return (
@@ -28,10 +27,10 @@ export const DesktopNavigation = () => {
         <Link
           key={item.path}
           to={item.path}
-          className={`font-fredoka text-sm font-medium transition-colors hover:text-goal-subheading ${
+          className={`font-fredoka text-sm font-medium transition-all duration-200 px-4 py-2 rounded-2xl ${
             location.pathname === item.path
-              ? 'text-goal-text'
-              : 'text-goal-text/70'
+              ? 'text-goal-text bg-goal-primary/20 shadow-sm'
+              : 'text-goal-text/70 hover:text-goal-subheading hover:bg-goal-primary/10 hover:shadow-sm'
           }`}
         >
           {item.label}
@@ -39,38 +38,20 @@ export const DesktopNavigation = () => {
       ))}
 
       {/* Show chain switcher when wallet is connected */}
-      {isWalletConnected && (
+      {isConnected && (
         <ChainSwitcher className="border-goal-border text-goal-text hover:bg-goal-accent" />
       )}
 
-      <ConnectWalletDialog>
-        <Button className={`font-medium rounded-full px-4 py-2 text-sm transition-all duration-200 ${
-          isWalletConnected
-            ? 'bg-green-500 hover:bg-green-600 text-white'
-            : 'bg-goal-secondary hover:bg-goal-secondary/80 text-goal-text'
-        }`}>
-          {isWalletConnected ? (
-            <>
-              <Check className="w-4 h-4 mr-2" />
-              {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Connected'}
-            </>
-          ) : (
-            <>
-              <Wallet className="w-4 h-4 mr-2" />
-              Connect Wallet
-            </>
-          )}
-        </Button>
-      </ConnectWalletDialog>
+      <WalletButton variant="outline" size="sm" />
 
-      {/* <Button
+      <Button
         asChild
         className="bg-goal-primary hover:bg-goal-primary/80 text-goal-text font-medium rounded-full px-6 py-2 text-sm transition-all duration-200 hover:scale-105"
       >
-        <Link to="/dashboard">
-          {isWalletConnected ? 'Launch App' : 'Start Saving'}
+        <Link to={isConnected ? '/app/dashboard' : '/app/dashboard'}>
+          {isConnected ? 'Dashboard' : 'Get Started'}
         </Link>
-      </Button> */}
+      </Button>
     </div>
   );
 };

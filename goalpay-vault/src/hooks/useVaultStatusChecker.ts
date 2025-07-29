@@ -25,7 +25,7 @@ export function useVaultRealTimeStatus(vaultId: bigint | undefined) {
 
   return {
     realTimeStatus,
-    displayStatus: getDisplayStatus(realTimeStatus),
+    displayStatus: getDisplayStatus(realTimeStatus as number | undefined),
     isActive: realTimeStatus === 0,
     isCompleted: realTimeStatus === 1,
     isFailed: realTimeStatus === 2,
@@ -37,7 +37,8 @@ export function useVaultRealTimeStatus(vaultId: bigint | undefined) {
  * This ensures that vaults are properly categorized based on current blockchain state
  */
 export function useFilteredVaultsByStatus(vaults: VaultData[]) {
-  // Get real-time status for each vault (up to 10 vaults)
+  // Get real-time status for each vault (up to 25 vaults)
+  // TODO: Implement a more scalable solution for users with many vaults
   const vault1Status = useVaultRealTimeStatus(vaults[0]?.id);
   const vault2Status = useVaultRealTimeStatus(vaults[1]?.id);
   const vault3Status = useVaultRealTimeStatus(vaults[2]?.id);
@@ -48,10 +49,28 @@ export function useFilteredVaultsByStatus(vaults: VaultData[]) {
   const vault8Status = useVaultRealTimeStatus(vaults[7]?.id);
   const vault9Status = useVaultRealTimeStatus(vaults[8]?.id);
   const vault10Status = useVaultRealTimeStatus(vaults[9]?.id);
+  const vault11Status = useVaultRealTimeStatus(vaults[10]?.id);
+  const vault12Status = useVaultRealTimeStatus(vaults[11]?.id);
+  const vault13Status = useVaultRealTimeStatus(vaults[12]?.id);
+  const vault14Status = useVaultRealTimeStatus(vaults[13]?.id);
+  const vault15Status = useVaultRealTimeStatus(vaults[14]?.id);
+  const vault16Status = useVaultRealTimeStatus(vaults[15]?.id);
+  const vault17Status = useVaultRealTimeStatus(vaults[16]?.id);
+  const vault18Status = useVaultRealTimeStatus(vaults[17]?.id);
+  const vault19Status = useVaultRealTimeStatus(vaults[18]?.id);
+  const vault20Status = useVaultRealTimeStatus(vaults[19]?.id);
+  const vault21Status = useVaultRealTimeStatus(vaults[20]?.id);
+  const vault22Status = useVaultRealTimeStatus(vaults[21]?.id);
+  const vault23Status = useVaultRealTimeStatus(vaults[22]?.id);
+  const vault24Status = useVaultRealTimeStatus(vaults[23]?.id);
+  const vault25Status = useVaultRealTimeStatus(vaults[24]?.id);
 
   const statusCheckers = [
     vault1Status, vault2Status, vault3Status, vault4Status, vault5Status,
-    vault6Status, vault7Status, vault8Status, vault9Status, vault10Status
+    vault6Status, vault7Status, vault8Status, vault9Status, vault10Status,
+    vault11Status, vault12Status, vault13Status, vault14Status, vault15Status,
+    vault16Status, vault17Status, vault18Status, vault19Status, vault20Status,
+    vault21Status, vault22Status, vault23Status, vault24Status, vault25Status
   ];
 
   const filteredVaults = useMemo(() => {
@@ -61,7 +80,7 @@ export function useFilteredVaultsByStatus(vaults: VaultData[]) {
     const cancelledVaults: VaultData[] = [];
 
     vaults.forEach((vault, index) => {
-      if (index >= 10) return; // Only process first 10 vaults
+      if (index >= 25) return; // Only process first 25 vaults
 
       const statusChecker = statusCheckers[index];
       const realTimeStatus = statusChecker.realTimeStatus;
@@ -109,7 +128,7 @@ export function useFilteredVaultsByStatus(vaults: VaultData[]) {
  * Enhanced vault data with real-time status
  */
 export function useEnhancedVaultData(vaults: VaultData[]) {
-  // Get real-time status for each vault
+  // Get real-time status for each vault (up to 25 vaults)
   const vault1Status = useVaultRealTimeStatus(vaults[0]?.id);
   const vault2Status = useVaultRealTimeStatus(vaults[1]?.id);
   const vault3Status = useVaultRealTimeStatus(vaults[2]?.id);
@@ -120,16 +139,34 @@ export function useEnhancedVaultData(vaults: VaultData[]) {
   const vault8Status = useVaultRealTimeStatus(vaults[7]?.id);
   const vault9Status = useVaultRealTimeStatus(vaults[8]?.id);
   const vault10Status = useVaultRealTimeStatus(vaults[9]?.id);
+  const vault11Status = useVaultRealTimeStatus(vaults[10]?.id);
+  const vault12Status = useVaultRealTimeStatus(vaults[11]?.id);
+  const vault13Status = useVaultRealTimeStatus(vaults[12]?.id);
+  const vault14Status = useVaultRealTimeStatus(vaults[13]?.id);
+  const vault15Status = useVaultRealTimeStatus(vaults[14]?.id);
+  const vault16Status = useVaultRealTimeStatus(vaults[15]?.id);
+  const vault17Status = useVaultRealTimeStatus(vaults[16]?.id);
+  const vault18Status = useVaultRealTimeStatus(vaults[17]?.id);
+  const vault19Status = useVaultRealTimeStatus(vaults[18]?.id);
+  const vault20Status = useVaultRealTimeStatus(vaults[19]?.id);
+  const vault21Status = useVaultRealTimeStatus(vaults[20]?.id);
+  const vault22Status = useVaultRealTimeStatus(vaults[21]?.id);
+  const vault23Status = useVaultRealTimeStatus(vaults[22]?.id);
+  const vault24Status = useVaultRealTimeStatus(vaults[23]?.id);
+  const vault25Status = useVaultRealTimeStatus(vaults[24]?.id);
 
   const statusCheckers = [
     vault1Status, vault2Status, vault3Status, vault4Status, vault5Status,
-    vault6Status, vault7Status, vault8Status, vault9Status, vault10Status
+    vault6Status, vault7Status, vault8Status, vault9Status, vault10Status,
+    vault11Status, vault12Status, vault13Status, vault14Status, vault15Status,
+    vault16Status, vault17Status, vault18Status, vault19Status, vault20Status,
+    vault21Status, vault22Status, vault23Status, vault24Status, vault25Status
   ];
 
   const enhancedVaults = useMemo(() => {
     return vaults.map((vault, index) => {
-      if (index >= 10) {
-        // For vaults beyond the first 10, use stored status
+      if (index >= 25) {
+        // For vaults beyond the first 25, use stored status
         return {
           ...vault,
           realTimeStatus: vault.status,

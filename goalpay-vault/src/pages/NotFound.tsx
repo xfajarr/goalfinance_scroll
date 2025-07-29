@@ -31,7 +31,7 @@ const NotFound = () => {
               variant="outline"
               className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6"
             >
-              <Link to="/dashboard">
+              <Link to="/app/dashboard">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Link>
@@ -41,7 +41,7 @@ const NotFound = () => {
               asChild
               className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full px-6"
             >
-              <Link to="/dashboard">
+              <Link to="/app/dashboard">
                 <Home className="w-4 h-4 mr-2" />
                 Dashboard
               </Link>

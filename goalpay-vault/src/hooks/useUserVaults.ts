@@ -34,7 +34,8 @@ export function useUserVaults(): UseUserVaultsReturn {
 
 
 
-  // Get detailed info for each goal (up to first 10 goals for better UX)
+  // Get detailed info for each goal (up to first 25 goals for better UX)
+  // TODO: Implement a more scalable solution for users with many vaults
   // Always call hooks in the same order
   const vault1 = useGetVault(vaultIds?.[0]);
   const vault2 = useGetVault(vaultIds?.[1]);
@@ -46,9 +47,32 @@ export function useUserVaults(): UseUserVaultsReturn {
   const vault8 = useGetVault(vaultIds?.[7]);
   const vault9 = useGetVault(vaultIds?.[8]);
   const vault10 = useGetVault(vaultIds?.[9]);
+  const vault11 = useGetVault(vaultIds?.[10]);
+  const vault12 = useGetVault(vaultIds?.[11]);
+  const vault13 = useGetVault(vaultIds?.[12]);
+  const vault14 = useGetVault(vaultIds?.[13]);
+  const vault15 = useGetVault(vaultIds?.[14]);
+  const vault16 = useGetVault(vaultIds?.[15]);
+  const vault17 = useGetVault(vaultIds?.[16]);
+  const vault18 = useGetVault(vaultIds?.[17]);
+  const vault19 = useGetVault(vaultIds?.[18]);
+  const vault20 = useGetVault(vaultIds?.[19]);
+  const vault21 = useGetVault(vaultIds?.[20]);
+  const vault22 = useGetVault(vaultIds?.[21]);
+  const vault23 = useGetVault(vaultIds?.[22]);
+  const vault24 = useGetVault(vaultIds?.[23]);
+  const vault25 = useGetVault(vaultIds?.[24]);
 
   // Combine all goal queries (no need for individual goal contract calls)
-  const vaultQueries = useMemo(() => [vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10], [vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10]);
+  const vaultQueries = useMemo(() => [
+    vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10,
+    vault11, vault12, vault13, vault14, vault15, vault16, vault17, vault18, vault19, vault20,
+    vault21, vault22, vault23, vault24, vault25
+  ], [
+    vault1, vault2, vault3, vault4, vault5, vault6, vault7, vault8, vault9, vault10,
+    vault11, vault12, vault13, vault14, vault15, vault16, vault17, vault18, vault19, vault20,
+    vault21, vault22, vault23, vault24, vault25
+  ]);
 
   // Check if any goal details are loading
   const isLoadingDetails = vaultQueries.some(query => query.isLoading);
@@ -71,7 +95,7 @@ export function useUserVaults(): UseUserVaultsReturn {
 
     if (!vaultIds || !Array.isArray(vaultIds)) return [];
 
-    return (vaultIds as bigint[]).slice(0, 10).map((id, index) => {
+    return (vaultIds as bigint[]).slice(0, 25).map((id, index) => {
       const vaultQuery = vaultQueries[index];
       const vaultInfo = vaultQuery?.data;
 

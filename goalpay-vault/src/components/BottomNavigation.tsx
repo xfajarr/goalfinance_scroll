@@ -1,40 +1,40 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, User, BookOpen, Search } from 'lucide-react';
+import { Home, Plus, User, Receipt, DollarSign } from 'lucide-react';
 
 const BottomNavigation = () => {
   const location = useLocation();
   
   const navItems = [
-    { 
-      icon: Home, 
-      label: 'Home', 
-      path: '/dashboard',
-      active: location.pathname === '/dashboard'
+    {
+      icon: Home,
+      label: 'Home',
+      path: '/app/dashboard',
+      active: location.pathname === '/app/dashboard'
     },
     {
-      icon: Search,
-      label: 'Discover',
-      path: '/discover-circles',
-      active: location.pathname === '/discover-circles'
+      icon: Receipt,
+      label: 'Bills',
+      path: '/app/split-bills',
+      active: location.pathname === '/app/split-bills'
     },
-    { 
-      icon: Plus, 
-      label: 'Create', 
-      path: '/create-goal',
-      active: location.pathname === '/create-goal'
+    {
+      icon: Plus,
+      label: 'Create',
+      path: '/app/create-goal',
+      active: location.pathname === '/app/create-goal'
     },
-    { 
-      icon: BookOpen, 
-      label: 'Learn', 
-      path: '/learn',
-      active: location.pathname === '/learn'
+    {
+      icon: DollarSign,
+      label: 'Debts',
+      path: '/app/debts',
+      active: location.pathname === '/app/debts'
     },
-    { 
-      icon: User, 
-      label: 'Profile', 
-      path: '/profile',
-      active: location.pathname === '/profile'
+    {
+      icon: User,
+      label: 'Profile',
+      path: '/app/profile',
+      active: location.pathname === '/app/profile'
     }
   ];
 

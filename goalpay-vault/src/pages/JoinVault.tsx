@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import BottomNavigation from '@/components/BottomNavigation';
 import { ArrowLeft, Users, Target, Calendar, Plus, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useWalletGuard } from '@/hooks/useWalletGuard';
+import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import { useInviteCode, VaultPreview } from '@/hooks/useInviteCode';
 import { extractVaultIdFromInviteCode } from '@/utils/inviteCodeUtils';

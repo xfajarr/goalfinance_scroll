@@ -3,14 +3,28 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import BottomNavigation from '@/components/BottomNavigation';
-import { Settings, Trophy, Target, Users, Copy, Check, DollarSign, Loader2, AlertCircle } from 'lucide-react';
+import { WalletGuard } from '@/components/wallet/WalletGuard';
+import { Settings, Trophy, Target, Users, Copy, Check, DollarSign, Loader2, AlertCircle, LogOut } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { useWalletGuard } from '@/hooks/useWalletGuard';
-import { ConnectWalletDialog } from '@/components/ConnectWalletDialog';
+import { useWalletGuard } from '@/hooks/use-wallet-guard';
+import { usePrivy } from '@privy-io/react-auth';
+import { toast } from 'sonner';
 
 const Profile = () => {
   const [walletCopied, setWalletCopied] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // Get real user profile data
   const {
@@ -24,15 +38,50 @@ const Profile = () => {
   } = useUserProfile();
 
   // Wallet guard for connection state
-  const { isConnected, requireWalletConnection } = useWalletGuard();
+  const { isConnected, requireConnection, address } = useWalletGuard();
+  
+  // Privy for wallet disconnection
+  const { logout } = usePrivy();
 
   const copyWalletAddress = async () => {
     try {
-      await navigator.clipboard.writeText(walletAddress);
-      setWalletCopied(true);
-      setTimeout(() => setWalletCopied(false), 2000);
+      const addressToCopy = walletAddress || address;
+      if (addressToCopy) {
+        await navigator.clipboard.writeText(addressToCopy);
+        setWalletCopied(true);
+        toast.success('Address copied to clipboard');
+        setTimeout(() => setWalletCopied(false), 2000);
+      }
     } catch (err) {
       console.error('Failed to copy wallet address');
+      toast.error('Failed to copy address');
+    }
+  };
+
+  const handleDisconnectWallet = async () => {
+    try {
+      setIsDisconnecting(true);
+
+      // First try to logout from Privy
+      try {
+        await logout();
+      } catch (logoutError) {
+        console.warn('Privy logout failed, but continuing with disconnect:', logoutError);
+        // Continue with disconnect even if Privy logout fails
+      }
+
+      toast.success('Wallet disconnected successfully');
+
+      // Navigate to landing page after successful disconnect
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+
+    } catch (error) {
+      console.error('Failed to disconnect wallet:', error);
+      toast.error('Failed to disconnect wallet. Please try again.');
+    } finally {
+      setIsDisconnecting(false);
     }
   };
 
@@ -65,34 +114,10 @@ const Profile = () => {
     );
   }
 
-  // Show connect wallet prompt if not connected
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-goal-bg pb-32 md:pb-0 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 bg-goal-primary rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <Users className="w-8 h-8 text-goal-text" />
-          </div>
-          <h1 className="text-2xl font-fredoka font-bold text-goal-text mb-4">
-            Connect Your Wallet
-          </h1>
-          <p className="font-inter text-goal-text/70 mb-6">
-            Connect your wallet to view your profile and track your savings goals.
-          </p>
-          <ConnectWalletDialog>
-            <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full px-8 py-3">
-              Connect Wallet
-            </Button>
-          </ConnectWalletDialog>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-goal-bg pb-32 md:pb-0">
-
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <WalletGuard requireAuth={false}>
+      <div className="min-h-screen bg-goal-bg pb-32 md:pb-8">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-8 rounded-3xl mb-8">
           <div className="flex flex-col items-center text-center space-y-4">
@@ -130,13 +155,62 @@ const Profile = () => {
               </Button>
             </div>
 
-            <Button
-              variant="outline"
-              className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+              <Button
+                variant="outline"
+                className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 flex-1 min-w-0"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Settings</span>
+                <span className="sm:hidden">Settings</span>
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 rounded-full px-6 flex-1 min-w-0 transition-all duration-200"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Disconnect</span>
+                    <span className="sm:hidden">Disconnect</span>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30 rounded-xl max-w-[90vw] sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-fredoka text-goal-text">
+                      Disconnect Wallet?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="font-inter text-goal-text/70">
+                      Are you sure you want to disconnect your wallet? You will need to reconnect to access your profile and savings goals.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                    <AlertDialogCancel className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full w-full sm:w-auto">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDisconnectWallet}
+                      disabled={isDisconnecting}
+                      className="bg-red-600 hover:bg-red-700 text-white rounded-full w-full sm:w-auto"
+                    >
+                      {isDisconnecting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Disconnecting...
+                        </>
+                      ) : (
+                        <>
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Disconnect
+                        </>
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </Card>
 
@@ -218,8 +292,11 @@ const Profile = () => {
         </Card>
       </main>
 
-      <BottomNavigation />
-    </div>
+        <div className="md:hidden">
+          <BottomNavigation />
+        </div>
+      </div>
+    </WalletGuard>
   );
 };
 

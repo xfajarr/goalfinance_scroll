@@ -106,7 +106,7 @@ const GoalsHistory = () => {
             <AlertTriangle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
             <h2 className="text-xl font-fredoka font-bold text-goal-text mb-2">Wallet Not Connected</h2>
             <p className="text-goal-text/70 mb-6">Please connect your wallet to view your goals history.</p>
-            <Link to="/dashboard">
+            <Link to="/app/dashboard">
               <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold">
                 Go to Dashboard
               </Button>
@@ -124,7 +124,7 @@ const GoalsHistory = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Link to="/dashboard">
+            <Link to="/app/dashboard">
               <Button variant="ghost" size="sm" className="p-2">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
@@ -275,7 +275,7 @@ const GoalsHistory = () => {
                   <CheckCircle className="w-16 h-16 text-goal-text/30 mx-auto mb-4" />
                   <h3 className="text-lg font-fredoka font-bold text-goal-text mb-2">No Failed Goals</h3>
                   <p className="text-goal-text/70 mb-6">Great job! You haven't failed any goals yet.</p>
-                  <Link to="/dashboard">
+                  <Link to="/app/dashboard">
                     <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold">
                       View Active Goals
                     </Button>
@@ -313,7 +313,7 @@ const GoalsHistory = () => {
                   <Calendar className="w-16 h-16 text-goal-text/30 mx-auto mb-4" />
                   <h3 className="text-lg font-fredoka font-bold text-goal-text mb-2">No Cancelled Goals</h3>
                   <p className="text-goal-text/70 mb-6">You haven't cancelled any goals.</p>
-                  <Link to="/dashboard">
+                  <Link to="/app/dashboard">
                     <Button className="bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-semibold">
                       View Active Goals
                     </Button>
