@@ -12,6 +12,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  MobileDialog,
+  MobileDialogContent,
+  MobileDialogDescription,
+  MobileDialogHeader,
+  MobileDialogTitle,
+  MobileDialogTrigger,
+} from '@/components/ui/mobile-dialog';
+import {
   Receipt,
   Plus,
   Users,
@@ -101,8 +109,8 @@ export default function SplitBills() {
                   <h2 className="text-2xl font-fredoka font-bold text-goal-text">Bills & Friends</h2>
                   <p className="text-sm text-goal-text/70 font-inter">Manage your shared expenses</p>
                 </div>
-                <Dialog open={showCreateBill} onOpenChange={setShowCreateBill}>
-                  <DialogTrigger asChild>
+                <MobileDialog open={showCreateBill} onOpenChange={setShowCreateBill}>
+                  <MobileDialogTrigger asChild>
                     <Button
                       size="sm"
                       className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full transition-all duration-300 hover:scale-105"
@@ -110,20 +118,20 @@ export default function SplitBills() {
                       <Plus className="w-4 h-4 mr-2" />
                       New Bill
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle className="font-fredoka font-bold text-goal-text">Create New Bill</DialogTitle>
-                      <DialogDescription className="text-goal-text/70">
+                  </MobileDialogTrigger>
+                  <MobileDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30">
+                    <MobileDialogHeader>
+                      <MobileDialogTitle className="font-fredoka font-bold text-goal-text">Create New Bill</MobileDialogTitle>
+                      <MobileDialogDescription className="text-goal-text/70">
                         Split expenses with friends easily and transparently
-                      </DialogDescription>
-                    </DialogHeader>
+                      </MobileDialogDescription>
+                    </MobileDialogHeader>
                     <BillCreationForm
                       onSuccess={handleBillCreated}
                       onCancel={() => setShowCreateBill(false)}
                     />
-                  </DialogContent>
-                </Dialog>
+                  </MobileDialogContent>
+                </MobileDialog>
               </div>
 
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -227,23 +235,23 @@ function BillsTab({ billIds, isLoading }: BillsTabProps) {
             <p className="text-goal-text/70 font-inter mb-6">
               Create your first bill to start splitting expenses with friends.
             </p>
-            <Dialog>
-              <DialogTrigger asChild>
+            <MobileDialog>
+              <MobileDialogTrigger asChild>
                 <Button className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold rounded-full transition-all duration-300 hover:scale-105">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Bill
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle className="font-fredoka font-bold text-goal-text">Create New Bill</DialogTitle>
-                  <DialogDescription className="text-goal-text/70">
+              </MobileDialogTrigger>
+              <MobileDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30">
+                <MobileDialogHeader>
+                  <MobileDialogTitle className="font-fredoka font-bold text-goal-text">Create New Bill</MobileDialogTitle>
+                  <MobileDialogDescription className="text-goal-text/70">
                     Split expenses with friends easily and transparently
-                  </DialogDescription>
-                </DialogHeader>
+                  </MobileDialogDescription>
+                </MobileDialogHeader>
                 <BillCreationForm />
-              </DialogContent>
-            </Dialog>
+              </MobileDialogContent>
+            </MobileDialog>
           </div>
         </div>
       </div>

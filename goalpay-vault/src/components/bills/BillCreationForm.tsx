@@ -209,7 +209,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
   const preview = calculatePreview();
 
   return (
-    <div className={`${className}`}>
+    <div className={`px-1 sm:px-0 ${className}`}>
       {/* Compact Header */}
       <div className="flex items-center gap-3 mb-4">
         <div className="w-8 h-8 bg-goal-primary rounded-xl flex items-center justify-center">
@@ -226,7 +226,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 rounded-full">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 px-1 sm:px-0">
           {/* Basic Information */}
           <div className="space-y-3">
             <h3 className="font-fredoka font-semibold text-goal-text flex items-center gap-2 text-sm">

@@ -12,6 +12,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  MobileDialog,
+  MobileDialogContent,
+  MobileDialogDescription,
+  MobileDialogHeader,
+  MobileDialogTitle,
+  MobileDialogTrigger,
+} from '@/components/ui/mobile-dialog';
+import {
   Form,
   FormControl,
   FormDescription,
@@ -105,23 +113,23 @@ export function AddFriendDialog({ children, onSuccess }: AddFriendDialogProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+    <MobileDialog open={open} onOpenChange={handleOpenChange}>
+      <MobileDialogTrigger asChild>
         {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      </MobileDialogTrigger>
+      <MobileDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30">
+        <MobileDialogHeader>
+          <MobileDialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-goal-primary" />
             Add Friend
-          </DialogTitle>
-          <DialogDescription>
+          </MobileDialogTitle>
+          <MobileDialogDescription>
             Add a friend by their wallet address to easily split bills and track debts.
-          </DialogDescription>
-        </DialogHeader>
+          </MobileDialogDescription>
+        </MobileDialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 px-1 sm:px-0">
             {/* Wallet Address Field */}
             <FormField
               control={form.control}
@@ -266,8 +274,8 @@ export function AddFriendDialog({ children, onSuccess }: AddFriendDialogProps) {
             </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </MobileDialogContent>
+    </MobileDialog>
   );
 }
 

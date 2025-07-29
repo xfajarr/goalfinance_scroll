@@ -30,6 +30,7 @@ import Debts from "./pages/Debts";
 import GoalsHistory from "./pages/GoalsHistory";
 import FlashcardDemo from "./components/flashcard/FlashcardDemo";
 import GoalCreationV2 from "./pages/VaultCreationV2";
+import TestSlideAnimation from "./pages/TestSlideAnimation";
 
 // Special pages
 import Welcome from "./pages/Welcome";
@@ -76,6 +77,9 @@ const App = () => (
 
           {/* Welcome page without Layout since it's a full-screen onboarding experience */}
           <Route path="/welcome" element={<Welcome />} />
+
+          {/* Test page for slide animation */}
+          <Route path="/test-slide" element={<TestSlideAnimation />} />
 
           {/* Protected app routes with AppLayout */}
           <Route path="/app/*" element={
