@@ -15,14 +15,13 @@ interface WalletGuardProps {
 /**
  * Component that guards children behind wallet connection/authentication
  */
-export function WalletGuard({ 
-  children, 
-  requireAuth = false, 
-  fallback, 
-  className 
+export function WalletGuard({
+  children,
+  requireAuth = false,
+  fallback,
+  className
 }: WalletGuardProps) {
-  const { login } = usePrivy();
-  const { isConnected, isAuthenticated, isLoading, requireConnection, requireAuth: checkAuth } = useWalletGuard();
+  const { isConnected, isAuthenticated, isLoading, requireConnection, requireAuth: checkAuth, triggerLogin } = useWalletGuard();
 
   // Show loading state
   if (isLoading) {
@@ -72,14 +71,8 @@ export function WalletGuard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={() => {
-              if (requireAuth) {
-                checkAuth();
-              } else {
-                requireConnection();
-              }
-            }}
+          <Button
+            onClick={triggerLogin}
             className="w-full"
             size="lg"
           >

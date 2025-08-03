@@ -28,9 +28,16 @@ import JoinGoal from "./pages/JoinVault";
 import Learn from "./pages/Learn";
 import Debts from "./pages/Debts";
 import GoalsHistory from "./pages/GoalsHistory";
+import AllGoals from "./pages/AllGoals";
 import FlashcardDemo from "./components/flashcard/FlashcardDemo";
 import GoalCreationV2 from "./pages/VaultCreationV2";
-import TestSlideAnimation from "./pages/TestSlideAnimation";
+import IntegrationTestPage from "./pages/IntegrationTest";
+
+// Demo pages
+import DashboardDemo from "./pages/DashboardDemo";
+
+// Utility pages
+import Faucet from "./pages/Faucet";
 
 // Special pages
 import Welcome from "./pages/Welcome";
@@ -75,11 +82,18 @@ const App = () => (
             </LandingLayout>
           } />
 
+          {/* Demo page for responsive dashboard */}
+          <Route path="/dashboard-demo" element={<DashboardDemo />} />
+
+          {/* Faucet page for getting test USDC */}
+          <Route path="/faucet" element={
+            <LandingLayout>
+              <Faucet />
+            </LandingLayout>
+          } />
+
           {/* Welcome page without Layout since it's a full-screen onboarding experience */}
           <Route path="/welcome" element={<Welcome />} />
-
-          {/* Test page for slide animation */}
-          <Route path="/test-slide" element={<TestSlideAnimation />} />
 
           {/* Protected app routes with AppLayout */}
           <Route path="/app/*" element={
@@ -100,7 +114,9 @@ const App = () => (
                   <Route path="debts" element={<Debts />} />
                   <Route path="flashcard-demo" element={<FlashcardDemo />} />
                   <Route path="goals-history" element={<GoalsHistory />} />
+                  <Route path="all-goals" element={<AllGoals />} />
                   <Route path="goal-creation-v2" element={<GoalCreationV2 />} />
+                  <Route path="integration-test" element={<IntegrationTestPage />} />
                   {/* Catch-all for app routes */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

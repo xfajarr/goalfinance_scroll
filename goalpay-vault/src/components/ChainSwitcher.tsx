@@ -137,7 +137,7 @@ export function ChainSwitcher({
                   <div className="text-xs">
                     <p className="font-medium text-orange-800 mb-1">Network Warning</p>
                     <p className="text-orange-700">
-                      Goal Finance supports Mantle Sepolia and Base Sepolia. Please switch to a supported network to continue.
+                      Goal Finance supports Mantle Sepolia, Base Sepolia, and Lisk Sepolia. Please switch to a supported network to continue.
                     </p>
                   </div>
                 </div>

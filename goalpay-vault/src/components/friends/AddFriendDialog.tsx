@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -61,8 +61,12 @@ interface AddFriendDialogProps {
 
 export function AddFriendDialog({ children, onSuccess }: AddFriendDialogProps) {
   const [open, setOpen] = useState(false);
-  const { requireWalletConnection } = useWalletGuard();
+  const { requireConnection } = useWalletGuard();
   const { addFriend, isLoading, isConfirming, isSuccess, error, reset } = useFriendsRegistry();
+
+  // Use ref to store the latest onSuccess callback to avoid dependency issues
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
 
   const form = useForm<AddFriendFormData>({
     resolver: zodResolver(addFriendSchema),
@@ -74,7 +78,7 @@ export function AddFriendDialog({ children, onSuccess }: AddFriendDialogProps) {
   });
 
   const handleSubmit = async (data: AddFriendFormData) => {
-    const canProceed = await requireWalletConnection();
+    const canProceed = requireConnection();
     if (!canProceed) return;
 
     try {
@@ -88,24 +92,24 @@ export function AddFriendDialog({ children, onSuccess }: AddFriendDialogProps) {
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
+  const handleOpenChange = useCallback((newOpen: boolean) => {
     if (!newOpen) {
       // Reset form and state when closing
       form.reset();
       reset();
     }
     setOpen(newOpen);
-  };
+  }, [form.reset, reset]);
 
   // Close dialog and call onSuccess when transaction is successful
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSuccess) {
       setOpen(false);
-      onSuccess?.();
+      onSuccessRef.current?.();
       form.reset();
       reset();
     }
-  }, [isSuccess, onSuccess, form, reset]);
+  }, [isSuccess, form.reset, reset]);
 
   const formatAddress = (address: string) => {
     if (!address || address.length < 10) return address;

@@ -74,7 +74,7 @@ export const ShareVaultDialog = ({
       toast({
         title: '✅ Copied!',
         description: `${type} copied to clipboard.`,
-        className: 'top-4 right-4 bg-goal-primary text-white border-goal-primary shadow-lg',
+        className: 'top-4 right-4 bg-goal-primary text-goal-text border-goal-primary shadow-lg',
       });
 
       // Reset copied state after 2 seconds
@@ -263,7 +263,7 @@ export const ShareVaultDialog = ({
                   <Input
                     value={shareData.inviteCode}
                     readOnly
-                    className="font-mono text-sm bg-white/70 border-goal-border/60 rounded-2xl flex-1 font-bold text-goal-primary"
+                    className="font-mono text-sm bg-white/70 border-goal-border/60 rounded-2xl flex-1 font-bold text-goal-text"
                   />
                   <Button
                     onClick={() => copyToClipboard(shareData.inviteCode, 'Code')}

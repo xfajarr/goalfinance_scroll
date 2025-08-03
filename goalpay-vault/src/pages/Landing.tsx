@@ -3,16 +3,17 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { WalletButton } from '@/components/wallet/WalletButton';
-import { 
-  Target, 
-  Users, 
-  Shield, 
-  TrendingUp, 
+import {
+  Target,
+  Users,
+  Shield,
+  TrendingUp,
   Coins,
   Heart,
   ArrowRight,
   CheckCircle,
-  Sparkles
+  Sparkles,
+  Droplets
 } from 'lucide-react';
 import FloatingDecorations from '@/components/FloatingDecorations';
 
@@ -205,11 +206,27 @@ const Landing = () => {
               Join thousands of users who are achieving their financial goals together
             </p>
             
-            <WalletButton 
-              variant="default"
-              size="lg"
-              className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold px-8 py-4 rounded-2xl text-lg shadow-lg hover:shadow-xl transition-all"
-            />
+            <div className="space-y-4">
+              <WalletButton
+                variant="default"
+                size="lg"
+                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold px-8 py-4 rounded-2xl text-lg shadow-lg hover:shadow-xl transition-all"
+              />
+
+              <div className="flex items-center justify-center gap-4">
+                <span className="text-goal-text/60 text-sm font-inter">Need test tokens?</span>
+                <Link to="/faucet">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-goal-primary/30 text-goal-primary hover:bg-goal-primary/10 font-fredoka font-semibold"
+                  >
+                    <Droplets className="w-4 h-4 mr-2" />
+                    USDC Faucet
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -2,7 +2,7 @@ import React from 'react';
 import { PrivyProvider as PrivyProviderCore } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { config, mantleSepolia, baseSepolia } from '@/config/wagmi';
+import { config, mantleSepolia, baseSepolia, liskSepolia } from '@/config/wagmi';
 
 // Create a single QueryClient instance to avoid duplicate initialization
 let queryClientInstance: QueryClient | null = null;
@@ -27,18 +27,12 @@ const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'cmd87c3bk0063lb0mssxa
 // WalletConnect Project ID (only set if explicitly provided)
 const WALLETCONNECT_PROJECT_ID = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 
-// Create singleton flag to prevent double initialization
-let privyInitialized = false;
-
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
   
-  // Prevent double initialization
-  if (privyInitialized) {
-    console.warn('PrivyProvider already initialized, using existing instance');
-  }
-  privyInitialized = true;
-  
+  // Note: The "PrivyProvider already initialized" warning in development is expected
+  // due to React StrictMode double-rendering. This is normal and doesn't affect production.
+
   return (
     <PrivyProviderCore
       appId={PRIVY_APP_ID}
@@ -59,8 +53,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           createOnLogin: 'users-without-wallets',
           requireUserPasswordOnCreate: false,
         },
-        supportedChains: [mantleSepolia, baseSepolia],
-        defaultChain: mantleSepolia,
+        supportedChains: [mantleSepolia, baseSepolia, liskSepolia],
+        defaultChain: liskSepolia,
 
         // Only include WalletConnect config if project ID is provided
         // This prevents duplicate initialization warnings

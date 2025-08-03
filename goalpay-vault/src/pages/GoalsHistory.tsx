@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, RefreshCw, CheckCircle, XCircle, Trophy, TrendingDown, Calendar, Users, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, XCircle, Trophy, TrendingDown, Calendar, Users, AlertTriangle, Loader2 } from 'lucide-react';
 
 import { VaultCard } from '@/components/vault/vault-card';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -142,7 +142,11 @@ const GoalsHistory = () => {
             className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka font-semibold rounded-full"
             disabled={isLoading}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
             Refresh
           </Button>
         </div>

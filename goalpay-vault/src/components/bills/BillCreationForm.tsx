@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,11 +33,13 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
+  Percent,
 } from 'lucide-react';
 import { FriendSearch, SelectedFriend } from '@/components/friends/FriendSearch';
 import { useBillSplitter, billUtils, ParticipantShare } from '@/hooks/useBillSplitter';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { SplitMode, NATIVE_TOKEN } from '@/config/contracts';
+import { useSupportedTokens } from '@/hooks/useTokenInfo';
 import { SplitCalculator } from './SplitCalculator';
 
 // Form validation schema
@@ -79,17 +81,18 @@ const BILL_CATEGORIES = [
   { value: 'other', label: '📦 Other' },
 ];
 
-const TOKEN_OPTIONS = [
-  { value: NATIVE_TOKEN, label: 'ETH (Native)', symbol: 'ETH' },
-  { value: '0x77B2693ea846571259FA89CBe4DD8e18f3F61787', label: 'USDC', symbol: 'USDC' }, // Mantle Sepolia USDC
-];
-
 export function BillCreationForm({ onSuccess, onCancel, className }: BillCreationFormProps) {
   const [selectedFriends, setSelectedFriends] = useState<SelectedFriend[]>([]);
   const [participantShares, setParticipantShares] = useState<ParticipantShare[]>([]);
+  const supportedTokens = useSupportedTokens();
   const [isCalculationValid, setIsCalculationValid] = useState(true);
-  
-  const { requireWalletConnection } = useWalletGuard();
+
+  const { requireConnection } = useWalletGuard();
+
+  // Memoize the selection change handler to prevent infinite re-renders
+  const handleSelectionChange = useCallback((friends: SelectedFriend[]) => {
+    setSelectedFriends(friends);
+  }, []);
   const { createBill, isLoading, isConfirming, isSuccess, error, reset } = useBillSplitter();
 
   const form = useForm<BillCreationFormData>({
@@ -98,7 +101,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
       title: '',
       description: '',
       totalAmount: '',
-      token: TOKEN_OPTIONS[1].value, // Default to USDC
+      token: supportedTokens[1]?.value || supportedTokens[0]?.value || '', // Default to USDC or first available
       splitMode: SplitMode.EQUAL,
       category: 'food',
     },
@@ -107,6 +110,17 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
   const watchedValues = form.watch();
   const splitMode = watchedValues.splitMode;
   const totalAmount = watchedValues.totalAmount;
+
+  // Set default token when supportedTokens loads
+  useEffect(() => {
+    const currentToken = form.getValues('token');
+    if (!currentToken && supportedTokens.length > 0) {
+      const defaultToken = supportedTokens[1]?.value || supportedTokens[0]?.value;
+      if (defaultToken) {
+        form.setValue('token', defaultToken);
+      }
+    }
+  }, [supportedTokens, form]);
 
   // Reset shares when split mode changes
   useEffect(() => {
@@ -141,7 +155,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
   }, [participantShares, splitMode, totalAmount, selectedFriends.length]);
 
   const handleSubmit = async (data: BillCreationFormData) => {
-    const canProceed = await requireWalletConnection();
+    const canProceed = requireConnection();
     if (!canProceed) return;
 
     if (selectedFriends.length === 0) {
@@ -185,7 +199,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
   }, [isSuccess, onSuccess, form, reset]);
 
   const getSelectedToken = () => {
-    return TOKEN_OPTIONS.find(t => t.value === watchedValues.token);
+    return supportedTokens.find(t => t.value === watchedValues.token);
   };
 
   const calculatePreview = () => {
@@ -302,16 +316,17 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
                 render={({ field }) => (
                   <FormItem className="space-y-1">
                     <FormLabel className="font-fredoka font-medium text-goal-text text-sm">Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-white/60 border-goal-border/30 rounded-xl focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text h-9">
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="bg-white/60 border-goal-border/30 rounded-xl focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text h-9">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
                       <SelectContent>
-                        {TOKEN_OPTIONS.map((token) => (
+                        {supportedTokens.map((token) => (
                           <SelectItem key={token.value} value={token.value}>
-                            {token.label}
+                            <div className="flex items-center gap-2">
+                              <img src={token.logoUrl} alt={token.symbol} className="w-4 h-4" />
+                              {token.label}
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -328,12 +343,10 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
               render={({ field }) => (
                 <FormItem className="space-y-1">
                   <FormLabel className="font-fredoka font-medium text-goal-text text-sm">Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-white/60 border-goal-border/30 rounded-xl focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text h-9">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                    </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="bg-white/60 border-goal-border/30 rounded-xl focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text h-9">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
                     <SelectContent>
                       {BILL_CATEGORIES.map((category) => (
                         <SelectItem key={category.value} value={category.value}>
@@ -359,9 +372,16 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
 
             <FriendSearch
               selectedFriends={selectedFriends}
-              onSelectionChange={setSelectedFriends}
+              onSelectionChange={handleSelectionChange}
               placeholder="Search and select friends..."
             />
+
+            {/* Validation message for participants */}
+            {selectedFriends.length === 0 && (
+              <div className="text-sm text-goal-text/60 font-inter bg-goal-accent/10 p-3 rounded-lg border border-goal-border/20">
+                💡 Select at least one friend to split the bill with
+              </div>
+            )}
           </div>
 
           <Separator className="bg-goal-border/20" />
@@ -377,35 +397,99 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
               control={form.control}
               name="splitMode"
               render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="font-fredoka font-medium text-goal-text text-sm">How to split the bill?</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value.toString()}>
-                    <FormControl>
-                      <SelectTrigger className="bg-white/60 border-goal-border/30 rounded-xl focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text h-9">
-                        <SelectValue placeholder="Select split method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={SplitMode.EQUAL.toString()}>
-                        <div className="font-inter">
-                          <div className="font-medium">Equal Split</div>
-                          <div className="text-xs text-goal-text/60">Everyone pays the same amount</div>
+                <FormItem className="space-y-3">
+                  <FormLabel className="font-fredoka font-medium text-goal-text text-base">How to split the bill?</FormLabel>
+
+                  {/* Custom Radio Group Style */}
+                  <div className="grid gap-3">
+                    {/* Equal Split Option */}
+                    <div
+                      className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md ${
+                        field.value === SplitMode.EQUAL
+                          ? 'border-goal-primary bg-goal-primary/10 shadow-sm'
+                          : 'border-goal-border/30 bg-white/60 hover:border-goal-primary/50'
+                      }`}
+                      onClick={() => field.onChange(SplitMode.EQUAL)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                          field.value === SplitMode.EQUAL
+                            ? 'border-goal-primary bg-goal-primary'
+                            : 'border-goal-border/40'
+                        }`}>
+                          {field.value === SplitMode.EQUAL && (
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          )}
                         </div>
-                      </SelectItem>
-                      <SelectItem value={SplitMode.PERCENTAGE.toString()}>
-                        <div className="font-inter">
-                          <div className="font-medium">Percentage Split</div>
-                          <div className="text-xs text-goal-text/60">Custom percentages for each person</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Users className="h-4 w-4 text-goal-text" />
+                            <span className="font-fredoka font-semibold text-goal-text">Equal Split</span>
+                          </div>
+                          <p className="text-sm text-goal-text/70 font-inter">Everyone pays the same amount</p>
                         </div>
-                      </SelectItem>
-                      <SelectItem value={SplitMode.EXACT.toString()}>
-                        <div className="font-inter">
-                          <div className="font-medium">Exact Amount</div>
-                          <div className="text-xs text-goal-text/60">Specific amounts for each person</div>
+                      </div>
+                    </div>
+
+                    {/* Percentage Split Option */}
+                    <div
+                      className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md ${
+                        field.value === SplitMode.PERCENTAGE
+                          ? 'border-goal-primary bg-goal-primary/10 shadow-sm'
+                          : 'border-goal-border/30 bg-white/60 hover:border-goal-primary/50'
+                      }`}
+                      onClick={() => field.onChange(SplitMode.PERCENTAGE)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                          field.value === SplitMode.PERCENTAGE
+                            ? 'border-goal-primary bg-goal-primary'
+                            : 'border-goal-border/40'
+                        }`}>
+                          {field.value === SplitMode.PERCENTAGE && (
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          )}
                         </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Percent className="h-4 w-4 text-goal-text" />
+                            <span className="font-fredoka font-semibold text-goal-text">Percentage Split</span>
+                          </div>
+                          <p className="text-sm text-goal-text/70 font-inter">Custom percentages for each person</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Exact Amount Option */}
+                    <div
+                      className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 hover:shadow-md ${
+                        field.value === SplitMode.EXACT
+                          ? 'border-goal-primary bg-goal-primary/10 shadow-sm'
+                          : 'border-goal-border/30 bg-white/60 hover:border-goal-primary/50'
+                      }`}
+                      onClick={() => field.onChange(SplitMode.EXACT)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                          field.value === SplitMode.EXACT
+                            ? 'border-goal-primary bg-goal-primary'
+                            : 'border-goal-border/40'
+                        }`}>
+                          {field.value === SplitMode.EXACT && (
+                            <div className="h-2 w-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Calculator className="h-4 w-4 text-goal-text" />
+                            <span className="font-fredoka font-semibold text-goal-text">Exact Amount</span>
+                          </div>
+                          <p className="text-sm text-goal-text/70 font-inter">Specific amounts for each person</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -413,7 +497,7 @@ export function BillCreationForm({ onSuccess, onCancel, className }: BillCreatio
 
             {/* Split Calculator */}
             {selectedFriends.length > 0 && totalAmount && (
-              <div className="bg-white/40 backdrop-blur-sm border border-goal-border/20 rounded-xl p-3">
+              <div className="bg-white/50 backdrop-blur-sm border border-goal-border/30 rounded-2xl p-5 shadow-sm">
                 <SplitCalculator
                   splitMode={splitMode}
                   totalAmount={totalAmount}

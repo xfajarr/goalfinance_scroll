@@ -52,7 +52,7 @@ const Welcome = () => {
   useEffect(() => {
     // Redirect to dashboard if already authenticated
     if (ready && authenticated && user) {
-      navigate('/dashboard');
+      navigate('/app/dashboard');
     }
   }, [ready, authenticated, user, navigate]);
 

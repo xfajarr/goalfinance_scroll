@@ -134,39 +134,59 @@ export function SplitCalculator({
     const amountPerPerson = totalAmountNum / allParticipants.length;
 
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 mb-2">
-          <Calculator className="w-4 h-4 text-goal-primary" />
-          <span className="font-fredoka font-medium text-goal-text text-sm">Equal Split</span>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 rounded-lg bg-goal-primary/20">
+            <Calculator className="w-4 h-4 text-goal-primary" />
+          </div>
+          <span className="font-fredoka font-semibold text-goal-text">Equal Split Breakdown</span>
         </div>
-        <div className="space-y-1">
-          {allParticipants.map((participant) => (
-            <div key={participant.address} className="flex items-center justify-between py-1">
-              <span className="text-sm font-inter text-goal-text">{participant.displayName}</span>
-              <Badge variant="secondary" className="bg-goal-primary/20 text-goal-text border-goal-border/30 text-xs">
+        <div className="space-y-2">
+          {allParticipants.map((participant, index) => (
+            <div
+              key={participant.address}
+              className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-goal-border/20 transition-all duration-200 hover:shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-goal-primary/20 flex items-center justify-center">
+                  <span className="text-xs font-fredoka font-semibold text-goal-primary">
+                    {participant.displayName === 'You' ? 'Y' : participant.displayName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="font-inter font-medium text-goal-text">{participant.displayName}</span>
+              </div>
+              <Badge variant="secondary" className="bg-goal-primary text-white border-0 font-fredoka font-semibold px-3 py-1">
                 {amountPerPerson.toFixed(2)} {currency}
               </Badge>
             </div>
           ))}
+        </div>
+        <div className="mt-4 p-3 bg-goal-accent/30 rounded-lg border border-goal-border/20">
+          <div className="flex items-center justify-between">
+            <span className="font-inter font-medium text-goal-text/80">Total Amount</span>
+            <span className="font-fredoka font-bold text-goal-text">{totalAmountNum.toFixed(2)} {currency}</span>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calculator className="w-4 h-4 text-goal-primary" />
-          <span className="font-fredoka font-medium text-goal-text text-sm">
-            {splitMode === SplitMode.PERCENTAGE ? 'Percentage Split' : 'Exact Amount Split'}
+          <div className="p-1.5 rounded-lg bg-goal-primary/20">
+            <Calculator className="w-4 h-4 text-goal-primary" />
+          </div>
+          <span className="font-fredoka font-semibold text-goal-text">
+            {splitMode === SplitMode.PERCENTAGE ? 'Percentage Split Breakdown' : 'Exact Amount Split Breakdown'}
           </span>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={resetToEqual}
-          className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-inter text-xs h-7 px-2 rounded-lg"
+          className="border-goal-border/30 text-goal-text hover:bg-goal-accent/20 font-fredoka text-xs h-8 px-3 rounded-lg transition-all duration-200 hover:scale-105"
         >
           <RotateCcw className="w-3 h-3 mr-1" />
           Reset to Equal
@@ -175,8 +195,15 @@ export function SplitCalculator({
 
       <div className="space-y-3">
         {calculations.map((calc) => (
-          <div key={calc.address} className="space-y-2 bg-white/40 backdrop-blur-sm border border-goal-border/20 rounded-lg p-3">
-            <Label className="text-sm font-fredoka font-medium text-goal-text">{calc.displayName}</Label>
+          <div key={calc.address} className="space-y-3 bg-white/60 backdrop-blur-sm border border-goal-border/20 rounded-xl p-4 transition-all duration-200 hover:shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-goal-primary/20 flex items-center justify-center">
+                <span className="text-xs font-fredoka font-semibold text-goal-primary">
+                  {calc.displayName === 'You' ? 'Y' : calc.displayName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <Label className="font-fredoka font-semibold text-goal-text">{calc.displayName}</Label>
+            </div>
             
             {splitMode === SplitMode.PERCENTAGE ? (
               <div className="space-y-2">
@@ -201,26 +228,34 @@ export function SplitCalculator({
                     <span className="text-xs text-goal-text/60 font-inter">%</span>
                   </div>
                 </div>
-                <div className="text-xs text-goal-text/60 font-inter">
-                  Amount: {calc.calculatedAmount.toFixed(2)} {currency}
+                <div className="mt-3 p-2 bg-goal-accent/20 rounded-lg border border-goal-border/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-inter text-goal-text/70">Amount to pay:</span>
+                    <Badge className="bg-goal-primary text-white border-0 font-fredoka font-semibold">
+                      {calc.calculatedAmount.toFixed(2)} {currency}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Input
                     type="number"
                     value={calc.exactAmount}
                     onChange={(e) => updateCalculation(calc.address, 'exactAmount', e.target.value)}
-                    className="bg-white/60 border-goal-border/30 rounded-lg focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text placeholder:text-goal-text/50 flex-1 h-7"
+                    className="bg-white/80 border-goal-border/30 rounded-lg focus:ring-goal-primary focus:border-goal-primary font-inter text-goal-text placeholder:text-goal-text/50 flex-1 h-9"
                     min="0"
                     step="0.01"
                     placeholder="0.00"
                   />
-                  <span className="text-sm text-goal-text/60 font-inter min-w-[40px]">{currency}</span>
+                  <span className="text-sm text-goal-text/60 font-fredoka font-medium min-w-[50px]">{currency}</span>
                 </div>
-                <div className="text-xs text-goal-text/60 font-inter">
-                  Percentage: {calc.percentage.toFixed(1)}%
+                <div className="p-2 bg-goal-accent/20 rounded-lg border border-goal-border/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-inter text-goal-text/70">Percentage of total:</span>
+                    <span className="text-xs font-fredoka font-semibold text-goal-text">{calc.percentage.toFixed(1)}%</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -229,17 +264,31 @@ export function SplitCalculator({
       </div>
 
       {/* Validation Status */}
-      <div className={`flex items-center gap-2 p-2 rounded-lg ${
-        validation.isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+      <div className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${
+        validation.isValid
+          ? 'bg-green-50/80 border-green-200 shadow-sm'
+          : 'bg-red-50/80 border-red-200 shadow-sm'
       }`}>
-        {validation.isValid ? (
-          <CheckCircle className="w-4 h-4 text-green-600" />
-        ) : (
-          <AlertCircle className="w-4 h-4 text-red-600" />
-        )}
-        <span className={`text-sm font-inter ${validation.isValid ? 'text-green-700' : 'text-red-700'}`}>
+        <div className={`p-1.5 rounded-lg ${
+          validation.isValid ? 'bg-green-100' : 'bg-red-100'
+        }`}>
+          {validation.isValid ? (
+            <CheckCircle className="w-4 h-4 text-green-600" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-red-600" />
+          )}
+        </div>
+        <span className={`font-fredoka font-medium ${validation.isValid ? 'text-green-700' : 'text-red-700'}`}>
           {validation.message}
         </span>
+      </div>
+
+      {/* Total Summary */}
+      <div className="mt-4 p-4 bg-goal-accent/30 rounded-xl border border-goal-border/20">
+        <div className="flex items-center justify-between">
+          <span className="font-fredoka font-semibold text-goal-text">Total Amount</span>
+          <span className="font-fredoka font-bold text-lg text-goal-text">{totalAmountNum.toFixed(2)} {currency}</span>
+        </div>
       </div>
     </div>
   );

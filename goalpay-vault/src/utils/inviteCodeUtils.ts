@@ -143,11 +143,73 @@ export function generateCompleteShareData(vaultId: bigint, baseUrl?: string): Sh
   const inviteCode = generateFrontendInviteCode(vaultId);
   const shareUrl = generateShareUrl(vaultId, inviteCode, baseUrl);
   const qrCodeData = generateQRCodeData(shareUrl);
-  
+
   return {
     vaultId,
     inviteCode,
     shareUrl,
     qrCodeData,
   };
+}
+
+/**
+ * Extract invite code from URL parameters
+ * Handles URLs like: http://localhost:8080/join/2?invite=0x2b04ccd3b660244872a6294387c17cb48e6cc1cb4dd969a36e78ddd9a9810b85
+ */
+export function extractInviteCodeFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get('invite');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract invite code from current window location
+ */
+export function extractInviteCodeFromCurrentUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  return extractInviteCodeFromUrl(window.location.href);
+}
+
+/**
+ * Parse invite link and extract both vault ID and invite code
+ */
+export interface ParsedInviteLink {
+  vaultId: bigint | null;
+  inviteCode: string | null;
+  isValid: boolean;
+}
+
+export function parseInviteLink(url: string): ParsedInviteLink {
+  try {
+    const urlObj = new URL(url);
+    const pathParts = urlObj.pathname.split('/');
+
+    // Expected format: /join/{vaultId}
+    if (pathParts.length >= 3 && pathParts[1] === 'join') {
+      const vaultIdStr = pathParts[2];
+      const vaultId = BigInt(vaultIdStr);
+      const inviteCode = urlObj.searchParams.get('invite');
+
+      return {
+        vaultId,
+        inviteCode,
+        isValid: vaultId > 0n && inviteCode !== null
+      };
+    }
+
+    return { vaultId: null, inviteCode: null, isValid: false };
+  } catch {
+    return { vaultId: null, inviteCode: null, isValid: false };
+  }
+}
+
+/**
+ * Validate if a string is a proper invite link format
+ */
+export function isValidInviteLink(url: string): boolean {
+  const parsed = parseInviteLink(url);
+  return parsed.isValid;
 }

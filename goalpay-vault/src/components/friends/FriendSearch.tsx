@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useFriendsData, Friend } from '@/hooks/useFriendsRegistry';
 
-interface SelectedFriend {
+export interface SelectedFriend {
   address: Address;
   displayName: string;
 }
@@ -32,7 +32,13 @@ export function FriendSearch({
   showSelectedCount = true,
 }: FriendSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const { friends, isLoading } = useFriendsData();
+  const { friends, isLoading, error } = useFriendsData();
+
+  // Debug logging to help identify issues
+  React.useEffect(() => {
+    console.log('FriendSearch - Friends loaded:', friends.length);
+    console.log('FriendSearch - Selected friends:', selectedFriends.length);
+  }, [friends.length, selectedFriends.length]);
 
   // Filter friends based on search term
   const filteredFriends = useMemo(() => {
@@ -45,31 +51,41 @@ export function FriendSearch({
     );
   }, [friends, searchTerm]);
 
-  const handleFriendToggle = (friend: Friend) => {
-    const isSelected = selectedFriends.some(f => f.address === friend.friendAddress);
-    
+  const handleFriendToggle = React.useCallback((friend: Friend) => {
+    // Use case-insensitive address comparison for better reliability
+    const isSelected = selectedFriends.some(f =>
+      f.address.toLowerCase() === friend.friendAddress.toLowerCase()
+    );
+
     if (isSelected) {
-      // Remove friend
-      onSelectionChange(selectedFriends.filter(f => f.address !== friend.friendAddress));
+      // Remove friend using case-insensitive comparison
+      const newSelection = selectedFriends.filter(f =>
+        f.address.toLowerCase() !== friend.friendAddress.toLowerCase()
+      );
+      onSelectionChange(newSelection);
     } else {
       // Add friend (check max limit)
       if (maxSelections && selectedFriends.length >= maxSelections) {
         return; // Don't add if at max limit
       }
-      
-      onSelectionChange([
+
+      const newSelection = [
         ...selectedFriends,
         {
           address: friend.friendAddress,
           displayName: friend.displayName,
         }
-      ]);
+      ];
+      onSelectionChange(newSelection);
     }
-  };
+  }, [selectedFriends, maxSelections, onSelectionChange]);
 
-  const handleRemoveSelected = (address: Address) => {
-    onSelectionChange(selectedFriends.filter(f => f.address !== address));
-  };
+  const handleRemoveSelected = React.useCallback((address: Address) => {
+    // Use case-insensitive address comparison
+    onSelectionChange(selectedFriends.filter(f =>
+      f.address.toLowerCase() !== address.toLowerCase()
+    ));
+  }, [selectedFriends, onSelectionChange]);
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -124,6 +140,25 @@ export function FriendSearch({
         </div>
       )}
 
+      {/* Debug info for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-2 p-2 bg-gray-100 rounded text-xs">
+          <div>Total friends: {friends.length}</div>
+          <div>Selected: {selectedFriends.length}</div>
+          <div>Loading: {isLoading ? 'Yes' : 'No'}</div>
+          <div>Error: {error ? 'Yes' : 'No'}</div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-sm text-red-600 font-inter">
+            Failed to load friends. Please check your wallet connection.
+          </p>
+        </div>
+      )}
+
       {/* Friends List */}
       <div className="bg-white/40 backdrop-blur-sm border border-goal-border/20 rounded-xl">
         <ScrollArea className="h-[200px]">
@@ -150,25 +185,32 @@ export function FriendSearch({
           ) : (
             <div className="p-2">
               {filteredFriends.map((friend) => {
-                const isSelected = selectedFriends.some(f => f.address === friend.friendAddress);
+                // Use case-insensitive address comparison
+                const isSelected = selectedFriends.some(f =>
+                  f.address.toLowerCase() === friend.friendAddress.toLowerCase()
+                );
                 const isDisabled = !isSelected && maxSelections && selectedFriends.length >= maxSelections;
 
                 return (
                   <div
                     key={friend.friendAddress}
-                    className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${
                       isSelected
                         ? 'bg-goal-primary/10 border border-goal-primary/20'
                         : isDisabled
-                          ? 'opacity-50 cursor-not-allowed'
+                          ? 'opacity-50'
                           : 'hover:bg-goal-accent/30'
                     }`}
-                    onClick={() => !isDisabled && handleFriendToggle(friend)}
                   >
                     <Checkbox
                       checked={isSelected}
                       disabled={isDisabled}
-                      onChange={() => {}} // Handled by parent click
+                      onCheckedChange={() => {
+                        if (!isDisabled) {
+                          handleFriendToggle(friend);
+                        }
+                      }}
+                      className="cursor-pointer"
                     />
 
                     <div className="w-6 h-6 bg-goal-primary rounded-lg flex items-center justify-center flex-shrink-0">
@@ -177,7 +219,15 @@ export function FriendSearch({
                       </span>
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!isDisabled) {
+                          handleFriendToggle(friend);
+                        }
+                      }}
+                    >
                       <p className="font-fredoka font-medium text-sm text-goal-text truncate">
                         {friend.displayName}
                       </p>
@@ -289,7 +339,6 @@ export function QuickFriendPicker({ onSelect, excludeAddresses = [], className }
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 h-8"
-          size="sm"
         />
       </div>
 

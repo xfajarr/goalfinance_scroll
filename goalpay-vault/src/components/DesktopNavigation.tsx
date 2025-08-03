@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { Button } from '@/components/ui/button';
 import { WalletButton } from './wallet/WalletButton';
-import { ChainSwitcher } from './ChainSwitcher';
 
 export const DesktopNavigation = () => {
   const location = useLocation();
@@ -19,6 +18,7 @@ export const DesktopNavigation = () => {
       { label: 'How it Works', path: '/how-it-works' },
       { label: 'FAQ', path: '/faq' },
     ]),
+    { label: 'Faucet', path: '/faucet' },
   ];
 
   return (
@@ -36,11 +36,6 @@ export const DesktopNavigation = () => {
           {item.label}
         </Link>
       ))}
-
-      {/* Show chain switcher when wallet is connected */}
-      {isConnected && (
-        <ChainSwitcher className="border-goal-border text-goal-text hover:bg-goal-accent" />
-      )}
 
       <WalletButton variant="outline" size="sm" />
 

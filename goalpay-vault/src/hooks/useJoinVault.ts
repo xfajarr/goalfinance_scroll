@@ -13,6 +13,8 @@ export interface UseJoinVaultReturn {
   joinVault: (vaultId: bigint, amount: string, inviteCode?: string) => Promise<void>;
   // Join vault with ERC20 token (USDC)
   joinVaultWithToken: (vaultId: bigint, amount: string, inviteCode?: string) => Promise<void>;
+  // Complete join process (handles approval + join automatically)
+  joinVaultComplete: (vaultId: bigint, amount: string, inviteCode?: string, isNativeToken?: boolean) => Promise<void>;
   isLoading: boolean;
   isConfirming: boolean;
   isSuccess: boolean;
@@ -70,16 +72,23 @@ export const useJoinVault = (): UseJoinVaultReturn => {
     args: [],
   });
 
-  // Reset current step when approval is successful
+  // Reset current step when approval is successful and automatically proceed to join
   useEffect(() => {
     if (isApprovalSuccess && currentStep === 'approving') {
-      setCurrentStep('idle');
+      setCurrentStep('success');
       toast({
         title: '✅ Approval Successful',
-        description: 'You can now join the vault',
+        description: 'Now proceeding to join the vault...',
       });
     }
   }, [isApprovalSuccess, currentStep, toast]);
+
+  // Set success when transaction is confirmed
+  useEffect(() => {
+    if (isConfirmed && currentStep === 'joining') {
+      setCurrentStep('success');
+    }
+  }, [isConfirmed, currentStep]);
 
   // Helper function to format invite code for contract calls
   const formatInviteCode = (inviteCode?: string): `0x${string}` => {
@@ -139,10 +148,7 @@ export const useJoinVault = (): UseJoinVaultReturn => {
         account: address,
       });
 
-      toast({
-        title: '🎉 Successfully Joined Vault!',
-        description: `Welcome to the savings squad! Deposited ${amount} native tokens`,
-      });
+      // Success will be handled by the calling component when transaction is confirmed
 
     } catch (err) {
       setCurrentStep('error');
@@ -191,7 +197,7 @@ export const useJoinVault = (): UseJoinVaultReturn => {
           description: 'Please approve USDC spending first, then try joining again',
         });
 
-        // Request approval
+        // Request approval and wait for it to complete
         await approve(amountWei, GOAL_FINANCE_CONTRACT.address);
 
         // Exit here - user needs to call joinVaultWithToken again after approval
@@ -217,10 +223,7 @@ export const useJoinVault = (): UseJoinVaultReturn => {
         account: address,
       });
 
-      toast({
-        title: '🎉 Successfully Joined Vault!',
-        description: `Welcome to the savings squad! Deposited ${amount} USDC`,
-      });
+      // Success will be handled by the calling component when transaction is confirmed
 
     } catch (err) {
       setCurrentStep('error');
@@ -231,6 +234,46 @@ export const useJoinVault = (): UseJoinVaultReturn => {
         description: errorMessage,
         variant: 'destructive',
       });
+      throw err;
+    }
+  };
+
+  // Comprehensive join function that handles approval and joining in sequence
+  const joinVaultComplete = async (vaultId: bigint, amount: string, inviteCode?: string, isNativeToken: boolean = false): Promise<void> => {
+    try {
+      setError(null);
+
+      if (isNativeToken) {
+        await joinVault(vaultId, amount, inviteCode);
+      } else {
+        // For ERC20 tokens, handle approval first if needed
+        setCurrentStep('checking');
+
+        const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+        const needsApprovalCheck = await checkNeedsApproval(amountWei, GOAL_FINANCE_CONTRACT.address);
+        setNeedsApproval(needsApprovalCheck);
+
+        if (needsApprovalCheck) {
+          setCurrentStep('approving');
+          toast({
+            title: 'Approval Required',
+            description: 'Please approve USDC spending to continue...',
+          });
+
+          // Wait for approval to complete
+          await approve(amountWei, GOAL_FINANCE_CONTRACT.address);
+
+          // Wait a bit for the approval to be processed
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        // Now proceed with joining
+        await joinVaultWithToken(vaultId, amount, inviteCode);
+      }
+    } catch (err) {
+      setCurrentStep('error');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to join vault';
+      setError(new Error(errorMessage));
       throw err;
     }
   };
@@ -249,6 +292,7 @@ export const useJoinVault = (): UseJoinVaultReturn => {
   return {
     joinVault,
     joinVaultWithToken,
+    joinVaultComplete,
     isLoading: isWritePending,
     isConfirming,
     isSuccess: isConfirmed,

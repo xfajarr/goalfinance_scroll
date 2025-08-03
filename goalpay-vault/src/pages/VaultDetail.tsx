@@ -14,7 +14,7 @@ import { WithdrawDialog } from '@/components/vault/WithdrawDialog';
 import { useVaultData } from '@/hooks/useVaultData';
 import { useCheckVaultStatus } from '@/hooks/useVaultReads';
 import { formatUnits } from 'viem';
-import { ArrowLeft, Share2, Plus, Calendar, Users, Target, MessageCircle, Activity, Send, AlertCircle, ArrowDownToLine, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Share2, Plus, Calendar, Users, Target, MessageCircle, Activity, Send, AlertCircle, ArrowDownToLine, RefreshCw, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { usePublicClient } from 'wagmi';
 import { GOAL_FINANCE_CONTRACT } from '@/config/contracts';
@@ -291,8 +291,19 @@ const VaultDetailContent = () => {
               This goal may have been created with an older contract version or doesn't exist.
               Please create a new goal or check the goal ID.
             </p>
-            <Button onClick={refetch} className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3">
-              Try Again
+            <Button
+              onClick={refetch}
+              disabled={isLoading}
+              className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-full px-6 py-3"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                'Try Again'
+              )}
             </Button>
           </Card>
         </main>
@@ -317,31 +328,38 @@ const VaultDetailContent = () => {
 
   // Add a function to fully refresh vault and member contributions
   const handleFullRefresh = async () => {
-    refetch();
-    // Wait a tick to ensure members are up to date
-    setTimeout(() => {
-      // re-fetch member contributions
-      if (!members || members.length === 0 || !vaultId) return;
-      setIsContribLoading(true);
-      Promise.all(
-        members.map(async (address) => {
-          try {
-            const data = await publicClient.readContract({
-              address: GOAL_FINANCE_CONTRACT.address,
-              abi: GOAL_FINANCE_CONTRACT.abi,
-              functionName: 'getMember',
-              args: [vaultId, address],
-            }) as { depositedAmount: bigint };
-            return [address, data?.depositedAmount ?? 0n];
-          } catch {
-            return [address, 0n];
-          }
-        })
-      ).then(results => {
-        setMemberContributions(Object.fromEntries(results));
-        setIsContribLoading(false);
-      });
-    }, 250);
+    setIsContribLoading(true);
+    try {
+      await refetch();
+      // Wait a tick to ensure members are up to date
+      setTimeout(() => {
+        // re-fetch member contributions
+        if (!members || members.length === 0 || !vaultId) {
+          setIsContribLoading(false);
+          return;
+        }
+        Promise.all(
+          members.map(async (address) => {
+            try {
+              const data = await publicClient.readContract({
+                address: GOAL_FINANCE_CONTRACT.address,
+                abi: GOAL_FINANCE_CONTRACT.abi,
+                functionName: 'getMember',
+                args: [vaultId, address],
+              }) as { depositedAmount: bigint };
+              return [address, data?.depositedAmount ?? 0n];
+            } catch {
+              return [address, 0n];
+            }
+          })
+        ).then(results => {
+          setMemberContributions(Object.fromEntries(results));
+          setIsContribLoading(false);
+        });
+      }, 250);
+    } catch (error) {
+      setIsContribLoading(false);
+    }
   };
 
   return (
@@ -375,10 +393,15 @@ const VaultDetailContent = () => {
                       variant="ghost"
                       size="sm"
                       onClick={handleFullRefresh}
+                      disabled={isContribLoading || isLoadingStatus}
                       className="h-8 w-8 p-0 text-goal-text/60 hover:text-goal-text hover:bg-goal-accent/20"
                       title="Refresh goal status"
                     >
-                      <RefreshCw className={`h-4 w-4 ${isLoadingStatus ? 'animate-spin' : ''}`} />
+                      {isContribLoading || isLoadingStatus ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { parseUnits } from 'viem';
 import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, Calendar, DollarSign, Users, Lock, Share2, TrendingUp, Sparkles, Target } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, DollarSign, Users, Lock, TrendingUp, Sparkles, Target, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useCreateVault, getGoalTypeFromString } from '@/hooks/useCreateVault';
 import { GoalType } from '@/contracts/types';
@@ -15,6 +15,7 @@ import { CONTRACT_ADDRESSES, NATIVE_TOKEN } from '@/config/contracts';
 import { useChainId } from 'wagmi';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import { toast } from '@/components/ui/sonner';
+import InviteShareSection from '@/components/invite/InviteShareSection';
 
 const CreateVault = () => {
   const navigate = useNavigate();
@@ -43,7 +44,8 @@ const CreateVault = () => {
     isPublic: false, // Always private by default
     category: 'other',
     goalType: 'group', // Changed from apyTier to goalType
-    tokenType: 'usdc' // 'usdc' or 'native'
+    tokenType: 'usdc', // 'usdc' or 'native'
+    penaltyRate: 3 // Default 3% penalty rate
   });
   const [goalCreated, setGoalCreated] = useState(false);
   const [shareLink, setShareLink] = useState('');
@@ -60,8 +62,10 @@ const CreateVault = () => {
         // Set goal created state immediately
         setGoalCreated(true);
 
-        // Generate share link (use goal ID if available, otherwise use transaction hash)
-        const link = vaultId
+        // Generate share link with invite code (use goal ID if available, otherwise use transaction hash)
+        const link = vaultId && inviteCode
+          ? `${window.location.origin}/join/${vaultId}?invite=${inviteCode}`
+          : vaultId
           ? `${window.location.origin}/join/${vaultId}`
           : `${window.location.origin}/join/tx/${txHash}`;
         setShareLink(link);
@@ -189,6 +193,91 @@ const CreateVault = () => {
     }
   ];
 
+  const penaltyOptions = [
+    {
+      rate: 1,
+      name: 'Low Risk',
+      description: 'Gentle motivation',
+      emoji: '🌱',
+      color: 'border-green-200 hover:border-green-300 hover:bg-green-50/30'
+    },
+    {
+      rate: 3,
+      name: 'Balanced',
+      description: 'Good motivation',
+      emoji: '⚖️',
+      color: 'border-blue-200 hover:border-blue-300 hover:bg-blue-50/30'
+    },
+    {
+      rate: 5,
+      name: 'Serious',
+      description: 'Strong commitment',
+      emoji: '🎯',
+      color: 'border-orange-200 hover:border-orange-300 hover:bg-orange-50/30'
+    },
+    {
+      rate: 10,
+      name: 'Maximum',
+      description: 'Ultimate discipline',
+      emoji: '🔥',
+      color: 'border-red-200 hover:border-red-300 hover:bg-red-50/30'
+    }
+  ];
+
+  // Calculate savings estimate with 8% APY
+  const calculateSavingsEstimate = () => {
+    if (!formData.goal || !formData.deadline) return null;
+
+    const principal = parseFloat(formData.goal);
+    if (principal <= 0) return null;
+
+    const deadlineDate = new Date(formData.deadline);
+    const now = new Date();
+    const timeDiffMs = deadlineDate.getTime() - now.getTime();
+    const years = timeDiffMs / (1000 * 60 * 60 * 24 * 365.25);
+
+    if (years <= 0) return null;
+
+    const apy = 0.08; // 8% APY
+    const finalAmount = principal * Math.pow(1 + apy, years);
+    const yieldAmount = finalAmount - principal;
+
+    return {
+      principal,
+      finalAmount,
+      yieldAmount,
+      years,
+      apy
+    };
+  };
+
+  // Calculate how much to save daily/weekly/monthly
+  const calculateSavingsBreakdown = () => {
+    if (!formData.goal || !formData.deadline) return null;
+
+    const targetAmount = parseFloat(formData.goal);
+    if (targetAmount <= 0) return null;
+
+    const deadlineDate = new Date(formData.deadline);
+    const now = new Date();
+    const timeDiffMs = deadlineDate.getTime() - now.getTime();
+    const days = Math.ceil(timeDiffMs / (1000 * 60 * 60 * 24));
+
+    if (days <= 0) return null;
+
+    const dailyAmount = targetAmount / days;
+    const weeklyAmount = dailyAmount * 7;
+    const monthlyAmount = dailyAmount * 30;
+
+    return {
+      days,
+      dailyAmount,
+      weeklyAmount,
+      monthlyAmount,
+      targetAmount
+    };
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -239,7 +328,7 @@ const CreateVault = () => {
         isPublic: formData.isPublic,
         goalType: goalType,
         token: token,
-        penaltyRate: 2
+        penaltyRate: formData.penaltyRate
       });
 
       // Show immediate feedback that transaction is being processed
@@ -256,7 +345,7 @@ const CreateVault = () => {
         isPublic: formData.isPublic,
         goalType: goalType,
         token: token,
-        penaltyRate: 2 // Default 2% penalty rate
+        penaltyRate: formData.penaltyRate
       });
 
       console.log('✅ Goal creation transaction submitted successfully!');
@@ -333,31 +422,14 @@ const CreateVault = () => {
               </div>
             </div>
 
-            <div className="bg-goal-accent/20 p-4 rounded-2xl mb-6">
-              <p className="font-inter text-sm font-semibold text-goal-text mb-2">Share Link:</p>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={shareLink}
-                  readOnly
-                  className="flex-1 px-3 py-2 bg-white/70 border border-goal-border/50 rounded-2xl font-mono text-sm text-goal-text"
-                />
-                <Button
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(shareLink);
-                    toast('✅ Copied!', {
-                      description: 'Share link copied to clipboard.',
-                      duration: 3000,
-                    });
-                  }}
-                  size="sm"
-                  className="bg-goal-primary hover:bg-goal-primary/90 text-white rounded-2xl px-3 font-semibold"
-                >
-                  <Share2 className="w-4 h-4 mr-1" />
-                  Copy
-                </Button>
-              </div>
-            </div>
+            {/* Sharing Section */}
+            <InviteShareSection
+              inviteCode={inviteCode}
+              shareLink={shareLink}
+              vaultId={vaultId?.toString()}
+              goalName={formData.name}
+              className="mb-6"
+            />
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -390,7 +462,8 @@ const CreateVault = () => {
                     isPublic: false,
                     category: 'other',
                     goalType: 'group',
-                    tokenType: 'usdc'
+                    tokenType: 'usdc',
+                    penaltyRate: 3
                   });
                   reset(); // Reset the contract hook state
                 }}
@@ -582,7 +655,7 @@ const CreateVault = () => {
                   <span className="text-goal-text text-xs font-bold">4</span>
                 </div>
                 <label htmlFor="category" className="font-fredoka font-bold text-goal-text text-lg">
-                  Pick your vibe!
+                  Category
                 </label>
               </div>
               <div className="relative group">
@@ -619,7 +692,7 @@ const CreateVault = () => {
                   <span className="text-goal-text text-xs font-bold">5</span>
                 </div>
                 <label className="font-fredoka font-bold text-goal-text text-lg">
-                  Choose your Goal type
+                  Goal Type
                 </label>
               </div>
 
@@ -636,31 +709,28 @@ const CreateVault = () => {
                     onClick={() => setFormData(prev => ({ ...prev, goalType: type.id }))}
                   >
                     {/* Selection indicator */}
-                    <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                    <div className={`absolute top-2 right-2 w-3 h-3 rounded-full border transition-all duration-200 ${
                       formData.goalType === type.id
                         ? 'bg-goal-primary border-goal-primary'
                         : 'border-goal-border/50 group-hover:border-goal-primary/60'
                     }`}>
                       {formData.goalType === type.id && (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-white text-xs">✓</span>
+                          <span className="text-white text-[8px]">✓</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-start space-x-2">
-                      <div className="text-xl mt-0.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="text-lg">
                         {type.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
+                        <h3 className="font-fredoka font-bold text-goal-heading text-sm">
                           {type.name}
                         </h3>
                         <p className="font-inter text-xs text-goal-text-secondary leading-tight">
                           {type.description}
-                        </p>
-                        <p className="font-inter text-xs text-goal-text-muted mt-1">
-                          <span className="font-medium">e.g.</span> {type.examples}
                         </p>
                       </div>
                     </div>
@@ -710,36 +780,217 @@ const CreateVault = () => {
                   </div>
                 </div>
 
-                {/* MNT Option */}
+                {/* ETH Option */}
                 <div
-                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  className={`p-4 rounded-2xl border-2 cursor-not-allowed transition-all relative ${
                     formData.tokenType === 'native'
-                      ? 'bg-goal-primary/10 border-goal-primary'
-                      : 'bg-goal-soft/60 border-goal-border/30 hover:border-goal-primary/50'
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-gray-50 border-gray-200 opacity-75'
                   }`}
-                  onClick={() => setFormData(prev => ({ ...prev, tokenType: 'native' }))}
+                  onClick={() => {
+                    toast.info("ETH deposits are coming soon! Please use USDC for now.");
+                  }}
                 >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 flex items-center justify-center">
-                      <img src="/mantle-mnt-logo.svg" alt="MNT" className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
-                        MNT
-                      </h3>
-                      <p className="font-inter text-xs text-goal-text-secondary leading-tight">
-                        Native Mantle token - Gas-efficient deposits
-                      </p>
-                    </div>
-                    {formData.tokenType === 'native' && (
-                      <div className="w-5 h-5 bg-goal-primary rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 flex items-center justify-center">
+                        <img src="/ethereum-eth-logo.svg" alt="ETH" className="w-6 h-6 opacity-60" />
                       </div>
-                    )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-fredoka font-bold text-gray-600 text-sm mb-1">
+                          ETH
+                        </h3>
+                        <p className="font-inter text-xs text-gray-500 leading-tight">
+                          Ethereum - Coming soon
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        Soon
+                      </span>
+                      <Clock className="w-4 h-4 text-gray-400" />
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <div className="bg-goal-accent/30 rounded-xl p-3 mt-3">
+                <p className="text-xs text-goal-text/80 text-center">
+                  <strong>Recommended:</strong> Use USDC for stable value and immediate goal creation.
+                  ETH support is being developed and will be available soon!
+                </p>
+              </div>
             </div>
+
+            {/* Penalty Selection */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                  <span className="text-goal-text text-xs font-bold">7</span>
+                </div>
+                <label className="font-fredoka font-bold text-goal-text text-lg">
+                  Choose your commitment level
+                </label>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {penaltyOptions.map((option) => (
+                  <div
+                    key={option.rate}
+                    className={`relative cursor-pointer transition-all duration-200 ${
+                      formData.penaltyRate === option.rate
+                        ? 'bg-goal-primary/15 border-goal-primary ring-2 ring-goal-primary/20'
+                        : 'bg-white/70 border-goal-border/40 hover:border-goal-primary/60 hover:bg-goal-primary/5'
+                    } border-2 rounded-xl p-3 group`}
+                    onClick={() => setFormData(prev => ({ ...prev, penaltyRate: option.rate }))}
+                  >
+                    {/* Selection indicator */}
+                    <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 transition-all duration-200 ${
+                      formData.penaltyRate === option.rate
+                        ? 'bg-goal-primary border-goal-primary'
+                        : 'border-goal-border/50 group-hover:border-goal-primary/60'
+                    }`}>
+                      {formData.penaltyRate === option.rate && (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-white text-xs">✓</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-start space-x-2">
+                      <div className="text-xl mt-0.5">
+                        {option.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-fredoka font-bold text-goal-heading text-sm mb-1">
+                          {option.rate}% Penalty
+                        </h3>
+                        <p className="font-inter text-xs text-goal-text-secondary leading-tight">
+                          {option.name}
+                        </p>
+                        <p className="font-inter text-xs text-goal-text-muted mt-1">
+                          {option.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-yellow-50/80 border border-yellow-200 rounded-xl p-3 mt-3">
+                <p className="text-xs text-yellow-800 text-center">
+                  <strong>⚠️ Penalty applies when:</strong> You withdraw early OR fail to reach your savings goal by the deadline.
+                </p>
+              </div>
+            </div>
+
+            {/* Savings Estimate & Breakdown */}
+            {(() => {
+              const estimate = calculateSavingsEstimate();
+              const breakdown = calculateSavingsBreakdown();
+              if (!estimate || !breakdown) return null;
+
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                      <span className="text-goal-text text-xs font-bold">8</span>
+                    </div>
+                    <label className="font-fredoka font-bold text-goal-text text-lg">
+                      Savings Plan & Projection
+                    </label>
+                  </div>
+
+                  {/* Savings Breakdown */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200/50 rounded-2xl p-4 relative overflow-hidden">
+                    <div className="absolute top-3 right-3 text-xl opacity-20">📊</div>
+
+                    <h3 className="font-fredoka font-bold text-blue-800 text-sm mb-3">
+                      How much to save to reach your goal:
+                    </h3>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-white/60 rounded-lg p-3 text-center">
+                        <p className="font-inter text-xs text-blue-600 mb-1">Daily</p>
+                        <p className="font-fredoka font-bold text-blue-800 text-sm">
+                          ${breakdown.dailyAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-3 text-center">
+                        <p className="font-inter text-xs text-blue-600 mb-1">Weekly</p>
+                        <p className="font-fredoka font-bold text-blue-800 text-sm">
+                          ${breakdown.weeklyAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-3 text-center">
+                        <p className="font-inter text-xs text-blue-600 mb-1">Monthly</p>
+                        <p className="font-fredoka font-bold text-blue-800 text-sm">
+                          ${breakdown.monthlyAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="font-inter text-xs text-blue-600 text-center mt-3">
+                      Over {breakdown.days} days to reach ${breakdown.targetAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+
+                  {/* Yield Projection */}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200/50 rounded-2xl p-4 relative overflow-hidden">
+                    <div className="absolute top-3 right-3 text-xl opacity-20">💰</div>
+
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <h3 className="font-fredoka font-bold text-green-800 text-sm mb-1">
+                          Estimated Final Amount
+                        </h3>
+                        <div className="text-2xl font-fredoka font-bold text-green-700">
+                          ${estimate.finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white/60 rounded-lg p-2 text-center">
+                          <p className="font-inter text-xs text-green-600 mb-1">Your Deposit</p>
+                          <p className="font-fredoka font-bold text-green-800 text-sm">
+                            ${estimate.principal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-white/60 rounded-lg p-2 text-center">
+                          <p className="font-inter text-xs text-green-600 mb-1">Yield Earned</p>
+                          <p className="font-fredoka font-bold text-green-800 text-sm">
+                            +${estimate.yieldAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/60 rounded-lg p-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-inter text-green-600">APY:</span>
+                          <span className="font-fredoka font-bold text-green-800">{(estimate.apy * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-inter text-green-600">Duration:</span>
+                          <span className="font-fredoka font-bold text-green-800">
+                            {estimate.years < 1
+                              ? `${Math.round(estimate.years * 12)} months`
+                              : `${estimate.years.toFixed(1)} years`
+                            }
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-center">
+                        <p className="font-inter text-xs text-green-600">
+                          * Estimated yield based on 8% APY. Actual returns may vary.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Privacy Setting - Hidden for now, defaults to private */}
             {/*
@@ -812,6 +1063,65 @@ const CreateVault = () => {
             </div>
             */}
 
+            {/* Recurring Savings Feature - Coming Soon */}
+            {formData.goal && formData.deadline && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-goal-primary rounded-full flex items-center justify-center">
+                    <span className="text-goal-text text-xs font-bold">9</span>
+                  </div>
+                  <label className="font-fredoka font-bold text-goal-text text-lg">
+                    Recurring Savings
+                  </label>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200/50 rounded-2xl p-4 relative overflow-hidden opacity-75">
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-fredoka font-bold text-purple-800 text-sm">
+                        Auto-Save to Your Goal
+                      </h3>
+                      <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">
+                        🚧 Coming Soon
+                      </span>
+                    </div>
+
+                    <p className="font-inter text-xs text-purple-700 leading-relaxed">
+                      Set up automatic transfers to reach your goal effortlessly. Choose daily, weekly, or monthly deposits that fit your budget.
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-2 opacity-60">
+                      <div className="bg-white/60 rounded-lg p-2 text-center border border-purple-200">
+                        <p className="font-inter text-xs text-purple-600 mb-1">Daily Auto</p>
+                        <p className="font-fredoka font-bold text-purple-800 text-xs">
+                          ${calculateSavingsBreakdown()?.dailyAmount.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2 text-center border border-purple-200">
+                        <p className="font-inter text-xs text-purple-600 mb-1">Weekly Auto</p>
+                        <p className="font-fredoka font-bold text-purple-800 text-xs">
+                          ${calculateSavingsBreakdown()?.weeklyAmount.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                      <div className="bg-white/60 rounded-lg p-2 text-center border border-purple-200">
+                        <p className="font-inter text-xs text-purple-600 mb-1">Monthly Auto</p>
+                        <p className="font-fredoka font-bold text-purple-800 text-xs">
+                          ${calculateSavingsBreakdown()?.monthlyAmount.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-100/60 rounded-lg p-2 text-center">
+                      <p className="font-inter text-xs text-purple-700">
+                        <strong>✨ Coming Soon:</strong> Never miss a savings target with smart auto-deposits!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Cute Error Display */}
             {error && (
               <div className="bg-red-50/80 border-2 border-red-200/50 rounded-2xl p-5 relative overflow-hidden">
@@ -858,7 +1168,7 @@ const CreateVault = () => {
             <div className="pt-6">
               <Button
                 type="submit"
-                disabled={isLoading || isConfirming || !isConnected}
+                disabled={isLoading || isConfirming || !isConnected || formData.tokenType === 'native'}
                 className="w-full h-14 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold text-lg rounded-2xl transition-all duration-200 hover:shadow-md disabled:hover:shadow-none shadow-sm disabled:opacity-50 relative overflow-hidden"
               >
                 <div className="relative">
@@ -876,6 +1186,11 @@ const CreateVault = () => {
                     <div className="flex items-center justify-center space-x-2">
                       <div className="w-5 h-5 border-2 border-goal-text/30 border-t-goal-text rounded-full animate-spin"></div>
                       <span>Almost there...</span>
+                    </div>
+                  ) : formData.tokenType === 'native' ? (
+                    <div className="flex items-center justify-center">
+                      <Clock className="w-5 h-5 mr-2" />
+                      ETH Coming Soon - Use USDC
                     </div>
                   ) : (
                     <div className="flex items-center justify-center">

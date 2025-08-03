@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { WalletButton } from '@/components/wallet/WalletButton';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { usePrivy } from '@privy-io/react-auth';
@@ -27,7 +28,7 @@ const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { isConnected } = useWalletGuard();
-  const { login, authenticated } = usePrivy();
+  const { authenticated } = usePrivy();
 
   // Auto-navigate to dashboard after successful wallet connection
   useEffect(() => {
@@ -40,32 +41,7 @@ const Index = () => {
     }
   }, [authenticated, isConnected, isMobile, navigate]);
 
-  const handleStartSaving = async (e?: React.MouseEvent) => {
-    // Prevent any default behavior that might cause page refresh
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
 
-    if (isMobile) {
-      // On mobile, always go to welcome page
-      navigate('/welcome');
-    } else {
-      // On desktop, handle wallet connection
-      if (isConnected) {
-        // If already connected, navigate to dashboard
-        navigate('/app/dashboard');
-      } else {
-        // If not connected, trigger wallet connection immediately
-        try {
-          // Don't await here to prevent blocking the UI
-          login();
-        } catch (error) {
-          console.error('Failed to trigger wallet connection:', error);
-        }
-      }
-    }
-  };
 
   useEffect(() => {
     // Check if user is first-time visitor
@@ -185,14 +161,37 @@ const Index = () => {
             >
               FAQ
             </button>
-            <Button
-              type="button"
-              onClick={handleStartSaving}
-              size="sm"
-              className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-3 sm:px-4 py-2 rounded-full text-sm whitespace-nowrap"
+            <button
+              onClick={() => navigate('/faucet')}
+              className="text-goal-text hover:text-goal-primary transition-colors font-inter font-medium text-sm sm:text-base"
             >
-              launch App
-            </Button>
+              Faucet
+            </button>
+            {isMobile === undefined ? (
+              <Button
+                disabled
+                size="sm"
+                className="bg-goal-primary/50 text-goal-text font-fredoka font-semibold px-3 sm:px-4 py-2 rounded-full text-sm whitespace-nowrap"
+              >
+                Loading...
+              </Button>
+            ) : isMobile ? (
+              <Button
+                type="button"
+                onClick={() => navigate('/welcome')}
+                size="sm"
+                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-3 sm:px-4 py-2 rounded-full text-sm whitespace-nowrap"
+              >
+                <Wallet className="mr-1 h-3 w-3" />
+                Launch App
+              </Button>
+            ) : (
+              <WalletButton
+                variant="default"
+                size="sm"
+                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-3 sm:px-4 py-2 rounded-full text-sm whitespace-nowrap"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -244,16 +243,33 @@ const Index = () => {
 
             {/* CTA Buttons */}
             <div className={`pt-8 flex flex-col sm:flex-row gap-4 justify-center transition-all duration-700 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <Button
-                type="button"
-                onClick={handleStartSaving}
-                disabled={isMobile === undefined}
-                variant="default"
-                size="lg"
-                className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md hover:shadow-lg hover:scale-[1.02] disabled:opacity-50"
-              >
-                {isMobile === undefined ? 'Loading...' : 'Launch App ✨'}
-              </Button>
+              {isMobile === undefined ? (
+                <Button
+                  disabled
+                  variant="default"
+                  size="lg"
+                  className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md disabled:opacity-50"
+                >
+                  Loading...
+                </Button>
+              ) : isMobile ? (
+                <Button
+                  type="button"
+                  onClick={() => navigate('/welcome')}
+                  variant="default"
+                  size="lg"
+                  className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md hover:shadow-lg hover:scale-[1.02]"
+                >
+                  <Wallet className="mr-2 h-5 w-5" />
+                  Launch App ✨
+                </Button>
+              ) : (
+                <WalletButton
+                  variant="default"
+                  size="lg"
+                  className="text-lg text-goal-text-primary px-12 py-4 rounded-full shadow-md hover:shadow-lg hover:scale-[1.02]"
+                />
+              )}
 
               <Button
                 variant="outline"
@@ -420,13 +436,28 @@ const Index = () => {
               <p className="font-inter text-goal-text/70 mb-4 text-sm">
                 Join thousands of users who are already achieving their financial goals together
               </p>
-              <Button
-                type="button"
-                onClick={handleStartSaving}
-                className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Get Started Now
-              </Button>
+              {isMobile === undefined ? (
+                <Button
+                  disabled
+                  className="bg-goal-primary/50 text-goal-text font-fredoka font-semibold px-6 py-2 rounded-xl shadow-lg"
+                >
+                  Loading...
+                </Button>
+              ) : isMobile ? (
+                <Button
+                  type="button"
+                  onClick={() => navigate('/welcome')}
+                  className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Get Started Now
+                </Button>
+              ) : (
+                <WalletButton
+                  variant="default"
+                  className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                />
+              )}
             </div>
           </div>
         </div>

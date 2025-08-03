@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract, useAccount } from 'wagmi';
 import { Address } from 'viem';
 import { FRIENDS_REGISTRY_CONTRACT, CONTRACT_ADDRESSES } from '../config/contracts';
@@ -7,7 +7,7 @@ import { toast } from '@/components/ui/sonner';
 export interface Friend {
   friendAddress: Address;
   displayName: string;
-  addedAt: number;
+  addedAt: number | bigint;
   isActive: boolean;
   notes: string;
   isMutual: boolean;
@@ -162,10 +162,10 @@ export function useFriendsRegistry() {
   };
 
   // Reset function
-  const reset = () => {
+  const reset = useCallback(() => {
     setError(null);
     setIsLoading(false);
-  };
+  }, []);
 
   // Show success toast when transaction is confirmed
   useEffect(() => {
@@ -208,7 +208,7 @@ export function useFriendsData(userAddress?: Address) {
   const targetAddress = userAddress || address;
 
   // Get user's friends list
-  const { data: friendAddresses, isLoading: isLoadingAddresses } = useReadContract({
+  const { data: friendAddresses, isLoading: isLoadingAddresses, error: errorAddresses } = useReadContract({
     address: FRIENDS_REGISTRY_CONTRACT.address,
     abi: FRIENDS_REGISTRY_CONTRACT.abi,
     functionName: 'getUserFriends',
@@ -219,7 +219,7 @@ export function useFriendsData(userAddress?: Address) {
   });
 
   // Get detailed friends information
-  const { data: friendsDetailed, isLoading: isLoadingDetailed } = useReadContract({
+  const { data: friendsDetailed, isLoading: isLoadingDetailed, error: errorDetailed } = useReadContract({
     address: FRIENDS_REGISTRY_CONTRACT.address,
     abi: FRIENDS_REGISTRY_CONTRACT.abi,
     functionName: 'getUserFriendsDetailed',
@@ -230,7 +230,7 @@ export function useFriendsData(userAddress?: Address) {
   });
 
   // Get friend count
-  const { data: friendCount, isLoading: isLoadingCount } = useReadContract({
+  const { data: friendCount, isLoading: isLoadingCount, error: errorCount } = useReadContract({
     address: FRIENDS_REGISTRY_CONTRACT.address,
     abi: FRIENDS_REGISTRY_CONTRACT.abi,
     functionName: 'getFriendCount',
@@ -240,11 +240,25 @@ export function useFriendsData(userAddress?: Address) {
     },
   });
 
+  // Debug logging for development
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useFriendsData - Target address:', targetAddress);
+      console.log('useFriendsData - Friend addresses length:', friendAddresses?.length || 0);
+      console.log('useFriendsData - Friends detailed length:', friendsDetailed?.length || 0);
+      console.log('useFriendsData - Friend count:', friendCount);
+      if (errorAddresses || errorDetailed || errorCount) {
+        console.log('useFriendsData - Errors:', { errorAddresses, errorDetailed, errorCount });
+      }
+    }
+  }, [targetAddress, friendAddresses?.length, friendsDetailed?.length, friendCount, !!errorAddresses, !!errorDetailed, !!errorCount]);
+
   return {
     friendAddresses: (friendAddresses as Address[]) || [],
     friends: (friendsDetailed as Friend[]) || [],
     friendCount: (friendCount as number) || 0,
     isLoading: isLoadingAddresses || isLoadingDetailed || isLoadingCount,
+    error: errorAddresses || errorDetailed || errorCount,
   };
 }
 

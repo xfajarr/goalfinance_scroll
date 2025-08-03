@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,28 +8,82 @@ import { useInviteCode, VaultPreview } from '@/hooks/useInviteCode';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { WalletGuardDialog } from '@/components/WalletGuardDialog';
 import { formatUnits, parseUnits } from 'viem';
-import { Users, Target, Calendar, Loader2, Search, UserPlus } from 'lucide-react';
+import { Users, Target, Calendar, Loader2, Search, UserPlus, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useWaitForTransactionReceipt } from 'wagmi';
 import confetti from 'canvas-confetti';
+import { useSupportedTokens } from '@/hooks/useTokenInfo';
 
 export const JoinGoalSection = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [goalPreview, setGoalPreview] = useState<VaultPreview | null>(null);
   const [depositAmount, setDepositAmount] = useState('');
-  const [isNativeToken, setIsNativeToken] = useState(false);
-  const [showPersonalGoal, setShowPersonalGoal] = useState(false);
+  const [selectedTokenIndex, setSelectedTokenIndex] = useState(1); // Default to USDC
+  const supportedTokens = useSupportedTokens();
+
+  // Get current selected token info
+  const selectedToken = supportedTokens[selectedTokenIndex];
+  const isNativeToken = selectedToken?.isNative || false;
   
-  const { 
-    validateInviteCode, 
-    isValidating, 
+  const {
+    validateInviteCode,
+    isValidating,
     validateError,
     joinVaultByInvite,
     isJoining,
-    joinError 
+    joinError,
+    joinTxHash,
+    currentStep,
+    isApproving,
+    isConfirming
   } = useInviteCode();
   
   const { requireWalletConnection, showConnectDialog, setShowConnectDialog } = useWalletGuard();
   const { toast } = useToast();
+
+  // Wait for transaction confirmation
+  const {
+    isLoading: isTxConfirming,
+    isSuccess: isConfirmed,
+    error: confirmError,
+  } = useWaitForTransactionReceipt({
+    hash: joinTxHash as `0x${string}` | undefined,
+  });
+
+  // Handle successful transaction confirmation
+  useEffect(() => {
+    if (isConfirmed && joinTxHash) {
+      // Trigger confetti animation
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
+      });
+
+      toast({
+        title: '🎉 Successfully Joined Vault!',
+        description: `Welcome to the savings squad! Deposited ${depositAmount} ${isNativeToken ? 'ETH' : 'USDC'}`,
+      });
+
+      // Reset form
+      setInviteCode('');
+      setGoalPreview(null);
+      setDepositAmount('');
+      setSelectedTokenIndex(1); // Reset to USDC
+    }
+  }, [isConfirmed, joinTxHash, depositAmount, isNativeToken, toast]);
+
+  // Handle transaction confirmation error
+  useEffect(() => {
+    if (confirmError) {
+      toast({
+        title: 'Transaction Failed',
+        description: 'The transaction was rejected or failed to confirm.',
+        variant: 'destructive',
+      });
+    }
+  }, [confirmError, toast]);
 
   const handleValidateCode = async () => {
     if (!inviteCode.trim()) {
@@ -45,9 +99,6 @@ export const JoinGoalSection = () => {
       const preview = await validateInviteCode(inviteCode.trim());
       if (preview) {
         setGoalPreview(preview);
-        // Show personal goal input for PERSONAL type goals (you'd need to check goal type)
-        // For now, we'll show it if targetAmount is 0 (indicating PERSONAL type)
-        setShowPersonalGoal(preview.targetAmount === 0n);
       } else {
         toast({
           title: 'Invalid Invite Code',
@@ -75,21 +126,7 @@ export const JoinGoalSection = () => {
 
       try {
         await joinVaultByInvite(inviteCode.trim(), depositAmount, isNativeToken);
-
-        // Trigger confetti animation
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE']
-        });
-
-        // Reset form
-        setInviteCode('');
-        setGoalPreview(null);
-        setDepositAmount('');
-        setIsNativeToken(false);
-
+        // Success feedback will be shown when transaction is confirmed
       } catch (error) {
         console.error('Error joining goal:', error);
       }
@@ -254,25 +291,43 @@ export const JoinGoalSection = () => {
                     />
 
                     {/* Token Selection */}
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant={!isNativeToken ? "default" : "outline"}
-                        onClick={() => setIsNativeToken(false)}
-                        className="flex-1 rounded-xl"
+                    <div className="space-y-2">
+                      {/* USDC Option */}
+                      <div
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          selectedTokenIndex === 1
+                            ? 'bg-goal-primary/10 border-goal-primary'
+                            : 'bg-white border-goal-border/30 hover:border-goal-primary/50'
+                        }`}
+                        onClick={() => setSelectedTokenIndex(1)}
                       >
-                        <img src="/usdc-logo.svg" alt="USDC" className="w-4 h-4 mr-2" />
-                        USDC
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={isNativeToken ? "default" : "outline"}
-                        onClick={() => setIsNativeToken(true)}
-                        className="flex-1 rounded-xl"
+                        <div className="flex items-center gap-3">
+                          <img src="/usdc-logo.svg" alt="USDC" className="w-5 h-5" />
+                          <span className="font-medium text-sm">USDC</span>
+                          {selectedTokenIndex === 1 && (
+                            <CheckCircle className="w-4 h-4 text-goal-primary ml-auto" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ETH Option */}
+                      <div
+                        className="p-3 rounded-xl border cursor-not-allowed bg-gray-50 border-gray-200 opacity-75"
+                        onClick={() => {
+                          toast({
+                            title: "ETH Coming Soon",
+                            description: "ETH deposits are being developed. Please use USDC for now.",
+                          });
+                        }}
                       >
-                        <img src="/mantle-mnt-logo.svg" alt="MNT" className="w-4 h-4 mr-2" />
-                        MNT
-                      </Button>
+                        <div className="flex items-center gap-3">
+                          <img src="/ethereum-eth-logo.svg" alt="ETH" className="w-5 h-5 opacity-60" />
+                          <span className="font-medium text-sm text-gray-600">ETH</span>
+                          <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-medium ml-auto">
+                            Soon
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <p className="text-xs text-goal-text/60">
@@ -283,13 +338,16 @@ export const JoinGoalSection = () => {
                 {/* Join Button */}
                 <Button
                   onClick={handleJoinGoal}
-                  disabled={isJoining || !depositAmount}
+                  disabled={isJoining || !depositAmount || selectedToken?.isNative}
                   className="w-full bg-goal-primary hover:bg-goal-primary/90 text-goal-text-primary font-fredoka font-semibold rounded-2xl py-3"
                 >
                   {isJoining ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Joining Circle...
+                      {currentStep === 'checking' && 'Checking approval...'}
+                      {currentStep === 'approving' && 'Approving USDC...'}
+                      {currentStep === 'joining' && 'Joining Circle...'}
+                      {(currentStep === 'idle' || !currentStep) && 'Processing...'}
                     </>
                   ) : (
                     <>

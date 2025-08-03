@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { usePrivy } from '@privy-io/react-auth';
-import { formatUnits } from 'viem';
 import { useUserVaults } from './useUserVaults';
 import { useJoinedVaults } from './useJoinedVaults';
+import { useUserTotalDeposits } from './useUserTotalDeposits';
 
 export interface UserProfileStats {
   vaultsCreated: number;
@@ -44,6 +44,9 @@ export const useUserProfile = (): UserProfile => {
     error: joinedVaultsError
   } = useJoinedVaults();
 
+  // Get user's total personal deposits
+  const { totalSaved: userTotalSaved } = useUserTotalDeposits();
+
   // Calculate user statistics
   const stats = useMemo((): UserProfileStats => {
     const allVaults = [...(userVaults || []), ...(joinedVaults || [])];
@@ -67,13 +70,8 @@ export const useUserProfile = (): UserProfile => {
     // Count completed goals (status 2 = COMPLETED)
     const goalsCompleted = allVaults.filter(vault => vault.status === 2).length;
 
-    // Calculate total saved across all vaults
-    const totalSaved = allVaults.reduce((sum, vault) => {
-      // Determine if this is a native token vault
-      const isNativeToken = vault.token === '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-      const decimals = isNativeToken ? 18 : 6; // 18 for native tokens, 6 for USDC
-      return sum + Number(formatUnits(vault.totalDeposited || 0n, decimals));
-    }, 0);
+    // Use user's actual total deposits instead of vault totals
+    const totalSaved = userTotalSaved;
 
     // Yield earned is 0 for now (future feature)
     const yieldEarned = 0;
@@ -85,7 +83,7 @@ export const useUserProfile = (): UserProfile => {
       totalSaved,
       yieldEarned
     };
-  }, [userVaults, joinedVaults]);
+  }, [userVaults, joinedVaults, userTotalSaved]);
 
   // Generate user display name and avatar
   const userDisplayData = useMemo(() => {

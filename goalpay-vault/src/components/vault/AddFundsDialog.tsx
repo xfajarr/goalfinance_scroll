@@ -33,6 +33,7 @@ import { useAccount, usePublicClient } from 'wagmi';
 import { Address, parseUnits } from 'viem';
 import { Vault, Member } from '@/contracts/types';
 import { ERC20ABI } from '@/contracts/abis/ERC20';
+import { useSupportedTokens, useNativeTokenInfo } from '@/hooks/useTokenInfo';
 
 // Form validation schema
 const addFundsSchema = z.object({
@@ -64,11 +65,12 @@ export const AddFundsDialog = ({
   children,
 }: AddFundsDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isNativeToken, setIsNativeToken] = useState(false);
   const { isConnected, address } = useAccount();
   const publicClient = usePublicClient();
   const [usdcBalance, setUsdcBalance] = useState<bigint | null>(null);
-  const [selectedToken, setSelectedToken] = useState<'usdc' | 'mnt' | 'ethbase'>('usdc');
+  const supportedTokens = useSupportedTokens();
+  const nativeTokenInfo = useNativeTokenInfo();
+  const [selectedTokenIndex, setSelectedTokenIndex] = useState(1); // Default to USDC (index 1)
 
   // Get vault info from new GoalFinance contract
   const { data: vaultInfo, isLoading: isLoadingVault } = useGetVault(vaultId);
@@ -128,13 +130,13 @@ export const AddFundsDialog = ({
   //   isLoadingMember
   // });
 
-  useEffect(() => {
-    setIsNativeToken(selectedToken === 'mnt');
-  }, [selectedToken]);
+  // Get current selected token info
+  const selectedToken = supportedTokens[selectedTokenIndex];
+  const isNativeToken = selectedToken?.isNative || false;
 
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!address || selectedToken !== 'usdc') {
+      if (!address || isNativeToken) {
         setUsdcBalance(null);
         return;
       }
@@ -151,7 +153,7 @@ export const AddFundsDialog = ({
       }
     };
     fetchBalance();
-  }, [address, selectedToken, publicClient]);
+  }, [address, isNativeToken, selectedToken?.value, publicClient]);
 
 
   const onSubmit = async (data: AddFundsFormData) => {
@@ -161,10 +163,7 @@ export const AddFundsDialog = ({
       }
 
       // Use the appropriate function based on token type
-      if (selectedToken === 'ethbase') {
-        // ETH Base is not yet implemented, so this will throw an error or show a message
-        throw new Error('ETH Base deposits are not yet available. Please choose USDC or MNT.');
-      } else if (isNativeToken) {
+      if (isNativeToken) {
         await addNativeFunds(vaultId, data.amount);
       } else {
         await addTokenFunds(vaultId, data.amount);
@@ -182,7 +181,7 @@ export const AddFundsDialog = ({
     setIsOpen(false);
     form.reset();
     setHasSucceeded(false);
-    setIsNativeToken(false);
+    setSelectedTokenIndex(1); // Reset to USDC
     reset(); // Reset the add funds hook state
   };
 
@@ -205,7 +204,7 @@ export const AddFundsDialog = ({
         form.reset();
         setIsOpen(false);
         setHasSucceeded(false);
-        setIsNativeToken(false);
+        setSelectedTokenIndex(1); // Reset to USDC
         reset();
       }, 3000); // 3 second delay to show success state
 
@@ -376,55 +375,82 @@ export const AddFundsDialog = ({
               )}
 
               {/* Token Selection */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <label className="font-fredoka font-bold text-goal-text text-sm">
                   Choose Token
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <Button
-                    type="button"
-                    variant={selectedToken === 'usdc' ? "default" : "outline"}
-                    onClick={() => setSelectedToken('usdc')}
-                    className="flex-1 rounded-xl"
-                  >
-                    <img src="/usdc-logo.svg" alt="USDC" className="w-4 h-4 mr-2" />
-                    USDC
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedToken === 'mnt' ? "default" : "outline"}
-                    onClick={() => setSelectedToken('mnt')}
-                    className="flex-1 rounded-xl"
-                  >
-                    <img src="/mantle-mnt-logo.svg" alt="MNT" className="w-4 h-4 mr-2" />
-                    MNT
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={selectedToken === 'ethbase' ? "default" : "outline"}
-                    onClick={() => setSelectedToken('ethbase')}
-                    className="flex-1 rounded-xl"
-                  >
-                    <img src="/base-logo.svg" alt="ETH Base" className="w-4 h-4 mr-2" />
-                    ETH Base
-                  </Button>
+
+                {/* USDC Option */}
+                <div
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    selectedTokenIndex === 1
+                      ? 'bg-goal-primary/10 border-goal-primary shadow-sm'
+                      : 'bg-white border-goal-border/30 hover:border-goal-primary/50 hover:shadow-sm'
+                  }`}
+                  onClick={() => setSelectedTokenIndex(1)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
+                        <img src="/usdc-logo.svg" alt="USDC" className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-fredoka font-bold text-goal-text text-sm">
+                          USDC
+                        </h3>
+                        <p className="font-inter text-xs text-goal-text/60">
+                          USD Coin - Stable and ready to use
+                        </p>
+                      </div>
+                    </div>
+                    {selectedTokenIndex === 1 && (
+                      <div className="w-5 h-5 bg-goal-primary rounded-full flex items-center justify-center">
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-goal-text/60">
-                  Choose your preferred token for the deposit
+
+                {/* ETH Option */}
+                <div
+                  className={`p-4 rounded-xl border-2 cursor-not-allowed transition-all relative ${
+                    selectedTokenIndex === 0
+                      ? 'bg-orange-50 border-orange-200'
+                      : 'bg-gray-50 border-gray-200 opacity-75'
+                  }`}
+                  onClick={() => {
+                    toast.info("ETH deposits are coming soon! Please use USDC for now.");
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                        <img src="/ethereum-eth-logo.svg" alt="ETH" className="w-6 h-6 opacity-60" />
+                      </div>
+                      <div>
+                        <h3 className="font-fredoka font-bold text-gray-600 text-sm">
+                          ETH
+                        </h3>
+                        <p className="font-inter text-xs text-gray-500">
+                          Ethereum - Coming soon
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        Soon
+                      </span>
+                      <Clock className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-goal-text/60 text-center">
+                  Choose USDC for immediate deposits. ETH support is being added soon!
                 </p>
               </div>
 
-              {/* ETH Base Coming Soon Notice */}
-              {selectedToken === 'ethbase' && (
-                <Card className="p-4 bg-blue-50 border-blue-200 rounded-2xl mt-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <img src="/base-logo.svg" alt="ETH Base" className="w-5 h-5 mr-2" />
-                    <span className="text-sm font-medium text-blue-800">
-                      ETH Base support is coming soon! Cross-chain deposits will be available in a future update.
-                    </span>
-                  </div>
-                </Card>
-              )}
+
 
               {/* Approval Status */}
               {!isNativeToken && contributionAmount > 0 && (
@@ -432,15 +458,15 @@ export const AddFundsDialog = ({
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
                     <span className="text-sm font-medium text-yellow-800">
-                      USDC Approval Required
+                      {selectedToken?.symbol || 'Token'} Approval Required
                     </span>
                   </div>
                   <p className="text-xs text-yellow-700 mb-2">
-                    For USDC deposits, you need to approve the contract to spend your tokens first, then add funds.
+                    For {selectedToken?.symbol || 'token'} deposits, you need to approve the contract to spend your tokens first, then add funds.
                   </p>
                   {currentStep === 'approving' && (
                     <div className="text-xs text-yellow-600">
-                      Step 1/2: Approving USDC spending...
+                      Step 1/2: Approving {selectedToken?.symbol || 'token'} spending...
                     </div>
                   )}
                   {currentStep === 'adding' && (
@@ -493,15 +519,6 @@ export const AddFundsDialog = ({
                       <span className="text-goal-text/80 font-medium">Your contribution:</span>
                       <span className="font-bold text-goal-text">{formatCurrency(contributionAmount)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-goal-text/80 font-medium">Yield feature:</span>
-                      <span className="font-bold text-goal-text bg-goal-accent px-2 py-1 rounded-full text-xs">Coming Soon</span>
-                    </div>
-                    <Separator className="bg-goal-border/40" />
-                    <div className="flex justify-between">
-                      <span className="text-goal-text/80 font-medium">Current total:</span>
-                      <span className="font-bold text-goal-text text-base">{formatCurrency(contributionAmount)}</span>
-                    </div>
                   </div>
 
                   <div className="pt-2">
@@ -533,7 +550,7 @@ export const AddFundsDialog = ({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading || isApproving || contributionAmount === 0 || isLoadingVault || !vaultInfo || !canAddFunds || selectedToken === 'ethbase'}
+                  disabled={isLoading || isApproving || contributionAmount === 0 || isLoadingVault || !vaultInfo || !canAddFunds || selectedToken?.isNative}
                   className="flex-1 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-bold rounded-2xl shadow-lg"
                 >
                   {isLoadingVault ? (
@@ -555,18 +572,23 @@ export const AddFundsDialog = ({
                         {isLoading ? 'Adding Funds...' : 'Confirming...'}
                       </span>
                     </div>
+                  ) : selectedToken?.isNative ? (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span>ETH Coming Soon</span>
+                    </div>
                   ) : needsApproval && !isNativeToken ? (
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
                       <span>
-                        {selectedToken === 'usdc' ? 'Deposit USDC' : selectedToken === 'mnt' ? 'Deposit MNT' : 'Deposit'}
+                        Deposit {selectedToken?.symbol || 'Token'}
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4" />
                       <span>
-                        Approve USDC First
+                        Approve {selectedToken?.symbol || 'Token'} First
                       </span>
                     </div>
                   )}

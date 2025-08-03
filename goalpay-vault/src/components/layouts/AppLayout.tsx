@@ -4,6 +4,7 @@ import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { Button } from '@/components/ui/button';
 import { WalletButton } from '@/components/wallet/WalletButton';
 import { ChainSwitcher } from '@/components/ChainSwitcher';
+import { Droplets } from 'lucide-react';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { label: 'Dashboard', path: '/app/dashboard' },
     { label: 'Split Bills', path: '/app/split-bills' },
     { label: 'Debts', path: '/app/debts' },
+    { label: 'Faucet', path: '/faucet' },
     { label: 'Profile', path: '/app/profile' },
   ];
 
@@ -53,11 +55,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </Link>
               ))}
 
-              {/* Chain Switcher */}
-              {isConnected && (
-                <ChainSwitcher className="text-goal-text" />
-              )}
-
               {/* Wallet Button */}
               <WalletButton 
                 variant="default"
@@ -77,11 +74,18 @@ export function AppLayout({ children }: AppLayoutProps) {
 
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center space-x-2">
-              {isConnected && (
-                <ChainSwitcher className="text-goal-text" />
-              )}
-              
-              <WalletButton 
+              {/* Faucet Button for Mobile */}
+              <Button
+                asChild
+                size="sm"
+                className="bg-goal-secondary hover:bg-goal-secondary/80 text-goal-text font-fredoka font-medium px-3 py-2 rounded-2xl"
+              >
+                <Link to="/faucet">
+                  <Droplets className="w-4 h-4" />
+                </Link>
+              </Button>
+
+              <WalletButton
                 variant="default"
                 size="sm"
                 className="bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-semibold px-3 py-2 rounded-2xl"

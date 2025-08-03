@@ -90,8 +90,10 @@ export function FriendsManager({ className }: FriendsManagerProps) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString();
+  const formatDate = (timestamp: number | bigint) => {
+    // Convert BigInt to number safely
+    const timestampNum = typeof timestamp === 'bigint' ? Number(timestamp) : timestamp;
+    return new Date(timestampNum * 1000).toLocaleDateString();
   };
 
   if (isLoading) {

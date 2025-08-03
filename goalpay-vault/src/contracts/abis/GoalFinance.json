@@ -416,12 +416,12 @@
                         "type": "address"
                     },
                     {
-                        "internalType": "enum GoalFinance.GoalType",
+                        "internalType": "enum IGoalFinanceTypes.GoalType",
                         "name": "goalType",
                         "type": "uint8"
                     },
                     {
-                        "internalType": "enum GoalFinance.Visibility",
+                        "internalType": "enum IGoalFinanceTypes.Visibility",
                         "name": "visibility",
                         "type": "uint8"
                     },
@@ -442,7 +442,7 @@
                     }
                 ],
                 "indexed": false,
-                "internalType": "struct GoalFinance.VaultConfig",
+                "internalType": "struct IGoalFinanceTypes.VaultConfig",
                 "name": "config",
                 "type": "tuple"
             },
@@ -517,7 +517,7 @@
             },
             {
                 "indexed": true,
-                "internalType": "enum GoalFinance.VaultStatus",
+                "internalType": "enum IGoalFinanceTypes.VaultStatus",
                 "name": "newStatus",
                 "type": "uint8"
             },
@@ -564,58 +564,6 @@
     },
     {
         "inputs": [],
-        "name": "BASIS_POINTS",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "DEFAULT_PENALTY_RATE",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "MAX_PENALTY_RATE",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
-        "name": "MIN_PENALTY_RATE",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [],
         "name": "NATIVE_TOKEN",
         "outputs": [
             {
@@ -624,7 +572,7 @@
                 "type": "address"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -669,7 +617,7 @@
         "name": "checkVaultStatus",
         "outputs": [
             {
-                "internalType": "enum GoalFinance.VaultStatus",
+                "internalType": "enum IGoalFinanceTypes.VaultStatus",
                 "name": "",
                 "type": "uint8"
             }
@@ -710,12 +658,12 @@
                         "type": "address"
                     },
                     {
-                        "internalType": "enum GoalFinance.GoalType",
+                        "internalType": "enum IGoalFinanceTypes.GoalType",
                         "name": "goalType",
                         "type": "uint8"
                     },
                     {
-                        "internalType": "enum GoalFinance.Visibility",
+                        "internalType": "enum IGoalFinanceTypes.Visibility",
                         "name": "visibility",
                         "type": "uint8"
                     },
@@ -735,7 +683,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct GoalFinance.VaultConfig",
+                "internalType": "struct IGoalFinanceTypes.VaultConfig",
                 "name": "_config",
                 "type": "tuple"
             }
@@ -854,7 +802,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct GoalFinance.Member",
+                "internalType": "struct IGoalFinanceTypes.Member",
                 "name": "",
                 "type": "tuple"
             }
@@ -940,7 +888,7 @@
                         "type": "bool"
                     }
                 ],
-                "internalType": "struct GoalFinance.PenaltyInfo[]",
+                "internalType": "struct IGoalFinanceTypes.PenaltyInfo[]",
                 "name": "",
                 "type": "tuple[]"
             }
@@ -983,12 +931,12 @@
                                 "type": "address"
                             },
                             {
-                                "internalType": "enum GoalFinance.GoalType",
+                                "internalType": "enum IGoalFinanceTypes.GoalType",
                                 "name": "goalType",
                                 "type": "uint8"
                             },
                             {
-                                "internalType": "enum GoalFinance.Visibility",
+                                "internalType": "enum IGoalFinanceTypes.Visibility",
                                 "name": "visibility",
                                 "type": "uint8"
                             },
@@ -1008,7 +956,7 @@
                                 "type": "uint256"
                             }
                         ],
-                        "internalType": "struct GoalFinance.VaultConfig",
+                        "internalType": "struct IGoalFinanceTypes.VaultConfig",
                         "name": "config",
                         "type": "tuple"
                     },
@@ -1028,7 +976,7 @@
                         "type": "uint256"
                     },
                     {
-                        "internalType": "enum GoalFinance.VaultStatus",
+                        "internalType": "enum IGoalFinanceTypes.VaultStatus",
                         "name": "status",
                         "type": "uint8"
                     },
@@ -1043,7 +991,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct GoalFinance.Vault",
+                "internalType": "struct IGoalFinanceTypes.Vault",
                 "name": "",
                 "type": "tuple"
             }
@@ -1098,12 +1046,12 @@
                         "type": "address"
                     },
                     {
-                        "internalType": "enum GoalFinance.GoalType",
+                        "internalType": "enum IGoalFinanceTypes.GoalType",
                         "name": "goalType",
                         "type": "uint8"
                     },
                     {
-                        "internalType": "enum GoalFinance.Visibility",
+                        "internalType": "enum IGoalFinanceTypes.Visibility",
                         "name": "visibility",
                         "type": "uint8"
                     },
@@ -1123,7 +1071,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct GoalFinance.VaultConfig",
+                "internalType": "struct IGoalFinanceTypes.VaultConfig",
                 "name": "",
                 "type": "tuple"
             }

@@ -23,12 +23,13 @@ import { useFriendsData, useFriendDisplayName } from '@/hooks/useFriendsRegistry
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { SectionHeader } from '@/components/ui/section-header';
 import { NATIVE_TOKEN } from '@/config/contracts';
+import { useTokenSymbol } from '@/hooks/useTokenInfo';
 import { Address } from 'viem';
 import BottomNavigation from '@/components/BottomNavigation';
 
 const SUPPORTED_TOKENS = [
   NATIVE_TOKEN,
-  '0x77B2693ea846571259FA89CBe4DD8e18f3F61787', // USDC on Mantle Sepolia
+  '0x8cCff0834e94BE6C68E30d2949d2f526195cB444', // USDC on Lisk Sepolia
 ];
 
 export default function Debts() {
@@ -255,14 +256,13 @@ function DebtOverviewTab({ summary, isLoading }: DebtOverviewTabProps) {
 
 // Token Summary Card
 function TokenSummaryCard({ summary }: { summary: any }) {
+  const tokenSymbol = useTokenSymbol(summary.token as Address);
   const totalOwed = Number(debtUtils.formatAmount(summary.totalOwed));
   const totalOwing = Number(debtUtils.formatAmount(summary.totalOwing));
   const netBalance = totalOwing - totalOwed;
 
   const isNetCreditor = netBalance > 0;
   const isNetDebtor = netBalance < 0;
-
-  const tokenSymbol = summary.token === NATIVE_TOKEN ? 'ETH' : 'USDC';
 
   return (
     <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-2xl hover:shadow-md transition-all duration-200">

@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -16,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import BottomNavigation from '@/components/BottomNavigation';
 import { WalletGuard } from '@/components/wallet/WalletGuard';
-import { Settings, Trophy, Target, Users, Copy, Check, DollarSign, Loader2, AlertCircle, LogOut } from 'lucide-react';
+import { Settings, Trophy, Target, Users, Copy, Check, DollarSign, Loader2, AlertCircle, LogOut, History } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { usePrivy } from '@privy-io/react-auth';
@@ -37,9 +38,11 @@ const Profile = () => {
     error
   } = useUserProfile();
 
+
+
   // Wallet guard for connection state
   const { isConnected, requireConnection, address } = useWalletGuard();
-  
+
   // Privy for wallet disconnection
   const { logout } = usePrivy();
 
@@ -156,16 +159,26 @@ const Profile = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
-              <Button
+            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+              <Link to="/app/goals-history" className="flex-1">
+                <Button
+                  variant="outline"
+                  className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 w-full"
+                >
+                  <History className="w-4 h-4 mr-2" />
+                  <span className="font-fredoka font-semibold">History</span>
+                </Button>
+              </Link>
+
+              {/* <Button
                 variant="outline"
                 className="border-goal-border text-goal-text hover:bg-goal-accent rounded-full px-6 flex-1 min-w-0"
               >
                 <Settings className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Settings</span>
-                <span className="sm:hidden">Settings</span>
-              </Button>
-              
+                <span className="hidden sm:inline font-fredoka font-semibold">Settings</span>
+                <span className="sm:hidden font-fredoka font-semibold">Settings</span>
+              </Button> */}
+
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -173,8 +186,8 @@ const Profile = () => {
                     className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 rounded-full px-6 flex-1 min-w-0 transition-all duration-200"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Disconnect</span>
-                    <span className="sm:hidden">Disconnect</span>
+                    <span className="hidden sm:inline font-fredoka font-semibold">Disconnect</span>
+                    <span className="sm:hidden font-fredoka font-semibold">Disconnect</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-white/95 backdrop-blur-sm border-goal-border/30 rounded-xl max-w-[90vw] sm:max-w-md">
@@ -290,6 +303,8 @@ const Profile = () => {
             </p>
           </div>
         </Card>
+
+
       </main>
 
         <div className="md:hidden">

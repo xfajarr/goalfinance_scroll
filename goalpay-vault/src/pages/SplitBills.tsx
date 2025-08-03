@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { BillCreationForm } from '@/components/bills/BillCreationForm';
 import { FriendsManager } from '@/components/friends/FriendsManager';
+import { FriendSearchTest } from '@/components/friends/FriendSearchTest';
 import { useUserBills } from '@/hooks/useBillSplitter';
 import { useWalletGuard } from '@/hooks/use-wallet-guard';
 import { SectionHeader } from '@/components/ui/section-header';
@@ -187,6 +188,14 @@ export default function SplitBills() {
                 </Button>
               </div>
             </Card>
+
+            {/* Test Component for Development */}
+            {process.env.NODE_ENV === 'development' && (
+              <Card className="bg-white/60 backdrop-blur-sm border-goal-border/30 p-6 rounded-3xl">
+                <h3 className="font-fredoka font-bold text-goal-text mb-4">Friend Selection Test</h3>
+                <FriendSearchTest />
+              </Card>
+            )}
           </div>
         </div>
       </main>

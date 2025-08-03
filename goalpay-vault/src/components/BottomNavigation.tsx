@@ -44,7 +44,7 @@ const BottomNavigation = () => {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="bg-goal-text/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-between px-4 py-3">
+      <div className="bg-goal-text/95 backdrop-blur-xl rounded-full shadow-xl border border-white/10 flex items-center justify-between px-6 py-2">
         {navItems.map((item, index) => {
           const isMiddleItem = index === Math.floor(navItems.length / 2);
 
@@ -54,15 +54,15 @@ const BottomNavigation = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center justify-center rounded-full w-12 h-12 transition-all duration-300 focus:ring-2 focus:ring-goal-primary focus:outline-none ${
+                className={`flex items-center justify-center rounded-full w-14 h-14 transition-all duration-300 focus:ring-2 focus:ring-goal-primary focus:outline-none shadow-lg ${
                   item.active
-                    ? 'bg-goal-primary text-goal-text'
-                    : 'bg-goal-primary text-goal-text hover:bg-goal-primary/90'
+                    ? 'bg-goal-primary text-goal-text scale-110'
+                    : 'bg-goal-primary text-goal-text hover:bg-goal-primary/90 hover:scale-105'
                 }`}
                 aria-label={`${item.label} - Create a new goal`}
                 aria-current={item.active ? 'page' : undefined}
               >
-                <item.icon className="w-6 h-6" />
+                <item.icon className="w-7 h-7" />
               </Link>
             );
           }
@@ -72,15 +72,15 @@ const BottomNavigation = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center justify-center rounded-full w-10 h-10 transition-all duration-200 focus:ring-2 focus:ring-goal-primary focus:outline-none ${
+              className={`flex items-center justify-center rounded-full w-11 h-11 transition-all duration-200 focus:ring-2 focus:ring-goal-primary focus:outline-none ${
                 item.active
-                  ? 'bg-goal-primary/90 text-goal-text'
-                  : 'text-goal-primary hover:bg-goal-text-muted/20'
+                  ? 'bg-goal-primary/20 text-goal-primary scale-110'
+                  : 'text-goal-primary/70 hover:bg-goal-primary/10 hover:text-goal-primary hover:scale-105'
               }`}
               aria-label={item.label}
               aria-current={item.active ? 'page' : undefined}
             >
-              <item.icon className="w-5 h-5" />
+              <item.icon className="w-6 h-6" />
             </Link>
           );
         })}

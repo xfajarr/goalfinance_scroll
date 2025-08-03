@@ -22,6 +22,7 @@ const Navigation = () => {
       { label: 'How it Works', path: '/how-it-works' },
       { label: 'FAQ', path: '/faq' },
     ]),
+    { label: 'Faucet', path: '/faucet' },
   ];
 
   const toggleMobileMenu = () => {

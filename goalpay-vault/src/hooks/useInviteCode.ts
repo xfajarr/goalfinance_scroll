@@ -46,6 +46,9 @@ export interface UseInviteCodeReturn {
   isJoining: boolean;
   joinError: Error | null;
   joinTxHash: string | null;
+  currentStep: 'idle' | 'checking' | 'approving' | 'joining' | 'success' | 'error';
+  isApproving: boolean;
+  isConfirming: boolean;
 
   // Join public vault directly with deposit
   joinPublicVault: (vaultId: bigint, amount: string, isNativeToken?: boolean) => Promise<void>;
@@ -68,9 +71,13 @@ export const useInviteCode = (): UseInviteCodeReturn => {
   const {
     joinVault: joinVaultNative,
     joinVaultWithToken: joinVaultWithTokenHook,
+    joinVaultComplete,
     isLoading: isJoiningHook,
     error: joinErrorHook,
-    txHash: joinTxHashHook
+    txHash: joinTxHashHook,
+    currentStep,
+    isApproving,
+    isConfirming
   } = useJoinVault();
 
   // Use the new contract configuration
@@ -226,6 +233,41 @@ export const useInviteCode = (): UseInviteCodeReturn => {
           const config = vaultInfo.config;
 
           if (vaultInfo && vaultInfo.creator !== '0x0000000000000000000000000000000000000000') {
+            // Check if vault is active (status 0)
+            if (vaultInfo.status !== 0) {
+              throw new Error('This vault is no longer active');
+            }
+
+            // Check if user is the creator
+            if (address && vaultInfo.creator?.toLowerCase() === address.toLowerCase()) {
+              throw new Error('You cannot join your own vault');
+            }
+
+            // Check if user has already joined this vault
+            if (address) {
+              try {
+                await delay(200); // Add delay before member check
+                const memberInfo = await retryContractCall(() =>
+                  publicClient.readContract({
+                    address: contractAddress,
+                    abi: GoalFinanceABI,
+                    functionName: 'getMember',
+                    args: [vaultId, address],
+                  })
+                ) as { depositedAmount: bigint };
+
+                if (memberInfo && memberInfo.depositedAmount > 0n) {
+                  throw new Error('You have already joined this vault');
+                }
+              } catch (error) {
+                // If the error is about already joining, re-throw it
+                if (error instanceof Error && error.message.includes('already joined')) {
+                  throw error;
+                }
+                // Otherwise, continue (user is not a member, which is what we want)
+              }
+            }
+
             const vaultPreview: VaultPreview = {
               id: vaultId,
               name: config.name || 'Unknown Vault',
@@ -266,6 +308,41 @@ export const useInviteCode = (): UseInviteCodeReturn => {
 
         if (!vaultInfo || vaultInfo.creator === '0x0000000000000000000000000000000000000000') {
           throw new Error('Vault not found');
+        }
+
+        // Check if vault is active (status 0)
+        if (vaultInfo.status !== 0) {
+          throw new Error('This vault is no longer active');
+        }
+
+        // Check if user is the creator
+        if (address && vaultInfo.creator?.toLowerCase() === address.toLowerCase()) {
+          throw new Error('You cannot join your own vault');
+        }
+
+        // Check if user has already joined this vault
+        if (address) {
+          try {
+            await delay(200); // Add delay before member check
+            const memberInfo = await retryContractCall(() =>
+              publicClient.readContract({
+                address: contractAddress,
+                abi: GoalFinanceABI,
+                functionName: 'getMember',
+                args: [vaultId, address],
+              })
+            ) as { depositedAmount: bigint };
+
+            if (memberInfo && memberInfo.depositedAmount > 0n) {
+              throw new Error('You have already joined this vault');
+            }
+          } catch (error) {
+            // If the error is about already joining, re-throw it
+            if (error instanceof Error && error.message.includes('already joined')) {
+              throw error;
+            }
+            // Otherwise, continue (user is not a member, which is what we want)
+          }
         }
 
         // vaultInfo structure: { id, config: { name, description, token, goalType, visibility, targetAmount, deadline, penaltyRate }, creator, totalDeposited, memberCount, status, inviteCode, createdAt }
@@ -403,19 +480,9 @@ export const useInviteCode = (): UseInviteCodeReturn => {
         }
       }
 
-      // Use the appropriate join function based on token type with the actual invite code
-      if (isNativeToken) {
-        await joinVaultNative(vaultId, amount, actualInviteCode);
-      } else {
-        await joinVaultWithTokenHook(vaultId, amount, actualInviteCode);
-      }
-
-      toast({
-        title: '🎉 Successfully Joined Vault!',
-        description: `Welcome to the savings squad! Deposited ${amount} ${isNativeToken ? 'MNT' : 'USDC'}`,
-      });
-
-
+      // Use the complete join function that handles approval and joining automatically
+      // Note: Success toast will be shown by the calling component after transaction confirmation
+      await joinVaultComplete(vaultId, amount, actualInviteCode, isNativeToken);
 
     } catch (error) {
       const err = error as Error;
@@ -482,15 +549,18 @@ export const useInviteCode = (): UseInviteCodeReturn => {
     generateInviteCode,
     isGenerating,
     generateError,
-    
+
     validateInviteCode,
     isValidating,
     validateError,
-    
+
     joinVaultByInvite,
-    isJoining: isJoiningHook,
+    isJoining: isJoiningHook || isApproving || isConfirming,
     joinError: joinErrorHook,
     joinTxHash: joinTxHashHook,
+    currentStep,
+    isApproving,
+    isConfirming,
 
     joinPublicVault,
   };
