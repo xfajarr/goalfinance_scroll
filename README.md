@@ -155,7 +155,7 @@ When your goal is reached:
 
 | Network | Status | Chain ID | Explorer | Contract Addresses |
 |---------|--------|----------|----------|-------------------|
-| Lisk Sepolia | ✅ Live | 4202 | [Lisk Explorer](https://sepolia-blockscout.lisk.com/) | See [deployments/](./goalpay-contract/deployments/) |
+| Lisk Sepolia | ✅ Live | 4202 | [Lisk Explorer](https://sepolia-blockscout.lisk.com/) | GoalFinance: `0xFe03ae72A941dFf0f07ba55b112Df6600Dd9a2f2`, BillSplitter: `0x75346BC0Aa2863CF24423E6dbA2D7374929847DB`, FriendsRegistry: `0xD102088948108C0024444230CF87A1405986a06A` |
 | Scroll Sepolia | ✅ Live | 534351 | [Scroll Explorer](https://sepolia.scrollscan.com/) | See [deployments/](./goalpay-contract/deployments/) |
 | Etherlink Testnet | ✅ Live | 128123 | [Etherlink Explorer](https://testnet.explorer.etherlink.com/) | See [deployments/](./goalpay-contract/deployments/) |
 
