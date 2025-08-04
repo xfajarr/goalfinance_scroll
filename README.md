@@ -3,7 +3,6 @@
 <div align="center">
 
 ![GoalFi Banner](https://img.shields.io/badge/GoalFi-Collaborative%20Savings-brightgreen?style=for-the-badge&logo=ethereum)
-![Hackathon](https://img.shields.io/badge/🏆-Hackathon%20Project-orange?style=for-the-badge)
 
 **Turn your financial dreams into reality with friends, family, and community** 🚀
 
