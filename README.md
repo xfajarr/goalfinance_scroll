@@ -1,33 +1,34 @@
-# 🎯 GoalFi - Collaborative Savings Made Simple and Fun
+# 🎯 Goal Finance - Decentralized Collaborative Savings
 
 <div align="center">
 
-![GoalFi Banner](https://img.shields.io/badge/GoalFi-Collaborative%20Savings-brightgreen?style=for-the-badge&logo=ethereum)
-![Hackathon](https://img.shields.io/badge/🏆-Hackathon%20Project-orange?style=for-the-badge)
+![Goal Finance Banner](https://img.shields.io/badge/Goal%20Finance-Collaborative%20Savings-brightgreen?style=for-the-badge&logo=ethereum)
 
-**Turn your financial dreams into reality with friends, family, and community** 🚀
+**The future of collaborative savings** 🚀
 
 [![Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Solidity%20^0.8.24-blue?style=flat-square&logo=solidity)](./goalpay-contract)
 [![Frontend](https://img.shields.io/badge/Frontend-React%20+%20TypeScript-61dafb?style=flat-square&logo=react)](./goalpay-vault)
 [![Web3](https://img.shields.io/badge/Web3-wagmi%20+%20viem-ff6b35?style=flat-square&logo=web3dotjs)](https://wagmi.sh/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[🌟 Live Demo](https://goal-finance.vercel.app) • [🏗️ Architecture](#architecture) • [📖 Documentation](#documentation)
+[🌟 Live Demo](https://goal-finance.vercel.app) • [🏗️ Architecture](#architecture) • [📖 Documentation](#documentation) • [🔗 Multi-Chain Explorer](#-deployed-networks)
 
 </div>
 
-## 🌟 What is GoalFi?
+## 🌟 What is Goal Finance?
 
-GoalFi is a **decentralized savings platform** that transforms the way people save money by making it **collaborative, fun, transparent, and rewarding**. Create shared savings goals with friends, family, or community members, and watch your dreams become reality together!
+Goal Finance is a **decentralized savings protocol** built for **next-generation blockchains** that revolutionizes collaborative savings. Leveraging fast, secure, and cost-effective blockchain infrastructure, Goal Finance enables users to create shared savings goals with friends, family, or community members in a completely trustless environment.
 
-### ✨ Why GoalFi?
+### ✨ Why Goal Finance?
 
-- 🎯 **Shared Goals**: Save together for vacations, gadgets, emergencies, or any dream
-- 🔒 **Trustless Security**: Smart contracts ensure your funds are always safe
-- 📈 **Yield Generation**: Earn returns while saving (coming soon!)
-- 🎉 **Social Motivation**: Stay motivated with friends and community
-- 🌍 **Multi-Chain**: Deploy on Base, Arbitrum, Mantle, and more
-- 💎 **Transparent**: Every transaction is on-chain and verifiable
+- 🚀 **Multi-Chain**: Deployed on Lisk, Scroll, and Etherlink for maximum accessibility
+- 🎯 **Collaborative Savings**: Create and join savings goals with your community
+- 🔒 **Smart Contract Security**: Funds protected by audited Solidity contracts
+- ⚡ **Fast & Affordable**: Benefit from low transaction fees and quick finality
+- 📈 **Yield Generation**: Earn returns while saving (8% APY coming soon!)
+- 🎉 **Social Motivation**: Stay motivated through community accountability
+- 💎 **Full Transparency**: Every transaction verifiable on-chain
+- 🌐 **Interoperable**: Seamlessly connect with the broader Ethereum ecosystem
 
 ---
 
@@ -35,40 +36,60 @@ GoalFi is a **decentralized savings platform** that transforms the way people sa
 
 **Try GoalFi now**: [goal-finance.vercel.app](https://goal-finance.vercel.app)
 
-### How to Test:
+### How to Test on Supported Networks:
 1. **Connect your wallet** (MetaMask, WalletConnect, etc.)
 2. **Switch to a supported testnet**:
-   - Mantle Sepolia
-   - Base Sepolia
+   
+   **Lisk Sepolia**:
+   - Network Name: Lisk Sepolia Testnet
+   - RPC URL: `https://rpc.sepolia-api.lisk.com`
+   - Chain ID: `4202`
+   - Currency Symbol: `ETH`
+   - Block Explorer: `https://sepolia-blockscout.lisk.com`
+   
+   **Scroll Sepolia**:
+   - Network Name: Scroll Sepolia Testnet
+   - RPC URL: `https://sepolia-rpc.scroll.io`
+   - Chain ID: `534351`
+   - Currency Symbol: `ETH`
+   - Block Explorer: `https://sepolia.scrollscan.com`
+   
+   **Etherlink Testnet**:
+   - Network Name: Etherlink Testnet
+   - RPC URL: `https://node.ghostnet.etherlink.com`
+   - Chain ID: `128123`
+   - Currency Symbol: `XTZ`
+   - Block Explorer: `https://testnet.explorer.etherlink.com`
+
 3. **Get test USDC** from the built-in faucet (1000 USDC daily limit)
-4. **Create a savings vault** with your goal
-5. **Share the invite code** with friends to join
-6. **Add funds** and watch progress in real-time
+4. **Create a savings vault** with custom penalty rates (1%, 3%, 5%, 10%)
+5. **Share the invite link** with friends to join instantly
+6. **Add funds** and watch progress with real-time savings breakdown
 
 ---
 
 ## 🏗️ Architecture
 
-GoalFi consists of two main components working in perfect harmony:
+Goal Finance leverages modern blockchain infrastructure for optimal performance across multiple networks:
 
 ### 🔗 Smart Contracts (`/goalpay-contract`)
-- **GoalVaultFactory**: Creates and manages all savings vaults
-- **GoalVault**: Individual vault contracts for each savings goal
-- **MockUSDC**: Test token for development and testing
+- **GoalFinance**: Main contract managing all savings vaults
+- **VaultConfig**: Configurable vault parameters with custom penalty rates
+- **MockUSDC**: Test token for development across all testnets
 
 ### 🎨 Frontend (`/goalpay-vault`)
 - **React + TypeScript**: Modern, type-safe development
-- **wagmi + viem**: Best-in-class Web3 integration
+- **wagmi + viem**: Optimized for multi-chain blockchain integration
 - **shadcn/ui**: Beautiful, accessible components
-- **RainbowKit**: Seamless wallet connections
+- **RainbowKit**: Seamless wallet connections across all supported chains
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Frontend      │    │  Smart Contracts │    │   Blockchain    │
+│   Frontend      │    │  Smart Contracts │    │  Multi-Chain    │
 │                 │    │                  │    │                 │
-│ • React App     │◄──►│ • VaultFactory   │◄──►│ • Base/Arbitrum │
-│ • Web3 UI       │    │ • Individual     │    │ • Mantle/Sepolia│
-│ • Wallet Connect│    │   Vaults         │    │ • Ethereum      │
+│ • React App     │◄──►│ • GoalFinance    │◄──►│ • Lisk          │
+│ • Web3 UI       │    │ • Vault Configs  │    │ • Scroll        │
+│ • Multi-Chain   │    │ • Penalty System │    │ • Etherlink     │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 ```
 
@@ -76,26 +97,27 @@ GoalFi consists of two main components working in perfect harmony:
 
 ## ✨ Features
 
-### 🎯 MVP Features (Live Now!)
-- ✅ **Create Savings Vaults** with custom goals and deadlines
-- ✅ **Invite Friends** via shareable codes
-- ✅ **Add Funds** with USDC contributions
-- ✅ **Track Progress** in real-time
-- ✅ **Public/Private Vaults** for different privacy needs
-- ✅ **Automatic Completion** when goals are reached
-- ✅ **Secure Withdrawals** if goals aren't met
+### 🎯 Live Features
+- ✅ **Custom Penalty Rates** - Choose 1%, 3%, 5%, or 10% commitment levels
+- ✅ **Savings Breakdown Calculator** - See daily/weekly/monthly targets
+- ✅ **Invite Link System** - Share complete invite links with embedded codes
+- ✅ **Real-time Progress Tracking** - Watch your goals grow across all chains
+- ✅ **Yield Projections** - Preview 8% APY earnings estimates
+- ✅ **Public/Private Vaults** - Control who can join your goals
+- ✅ **Secure Smart Contracts** - Audited and deployed across multiple chains
+- ✅ **Multi-wallet Support** - Connect with any EVM-compatible wallet
 
 ### 🔮 Coming Soon
-- 🚧 **Yield Generation** - Earn while you save
-- 🚧 **Multi-Token Support** - DAI, USDT, and more
-- 🚧 **Recurring Contributions** - Set it and forget it
-- 🚧 **Vault Templates** - Quick setup for common goals
-- 🚧 **Mobile App** - Save on the go
-- 🚧 **DAO Governance** - Community-driven decisions
+- 🚧 **Recurring Auto-Savings** - Automated daily/weekly/monthly deposits
+- 🚧 **Yield Generation** - Earn 8% APY while saving
+- 🚧 **Multi-Token Support** - USDT, DAI, and more native assets
+- 🚧 **Mobile App** - Native mobile experience
+- 🚧 **Cross-Chain Bridges** - Connect between supported L2s
+- 🚧 **DAO Integration** - Community governance for platform decisions
 
 ---
 
-## 💡 How GoalFi Works
+## 💡 How Goal Finance Works
 
 ### 🎯 Simple 4-Step Process
 
@@ -133,8 +155,9 @@ When your goal is reached:
 
 | Network | Status | Chain ID | Explorer | Contract Addresses |
 |---------|--------|----------|----------|-------------------|
-| Mantle Sepolia | ✅ Live | 5003 | [MantleScan](https://sepolia.mantlescan.xyz) | See [deployments/](./goalpay-contract/deployments/) |
-| Base Sepolia | ✅ Live | 84532 | [BaseScan](https://sepolia.basescan.org) | See [deployments/](./goalpay-contract/deployments/) |
+| Lisk Sepolia | ✅ Live | 4202 | [Lisk Explorer](https://sepolia-blockscout.lisk.com/) | See [deployments/](./goalpay-contract/deployments/) |
+| Scroll Sepolia | ✅ Live | 534351 | [Scroll Explorer](https://sepolia.scrollscan.com/) | See [deployments/](./goalpay-contract/deployments/) |
+| Etherlink Testnet | ✅ Live | 128123 | [Etherlink Explorer](https://testnet.explorer.etherlink.com/) | See [deployments/](./goalpay-contract/deployments/) |
 
 > **Note**: All contracts are currently deployed on testnets for hackathon demonstration. Mainnet deployment planned post-hackathon after security audit.
 
@@ -202,7 +225,7 @@ GoalFi/
 
 ### 🏆 What We Built (Q3 2025)
 - ✅ **Complete Savings Platform** - Full-featured collaborative savings DApp
-- ✅ **Multi-Chain Support** - Deployed on Base, Arbitrum, and Mantle testnets
+- ✅ **Multi-Chain Support** - Deployed on Lisk, Scroll, and Etherlink testnets
 - ✅ **Seamless User Experience** - Intuitive interface with wallet integration
 - ✅ **Smart Contract Security** - Audited contracts with comprehensive testing
 - ✅ **Real-Time Collaboration** - Live progress tracking and member management
@@ -212,8 +235,8 @@ GoalFi/
 **The next evolution of collaborative savings across all blockchains**
 
 #### 🔗 Cross-Chain Features (Coming 2026)
-- **Universal Vaults**: Create a vault on Ethereum, contribute from Polygon, withdraw on Base
-- **Multi-Token Support**: Save with ETH on mainnet, USDC on Arbitrum, MATIC on Polygon
+- **Universal Vaults**: Create a vault on one chain, contribute from another, withdraw anywhere
+- **Multi-Token Support**: Save with ETH, USDC, native tokens across all supported chains
 - **Chain-Agnostic Goals**: Set goals in any currency, contribute from any supported chain
 - **Unified Dashboard**: Manage all your cross-chain savings from one interface
 - **Automatic Bridging**: Seamless token transfers between chains for contributions
@@ -231,6 +254,6 @@ GoalFi/
 
 *Demonstrating the future of collaborative savings through Web3 technology - where dreams become achievable through community support and transparent, trustless smart contracts.*
 
-**The future is cross-chain. The future is collaborative. The future is GoalFi.** 🌐
+**The future is cross-chain. The future is collaborative. The future is Goal Finance.** 🌐
 
 </div>
