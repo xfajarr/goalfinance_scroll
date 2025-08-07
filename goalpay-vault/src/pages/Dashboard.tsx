@@ -337,7 +337,7 @@ const Dashboard = () => {
         {/* Acorns Micro-Investing Section */}
         <div className="space-y-4 lg:space-y-6">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-goal-heading font-fredoka font-bold text-xl lg:text-2xl">🌰 Acorns Portfolio</h2>
+            <h2 className="text-goal-heading font-fredoka font-bold text-xl lg:text-2xl">Acorns Portfolio</h2>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"

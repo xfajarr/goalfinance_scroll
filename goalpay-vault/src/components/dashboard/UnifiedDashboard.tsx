@@ -35,7 +35,15 @@ export const UnifiedDashboard = () => {
 
   // Calculate total savings across all goals
   const totalGoalSavings = vaults?.reduce((total, vault) => {
-    return total + parseFloat(vault.totalDeposited.toString()) / 1e6;
+    try {
+      // Handle bigint conversion safely
+      const totalDeposited = vault.totalDeposited || 0n;
+      const depositedAmount = Number(totalDeposited) / 1e6;
+      return total + depositedAmount;
+    } catch (error) {
+      console.warn('Error calculating vault total:', error);
+      return total;
+    }
   }, 0) || 0;
 
   // Calculate total portfolio value
@@ -216,12 +224,12 @@ export const UnifiedDashboard = () => {
                       <div>
                         <p className="font-fredoka font-semibold text-goal-text">{vault.name || 'Unnamed Goal'}</p>
                         <p className="text-sm font-inter text-goal-text-secondary">
-                          ${parseFloat(vault.totalDeposited?.toString() || '0') / 1e6} / ${parseFloat(vault.targetAmount?.toString() || '0') / 1e6}
+                          ${(Number(vault.totalDeposited || 0n) / 1e6).toFixed(2)} / ${(Number(vault.targetAmount || 0n) / 1e6).toFixed(2)}
                         </p>
                       </div>
                       <Badge variant="secondary" className="bg-goal-secondary text-goal-text font-fredoka font-semibold">
-                        {vault.targetAmount && vault.targetAmount > 0
-                          ? Math.round((parseFloat(vault.totalDeposited?.toString() || '0') / parseFloat(vault.targetAmount.toString())) * 100)
+                        {vault.targetAmount && vault.targetAmount > 0n
+                          ? Math.round((Number(vault.totalDeposited || 0n) / Number(vault.targetAmount)) * 100)
                           : 0}%
                       </Badge>
                     </div>
@@ -281,7 +289,7 @@ export const UnifiedDashboard = () => {
         <TabsContent value="goals" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl lg:text-3xl font-fredoka font-bold text-goal-heading">Savings Goals</h2>
-            <Button className="flex items-center gap-2 bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-medium rounded-xl px-4 py-2">
+            <Button className="flex items-center gap-2 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-medium rounded-xl px-4 py-2">
               <Plus className="w-4 h-4" />
               Create New Goal
             </Button>
@@ -290,8 +298,8 @@ export const UnifiedDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {vaults && vaults.length > 0 ? (
               vaults.map((vault) => {
-                const totalDeposited = parseFloat(vault.totalDeposited?.toString() || '0') / 1e6;
-                const targetAmount = parseFloat(vault.targetAmount?.toString() || '0') / 1e6;
+                const totalDeposited = Number(vault.totalDeposited || 0n) / 1e6;
+                const targetAmount = Number(vault.targetAmount || 0n) / 1e6;
                 const progress = targetAmount > 0 ? (totalDeposited / targetAmount) * 100 : 0;
 
                 return (
@@ -348,7 +356,6 @@ export const UnifiedDashboard = () => {
 
         <TabsContent value="acorns" className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl lg:text-3xl font-fredoka font-bold text-goal-heading">Acorns Portfolio</h2>
             <div className="flex gap-2 lg:gap-3">
               <Button
                 variant="outline"
@@ -358,7 +365,7 @@ export const UnifiedDashboard = () => {
                 <Plus className="w-4 h-4" />
                 Add Purchase
               </Button>
-              <Button className="flex items-center gap-2 bg-goal-primary hover:bg-goal-primary/90 text-white font-fredoka font-medium rounded-xl px-4 py-2">
+              <Button className="flex items-center gap-2 bg-goal-primary hover:bg-goal-primary/90 text-goal-text font-fredoka font-medium rounded-xl px-4 py-2">
                 <ArrowUpRight className="w-4 h-4" />
                 Invest Round-ups
               </Button>

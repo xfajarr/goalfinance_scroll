@@ -133,7 +133,7 @@ export const useTransactionMonitor = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // For demo, we'll just use the mock data
-      toast.success('🔍 Transaction monitoring started');
+      // toast.success('🔍 Transaction monitoring started');
       
     } catch (error) {
       console.error('Failed to start monitoring:', error);

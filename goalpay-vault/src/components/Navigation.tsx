@@ -15,8 +15,6 @@ const Navigation = () => {
   const navItems = [
     { label: 'Home', path: isConnected ? '/app/dashboard' : '/' },
     ...(isConnected ? [
-      { label: 'Split Bills', path: '/app/split-bills' },
-      { label: 'Debts', path: '/app/debts' },
       { label: 'Profile', path: '/app/profile' },
     ] : [
       { label: 'How it Works', path: '/how-it-works' },

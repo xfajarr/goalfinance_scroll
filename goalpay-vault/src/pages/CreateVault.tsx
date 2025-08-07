@@ -52,7 +52,7 @@ const CreateVault = () => {
 
   // Watch for successful goal creation
   useEffect(() => {
-    console.log('🔍 Success state check:', { isSuccess, vaultId, txHash, inviteCode });
+    // console.log('🔍 Success state check:', { isSuccess, vaultId, txHash, inviteCode });
 
     if (isSuccess && txHash) {
       // Show immediate success notification even if goal ID is not yet available
@@ -150,18 +150,18 @@ const CreateVault = () => {
   }, [error]);
 
   // Debug logging for state changes
-  useEffect(() => {
-    console.log('🔍 CreateGoal state update:', {
-      isLoading,
-      isConfirming,
-      isSuccess,
-      goalCreated,
-      txHash: txHash ? `${txHash.slice(0, 10)}...` : null,
-      vaultId: vaultId?.toString(),
-      inviteCode: inviteCode ? `${inviteCode.slice(0, 10)}...` : null,
-      error: error?.message
-    });
-  }, [isLoading, isConfirming, isSuccess, goalCreated, txHash, vaultId, inviteCode, error]);
+  // useEffect(() => {
+  //   console.log('🔍 CreateGoal state update:', {
+  //     isLoading,
+  //     isConfirming,
+  //     isSuccess,
+  //     goalCreated,
+  //     txHash: txHash ? `${txHash.slice(0, 10)}...` : null,
+  //     vaultId: vaultId?.toString(),
+  //     inviteCode: inviteCode ? `${inviteCode.slice(0, 10)}...` : null,
+  //     error: error?.message
+  //   });
+  // }, [isLoading, isConfirming, isSuccess, goalCreated, txHash, vaultId, inviteCode, error]);
 
   const categories = [
     { value: 'travel', label: 'Travel & Adventure', emoji: '✈️' },

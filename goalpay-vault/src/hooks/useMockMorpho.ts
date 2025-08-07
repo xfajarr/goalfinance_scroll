@@ -44,12 +44,17 @@ export interface YieldInfo {
  */
 export function useMockMorpho() {
   const { address, isConnected } = useAccount();
-  const { writeContract, data: hash, isPending, error } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const { writeContract, data: hash, isPending, error: writeError } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed, error: confirmError } = useWaitForTransactionReceipt({
     hash,
+    query: {
+      enabled: !!hash,
+    },
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingOperation, setPendingOperation] = useState<string | null>(null);
+  const [pendingOperationData, setPendingOperationData] = useState<any>(null);
 
   // Read available markets
   const { data: marketsData, refetch: refetchMarkets } = useReadContract({
@@ -94,6 +99,82 @@ export function useMockMorpho() {
     },
   });
 
+  // Handle transaction confirmation success
+  useEffect(() => {
+    if (isConfirmed && pendingOperation) {
+      try {
+        const operation = pendingOperation;
+        const operationData = pendingOperationData;
+        setPendingOperation(null);
+        setPendingOperationData(null);
+        setIsLoading(false);
+
+        switch (operation) {
+          case 'supplyAssets':
+            toast.success(`🏦 Supplied ${operationData?.amount} tokens to MockMorpho!`);
+            Promise.all([
+              refetchPosition?.() || Promise.resolve(),
+              refetchYield?.() || Promise.resolve(),
+              refetchMarkets?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'withdrawAssets':
+            toast.success(`💰 Withdrew ${operationData?.amount} tokens from MockMorpho!`);
+            Promise.all([
+              refetchPosition?.() || Promise.resolve(),
+              refetchYield?.() || Promise.resolve(),
+              refetchMarkets?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'claimYield':
+            toast.success('🎁 Yield claimed successfully!');
+            Promise.all([
+              refetchPosition?.() || Promise.resolve(),
+              refetchYield?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'updateYieldRates':
+            toast.success(`📈 Updated yield rate to ${operationData?.newRate}%`);
+            if (refetchMarkets) refetchMarkets().catch(console.error);
+            break;
+        }
+      } catch (error) {
+        console.error('Error in MockMorpho transaction confirmation handler:', error);
+      }
+    }
+  }, [isConfirmed, pendingOperation, pendingOperationData]);
+
+  // Handle transaction errors
+  useEffect(() => {
+    try {
+      const combinedError = writeError || confirmError;
+      if (combinedError) {
+        setIsLoading(false);
+        setPendingOperation(null);
+        setPendingOperationData(null);
+
+        if (pendingOperation) {
+          switch (pendingOperation) {
+            case 'supplyAssets':
+              toast.error('Failed to supply assets');
+              break;
+            case 'withdrawAssets':
+              toast.error('Failed to withdraw assets');
+              break;
+            case 'claimYield':
+              toast.error('Failed to claim yield');
+              break;
+            case 'updateYieldRates':
+              toast.error('Failed to update yield rates');
+              break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in MockMorpho transaction error handler:', error);
+    }
+  }, [writeError, confirmError, pendingOperation]);
+
   /**
    * Supply assets to MockMorpho for yield generation
    */
@@ -105,6 +186,8 @@ export function useMockMorpho() {
 
     try {
       setIsLoading(true);
+      setPendingOperation('supplyAssets');
+      setPendingOperationData({ amount });
       const amountWei = parseUnits(amount, 18);
 
       writeContract({
@@ -115,16 +198,14 @@ export function useMockMorpho() {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success(`🏦 Supplied ${amount} tokens to MockMorpho!`);
-      await Promise.all([refetchPosition(), refetchYield(), refetchMarkets()]);
     } catch (error) {
       console.error('Supply failed:', error);
       toast.error('Failed to supply assets');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
+      setPendingOperationData(null);
     }
-  }, [address, isConnected, writeContract, refetchPosition, refetchYield, refetchMarkets]);
+  }, [address, isConnected, writeContract]);
 
   /**
    * Withdraw supplied assets from MockMorpho
@@ -137,6 +218,8 @@ export function useMockMorpho() {
 
     try {
       setIsLoading(true);
+      setPendingOperation('withdrawAssets');
+      setPendingOperationData({ amount });
       const amountWei = parseUnits(amount, 18);
 
       writeContract({
@@ -147,16 +230,14 @@ export function useMockMorpho() {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success(`💰 Withdrew ${amount} tokens from MockMorpho!`);
-      await Promise.all([refetchPosition(), refetchYield(), refetchMarkets()]);
     } catch (error) {
       console.error('Withdrawal failed:', error);
       toast.error('Failed to withdraw assets');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
+      setPendingOperationData(null);
     }
-  }, [address, isConnected, writeContract, refetchPosition, refetchYield, refetchMarkets]);
+  }, [address, isConnected, writeContract]);
 
   /**
    * Claim accumulated yield
@@ -169,6 +250,7 @@ export function useMockMorpho() {
 
     try {
       setIsLoading(true);
+      setPendingOperation('claimYield');
 
       writeContract({
         address: MOCK_MORPHO_ADDRESS,
@@ -178,16 +260,13 @@ export function useMockMorpho() {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success('🎁 Yield claimed successfully!');
-      await Promise.all([refetchPosition(), refetchYield()]);
     } catch (error) {
       console.error('Claim yield failed:', error);
       toast.error('Failed to claim yield');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, isConnected, writeContract, refetchPosition, refetchYield]);
+  }, [address, isConnected, writeContract]);
 
   /**
    * Update yield rates (admin function for testing)
@@ -200,6 +279,8 @@ export function useMockMorpho() {
 
     try {
       setIsLoading(true);
+      setPendingOperation('updateYieldRates');
+      setPendingOperationData({ newRate });
       const rateWei = parseUnits(newRate, 18);
 
       writeContract({
@@ -210,16 +291,14 @@ export function useMockMorpho() {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success(`📈 Updated yield rate to ${newRate}%`);
-      await refetchMarkets();
     } catch (error) {
       console.error('Update yield rates failed:', error);
       toast.error('Failed to update yield rates');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
+      setPendingOperationData(null);
     }
-  }, [address, isConnected, writeContract, refetchMarkets]);
+  }, [address, isConnected, writeContract]);
 
   // Format data for UI consumption
   const markets: MarketInfo[] = marketsData ? (marketsData as any[]).map((market, index) => ({
@@ -273,7 +352,7 @@ export function useMockMorpho() {
     // Transaction state
     hash,
     isConfirmed,
-    error,
+    error: writeError || confirmError,
   };
 }
 

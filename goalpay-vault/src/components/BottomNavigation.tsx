@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Plus, User, Receipt, DollarSign, PiggyBank } from 'lucide-react';
+import { Home, Plus, User, DollarSign, PiggyBank } from 'lucide-react';
 
 const BottomNavigation = () => {
   const location = useLocation();
@@ -23,12 +23,6 @@ const BottomNavigation = () => {
       label: 'Create',
       path: '/app/create-goal',
       active: location.pathname === '/app/create-goal'
-    },
-    {
-      icon: Receipt,
-      label: 'Bills',
-      path: '/app/split-bills',
-      active: location.pathname === '/app/split-bills'
     },
     {
       icon: User,

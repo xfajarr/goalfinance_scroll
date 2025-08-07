@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useWriteContract, useReadContract } from 'wagmi';
+import { useAccount, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseUnits, formatUnits } from 'viem';
 import { toast } from 'sonner';
 import { scrollSepolia } from 'wagmi/chains';
@@ -55,10 +55,21 @@ export interface AcornsStats {
 
 export const useAcorns = () => {
   const { address } = useAccount();
-  const { writeContract } = useWriteContract();
-  
+  const { writeContract, data: txHash, isPending: isWritePending, error: writeError } = useWriteContract();
+
+  // Wait for transaction confirmation
+  const { isLoading: isConfirming, isSuccess: isConfirmed, error: confirmError } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: {
+      enabled: !!txHash,
+    },
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingOperation, setPendingOperation] = useState<string | null>(null);
+
+
 
   // Read user account data
   const { data: userAccount, refetch: refetchAccount } = useReadContract({
@@ -105,12 +116,109 @@ export const useAcorns = () => {
     query: { enabled: !!address },
   });
 
+
+
+  // Handle transaction confirmation success
+  // Temporarily disabled to debug error
+  /*
+  useEffect(() => {
+    if (isConfirmed && pendingOperation) {
+      try {
+        const operation = pendingOperation;
+        setPendingOperation(null);
+        setIsLoading(false);
+
+        switch (operation) {
+          case 'registerUser':
+            toast.success('🎯 Acorns account registered successfully!');
+            if (refetchAccount) refetchAccount().catch(console.error);
+            break;
+          case 'simulatePurchase':
+            toast.success('🛒 Purchase recorded successfully!');
+            Promise.all([
+              refetchPending?.() || Promise.resolve(),
+              refetchPurchases?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'investRoundUps':
+            toast.success('💰 Round-ups invested successfully!');
+            Promise.all([
+              refetchAccount?.() || Promise.resolve(),
+              refetchPortfolio?.() || Promise.resolve(),
+              refetchPending?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'setRecurringInvestment':
+            toast.success('🔄 Recurring investment set successfully!');
+            if (refetchAccount) refetchAccount().catch(console.error);
+            break;
+          case 'claimYield':
+            toast.success('🎁 Yield claimed successfully!');
+            Promise.all([
+              refetchAccount?.() || Promise.resolve(),
+              refetchPortfolio?.() || Promise.resolve(),
+              refetchYield?.() || Promise.resolve()
+            ]).catch(console.error);
+            break;
+          case 'changePortfolio':
+            toast.success('📊 Portfolio changed successfully!');
+            if (refetchAccount) refetchAccount().catch(console.error);
+            break;
+        }
+      } catch (error) {
+        console.error('Error in transaction confirmation handler:', error);
+      }
+    }
+  }, [isConfirmed, pendingOperation]);
+  */
+
+  // Handle transaction errors
+  // Temporarily disabled to debug error
+  /*
+  useEffect(() => {
+    try {
+      const combinedError = writeError || confirmError;
+      if (combinedError) {
+        setError(combinedError.message || 'Transaction failed');
+        setIsLoading(false);
+        setPendingOperation(null);
+
+        if (pendingOperation) {
+          switch (pendingOperation) {
+            case 'registerUser':
+              toast.error('Failed to register Acorns account');
+              break;
+            case 'simulatePurchase':
+              toast.error('Failed to record purchase');
+              break;
+            case 'investRoundUps':
+              toast.error('Failed to invest round-ups');
+              break;
+            case 'setRecurringInvestment':
+              toast.error('Failed to set recurring investment');
+              break;
+            case 'claimYield':
+              toast.error('Failed to claim yield');
+              break;
+            case 'changePortfolio':
+              toast.error('Failed to change portfolio');
+              break;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error in transaction error handler:', error);
+    }
+  }, [writeError, confirmError, pendingOperation]);
+  */
+
   // Register user with portfolio type
   const registerUser = useCallback(async (portfolioType: PortfolioType) => {
     if (!address) return;
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('registerUser');
 
     try {
       writeContract({
@@ -121,17 +229,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success('🎯 Acorns account registered successfully!');
-      await refetchAccount();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to register';
       setError(errorMessage);
       toast.error('Failed to register Acorns account');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchAccount]);
+  }, [address, writeContract]);
 
   // Simulate a purchase and calculate round-up
   const simulatePurchase = useCallback(async (amount: number, merchant: string) => {
@@ -139,6 +244,7 @@ export const useAcorns = () => {
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('simulatePurchase');
 
     try {
       const amountWei = parseUnits(amount.toString(), 6); // USDC decimals
@@ -151,17 +257,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success(`🛒 Purchase recorded: $${amount} at ${merchant}`);
-      await Promise.all([refetchPending(), refetchPurchases()]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to record purchase';
       setError(errorMessage);
       toast.error('Failed to record purchase');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchPending, refetchPurchases]);
+  }, [address, writeContract]);
 
   // Invest accumulated round-ups
   const investRoundUps = useCallback(async () => {
@@ -169,6 +272,7 @@ export const useAcorns = () => {
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('investRoundUps');
 
     try {
       writeContract({
@@ -178,17 +282,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success('💰 Round-ups invested successfully!');
-      await Promise.all([refetchAccount(), refetchPortfolio(), refetchPending()]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to invest round-ups';
       setError(errorMessage);
       toast.error('Failed to invest round-ups');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchAccount, refetchPortfolio, refetchPending]);
+  }, [address, writeContract]);
 
   // Set up recurring investment
   const setRecurringInvestment = useCallback(async (amount: number, intervalDays: number) => {
@@ -196,6 +297,7 @@ export const useAcorns = () => {
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('setRecurringInvestment');
 
     try {
       const amountWei = parseUnits(amount.toString(), 6);
@@ -208,17 +310,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success(`🔄 Recurring investment set: $${amount} every ${intervalDays} days`);
-      await refetchAccount();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to set recurring investment';
       setError(errorMessage);
       toast.error('Failed to set recurring investment');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchAccount]);
+  }, [address, writeContract]);
 
   // Claim accumulated yield
   const claimYield = useCallback(async () => {
@@ -226,6 +325,7 @@ export const useAcorns = () => {
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('claimYield');
 
     try {
       writeContract({
@@ -235,17 +335,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success('🎁 Yield claimed successfully!');
-      await Promise.all([refetchAccount(), refetchPortfolio(), refetchYield()]);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to claim yield';
       setError(errorMessage);
       toast.error('Failed to claim yield');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchAccount, refetchPortfolio, refetchYield]);
+  }, [address, writeContract]);
 
   // Change portfolio type
   const changePortfolio = useCallback(async (newPortfolioType: PortfolioType) => {
@@ -253,6 +350,7 @@ export const useAcorns = () => {
 
     setIsLoading(true);
     setError(null);
+    setPendingOperation('changePortfolio');
 
     try {
       writeContract({
@@ -263,17 +361,14 @@ export const useAcorns = () => {
         chain: scrollSepolia,
         account: address,
       });
-
-      toast.success('📊 Portfolio changed successfully!');
-      await refetchAccount();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to change portfolio';
       setError(errorMessage);
       toast.error('Failed to change portfolio');
-    } finally {
       setIsLoading(false);
+      setPendingOperation(null);
     }
-  }, [address, writeContract, refetchAccount]);
+  }, [address, writeContract]);
 
   // Calculate round-up for a given amount
   const calculateRoundUp = useCallback((amount: number): number => {
@@ -294,14 +389,14 @@ export const useAcorns = () => {
     const portfolioNames = ['Conservative (4% APY)', 'Moderate (6% APY)', 'Aggressive (8% APY)'];
 
     return {
-      portfolioValue: parseFloat(formatUnits(portfolioValue as bigint, 6)),
-      totalInvested: parseFloat(formatUnits(account.totalInvested, 6)),
-      totalRoundUps: parseFloat(formatUnits(account.totalRoundUps, 6)),
-      pendingRoundUps: parseFloat(formatUnits(pendingRoundUps as bigint || 0n, 6)),
-      currentYield: parseFloat(formatUnits(currentYield as bigint || 0n, 6)),
+      portfolioValue: Number(portfolioValue) / 1e6,
+      totalInvested: Number(account.totalInvested) / 1e6,
+      totalRoundUps: Number(account.totalRoundUps) / 1e6,
+      pendingRoundUps: Number(pendingRoundUps || 0n) / 1e6,
+      currentYield: Number(currentYield || 0n) / 1e6,
       portfolioType: portfolioNames[account.portfolio],
       recurringEnabled: account.recurringEnabled,
-      recurringAmount: parseFloat(formatUnits(account.recurringAmount, 6)),
+      recurringAmount: Number(account.recurringAmount) / 1e6,
       purchaseCount: purchases.length,
     };
   }, [userAccount, portfolioValue, pendingRoundUps, currentYield, userPurchases]);
@@ -317,6 +412,72 @@ export const useAcorns = () => {
     ]);
   }, [refetchAccount, refetchPortfolio, refetchPending, refetchYield, refetchPurchases]);
 
+  // Handle transaction confirmation success
+  useEffect(() => {
+    if (isConfirmed && pendingOperation) {
+      const operation = pendingOperation;
+      setPendingOperation(null);
+      setIsLoading(false);
+
+      // Show success toast based on operation
+      switch (operation) {
+        case 'registerUser':
+          toast.success('🎯 Acorns account registered successfully!');
+          break;
+        case 'simulatePurchase':
+          toast.success('🛒 Purchase recorded successfully!');
+          break;
+        case 'investRoundUps':
+          toast.success('💰 Round-ups invested successfully!');
+          break;
+        case 'setRecurringInvestment':
+          toast.success('🔄 Recurring investment set successfully!');
+          break;
+        case 'claimYield':
+          toast.success('🎁 Yield claimed successfully!');
+          break;
+        case 'changePortfolio':
+          toast.success('📊 Portfolio changed successfully!');
+          break;
+      }
+
+      // Refresh data after successful transaction
+      refreshData().catch(console.error);
+    }
+  }, [isConfirmed, pendingOperation, refreshData]);
+
+  // Handle transaction errors
+  useEffect(() => {
+    const combinedError = writeError || confirmError;
+    if (combinedError && pendingOperation) {
+      setError(combinedError.message || 'Transaction failed');
+      setIsLoading(false);
+      setPendingOperation(null);
+
+      // Show error toast based on operation
+      switch (pendingOperation) {
+        case 'registerUser':
+          toast.error('Failed to register Acorns account');
+          break;
+        case 'simulatePurchase':
+          toast.error('Failed to record purchase');
+          break;
+        case 'investRoundUps':
+          toast.error('Failed to invest round-ups');
+          break;
+        case 'setRecurringInvestment':
+          toast.error('Failed to set recurring investment');
+          break;
+        case 'claimYield':
+          toast.error('Failed to claim yield');
+          break;
+        case 'changePortfolio':
+          toast.error('Failed to change portfolio');
+          break;
+      }
+    }
+  }, [writeError, confirmError, pendingOperation]);
+
   return {
     // Data
     userAccount: userAccount as UserAccount | undefined,
@@ -324,7 +485,7 @@ export const useAcorns = () => {
     purchases: userPurchases as Purchase[] | undefined,
     
     // State
-    isLoading,
+    isLoading: isLoading || isWritePending || isConfirming,
     error,
     
     // Actions

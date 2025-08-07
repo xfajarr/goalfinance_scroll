@@ -224,8 +224,8 @@ export const AcornsSettings: React.FC<AcornsSettingsProps> = ({ onClose }) => {
                   <span className="font-medium text-green-800">Active Recurring Investment</span>
                 </div>
                 <p className="text-sm text-green-700">
-                  {formatCurrency(parseFloat(userAccount.recurringAmount.toString()) / 1e6)} every{' '}
-                  {parseInt(userAccount.recurringInterval.toString()) / (24 * 60 * 60)} days
+                  {formatCurrency(Number(userAccount.recurringAmount || 0n) / 1e6)} every{' '}
+                  {Number(userAccount.recurringInterval || 0n) / (24 * 60 * 60)} days
                 </p>
               </Card>
             )}
