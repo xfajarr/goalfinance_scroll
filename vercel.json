@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd goalpay-vault && pnpm run build",
   "outputDirectory": "goalpay-vault/dist",
-  "installCommand": "cd goalpay-vault && pnpm install --frozen-lockfile",
+  "installCommand": "cd goalpay-vault && rm -f pnpm-lock.yaml && pnpm install",
   "rewrites": [
     {
       "source": "/(.*)",
