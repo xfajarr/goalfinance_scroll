@@ -1,7 +1,9 @@
 {
-  "buildCommand": "cd goalpay-vault && pnpm run build",
-  "outputDirectory": "goalpay-vault/dist",
-  "installCommand": "pnpm install --prefix goalpay-vault",
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "rootDirectory": "goalpay-vault",
   "rewrites": [
     {
       "source": "/(.*)",
