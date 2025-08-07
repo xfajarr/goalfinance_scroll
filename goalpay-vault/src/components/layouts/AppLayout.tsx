@@ -20,6 +20,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = [
     { label: 'Dashboard', path: '/app/dashboard' },
+    { label: 'Acorns', path: '/app/acorns' },
     { label: 'Split Bills', path: '/app/split-bills' },
     { label: 'Debts', path: '/app/debts' },
     { label: 'Faucet', path: '/faucet' },

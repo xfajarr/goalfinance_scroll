@@ -41,6 +41,7 @@ export class GraphQLClient {
 
 // Create clients for each indexer
 export const goalFinanceClient = new GraphQLClient(INDEXER_ENDPOINTS.GOAL_FINANCE_CORE);
+export const acornsClient = new GraphQLClient(INDEXER_ENDPOINTS.GOAL_FINANCE_CORE); // Using same endpoint for Acorns
 export const billSplitterClient = new GraphQLClient(INDEXER_ENDPOINTS.BILL_SPLITTER);
 export const friendsRegistryClient = new GraphQLClient(INDEXER_ENDPOINTS.FRIENDS_REGISTRY);
 export const debtManagerClient = new GraphQLClient(INDEXER_ENDPOINTS.DEBT_MANAGER);
@@ -120,6 +121,54 @@ export const FRIEND_FRAGMENT = `
     displayName
     addedAt
     isActive
+  }
+`;
+
+// Acorns GraphQL fragments based on indexed events
+export const ACORNS_USER_REGISTERED_FRAGMENT = `
+  fragment AcornsUserRegisteredFragment on AcornsVault_UserRegistered {
+    id
+    user
+    portfolioType
+    block_number
+    block_timestamp
+    transaction_hash
+  }
+`;
+
+export const ACORNS_PURCHASE_FRAGMENT = `
+  fragment AcornsPurchaseFragment on AcornsVault_PurchaseRecorded {
+    id
+    user
+    amount
+    roundUpAmount
+    merchant
+    block_number
+    block_timestamp
+    transaction_hash
+  }
+`;
+
+export const ACORNS_ROUNDUPS_INVESTED_FRAGMENT = `
+  fragment AcornsRoundUpsInvestedFragment on AcornsVault_RoundUpsInvested {
+    id
+    user
+    amount
+    portfolioType
+    block_number
+    block_timestamp
+    transaction_hash
+  }
+`;
+
+export const ACORNS_YIELD_CLAIMED_FRAGMENT = `
+  fragment AcornsYieldClaimedFragment on AcornsVault_YieldClaimed {
+    id
+    user
+    amount
+    block_number
+    block_timestamp
+    transaction_hash
   }
 `;
 
@@ -217,6 +266,80 @@ export const SEARCH_FRIENDS_QUERY = `
   }
 `;
 
+// Acorns Queries using indexed events
+export const GET_USER_REGISTRATION_QUERY = `
+  ${ACORNS_USER_REGISTERED_FRAGMENT}
+  query GetUserRegistration($user: String!) {
+    AcornsVault_UserRegistered(where: { user: { _eq: $user } }, limit: 1, order_by: { block_timestamp: desc }) {
+      ...AcornsUserRegisteredFragment
+    }
+  }
+`;
+
+export const GET_USER_PURCHASES_QUERY = `
+  ${ACORNS_PURCHASE_FRAGMENT}
+  query GetUserPurchases($user: String!, $limit: Int, $offset: Int) {
+    AcornsVault_PurchaseRecorded(
+      where: { user: { _eq: $user } },
+      limit: $limit,
+      offset: $offset,
+      order_by: { block_timestamp: desc }
+    ) {
+      ...AcornsPurchaseFragment
+    }
+  }
+`;
+
+export const GET_USER_INVESTMENTS_QUERY = `
+  ${ACORNS_ROUNDUPS_INVESTED_FRAGMENT}
+  query GetUserInvestments($user: String!, $limit: Int, $offset: Int) {
+    AcornsVault_RoundUpsInvested(
+      where: { user: { _eq: $user } },
+      limit: $limit,
+      offset: $offset,
+      order_by: { block_timestamp: desc }
+    ) {
+      ...AcornsRoundUpsInvestedFragment
+    }
+  }
+`;
+
+export const GET_USER_YIELD_CLAIMS_QUERY = `
+  ${ACORNS_YIELD_CLAIMED_FRAGMENT}
+  query GetUserYieldClaims($user: String!, $limit: Int, $offset: Int) {
+    AcornsVault_YieldClaimed(
+      where: { user: { _eq: $user } },
+      limit: $limit,
+      offset: $offset,
+      order_by: { block_timestamp: desc }
+    ) {
+      ...AcornsYieldClaimedFragment
+    }
+  }
+`;
+
+export const GET_PORTFOLIO_ACTIVITY_QUERY = `
+  query GetPortfolioActivity($user: String!) {
+    userRegistration: AcornsVault_UserRegistered(where: { user: { _eq: $user } }, limit: 1) {
+      portfolioType
+      block_timestamp
+    }
+    purchases: AcornsVault_PurchaseRecorded(where: { user: { _eq: $user } }, order_by: { block_timestamp: desc }) {
+      amount
+      roundUpAmount
+      block_timestamp
+    }
+    investments: AcornsVault_RoundUpsInvested(where: { user: { _eq: $user } }, order_by: { block_timestamp: desc }) {
+      amount
+      block_timestamp
+    }
+    yieldClaims: AcornsVault_YieldClaimed(where: { user: { _eq: $user } }, order_by: { block_timestamp: desc }) {
+      amount
+      block_timestamp
+    }
+  }
+`;
+
 // Utility functions for GraphQL queries
 export const queryVaults = async (variables?: {
   first?: number;
@@ -249,6 +372,27 @@ export const queryUserFriends = async (user: string) => {
 
 export const searchFriends = async (user: string, searchTerm: string) => {
   return friendsRegistryClient.query(SEARCH_FRIENDS_QUERY, { user, searchTerm });
+};
+
+// Acorns utility functions
+export const queryUserRegistration = async (user: string) => {
+  return acornsClient.query(GET_USER_REGISTRATION_QUERY, { user });
+};
+
+export const queryUserPurchases = async (user: string, variables?: { limit?: number; offset?: number }) => {
+  return acornsClient.query(GET_USER_PURCHASES_QUERY, { user, limit: 50, offset: 0, ...variables });
+};
+
+export const queryUserInvestments = async (user: string, variables?: { limit?: number; offset?: number }) => {
+  return acornsClient.query(GET_USER_INVESTMENTS_QUERY, { user, limit: 50, offset: 0, ...variables });
+};
+
+export const queryUserYieldClaims = async (user: string, variables?: { limit?: number; offset?: number }) => {
+  return acornsClient.query(GET_USER_YIELD_CLAIMS_QUERY, { user, limit: 50, offset: 0, ...variables });
+};
+
+export const queryPortfolioActivity = async (user: string) => {
+  return acornsClient.query(GET_PORTFOLIO_ACTIVITY_QUERY, { user });
 };
 
 // Error handling utility

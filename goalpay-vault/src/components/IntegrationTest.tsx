@@ -50,9 +50,10 @@ export function IntegrationTest() {
     // Test 2: Network Support
     updateTestResult('Network Support', 'pending', 'Checking network support...');
     if (isSupported) {
-      updateTestResult('Network Support', 'success', `Lisk Sepolia (${chainId}) is supported`);
+      const chainName = chainId === 534351 ? 'Scroll Sepolia' : chainId === 4202 ? 'Lisk Sepolia' : `Chain ${chainId}`;
+      updateTestResult('Network Support', 'success', `${chainName} (${chainId}) is supported`);
     } else {
-      updateTestResult('Network Support', 'error', `Chain ${chainId} is not supported`);
+      updateTestResult('Network Support', 'error', `Chain ${chainId} is not supported`, 'Please switch to Scroll Sepolia (534351)');
     }
 
     // Test 3: Contract Addresses

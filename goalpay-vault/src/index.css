@@ -150,6 +150,103 @@ All colors MUST be HSL.
     scroll-behavior: smooth;
   }
 
+  /* Custom scrollbar styles for dialogs and modals */
+  .dialog-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--goal-primary) / 0.3) transparent;
+  }
+
+  .dialog-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .dialog-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+
+  .dialog-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--goal-primary) / 0.3);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+
+  .dialog-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--goal-primary) / 0.5);
+  }
+
+  .dialog-scrollbar::-webkit-scrollbar-thumb:active {
+    background: hsl(var(--goal-primary) / 0.7);
+  }
+
+  /* Alternative scrollbar style for light backgrounds */
+  .dialog-scrollbar-light {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 13% 91%) hsl(220 13% 96%);
+  }
+
+  .dialog-scrollbar-light::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .dialog-scrollbar-light::-webkit-scrollbar-track {
+    background: hsl(220 13% 96%);
+    border-radius: 4px;
+  }
+
+  .dialog-scrollbar-light::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 91%);
+    border-radius: 4px;
+    border: 1px solid hsl(220 13% 96%);
+    transition: all 0.2s ease;
+  }
+
+  .dialog-scrollbar-light::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 13% 85%);
+    border-color: hsl(220 13% 91%);
+  }
+
+  .dialog-scrollbar-light::-webkit-scrollbar-thumb:active {
+    background: hsl(220 13% 80%);
+  }
+
+  /* Minimal scrollbar for compact spaces */
+  .dialog-scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+  }
+
+  .dialog-scrollbar-minimal::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .dialog-scrollbar-minimal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dialog-scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+  }
+
+  .dialog-scrollbar-minimal::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  /* Utility classes for easy application */
+  .scrollbar-styled {
+    @apply dialog-scrollbar-light;
+  }
+
+  .scrollbar-primary {
+    @apply dialog-scrollbar;
+  }
+
+  .scrollbar-minimal {
+    @apply dialog-scrollbar-minimal;
+  }
+
   /* Better tap targets for mobile */
   .tap-target {
     min-height: 44px;

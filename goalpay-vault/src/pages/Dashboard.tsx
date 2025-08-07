@@ -1,12 +1,14 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useChainId } from 'wagmi';
 
 import BottomNavigation from '@/components/BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Gift, AlertTriangle, RefreshCw, History, Loader2, DollarSign, ChevronRight, Users } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Gift, AlertTriangle, RefreshCw, History, Loader2, DollarSign, ChevronRight, Users, PiggyBank, Coins, Target, TrendingUp, Settings } from 'lucide-react';
 
 // Import modular components
 import { QuickStats } from '@/components/dashboard/quick-stats';
@@ -31,6 +33,14 @@ import { useFilteredVaultsByStatus } from '@/hooks/useVaultStatusChecker';
 import { useUserTotalDeposits } from '@/hooks/useUserTotalDeposits';
 import { CONTRACT_ADDRESSES } from '@/config/wagmi';
 import { InviteCodeTest } from '@/components/InviteCodeTest';
+
+// Import Acorns components
+import { useAcorns } from '@/hooks/useAcorns';
+import { PortfolioType } from '@/config/contracts';
+import { useTransactionMonitor } from '@/hooks/useTransactionMonitor';
+import { RoundableTransactions } from '@/components/acorns/RoundableTransactions';
+import { PurchaseTracker } from '@/components/dashboard/PurchaseTracker';
+import { AcornsSettings } from '@/components/dashboard/AcornsSettings';
 
 // Mobile Goal Card Component
 interface MobileGoalCardProps {
@@ -115,9 +125,17 @@ const MobileGoalCard = ({ goal, index }: MobileGoalCardProps) => {
 const Dashboard = () => {
   const chainId = useChainId();
 
+  // State for Acorns modals
+  const [showPurchaseTracker, setShowPurchaseTracker] = useState(false);
+  const [showAcornsSettings, setShowAcornsSettings] = useState(false);
+
   // Check if current chain is supported (only Mantle Sepolia)
   const contractAddresses = CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES];
   const isChainSupported = !!contractAddresses?.GOAL_FINANCE;
+
+  // Acorns hooks
+  const { stats: acornsStats, userAccount, isLoading: acornsLoading, registerUser } = useAcorns();
+  const { stats: transactionStats } = useTransactionMonitor();
 
   // Get user's real goals from smart contract
   const { vaults: userVaults, isLoading: isLoadingVaults, error: vaultsError } = useUserVaults();
@@ -316,12 +334,144 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Acorns Micro-Investing Section */}
+        <div className="space-y-4 lg:space-y-6">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-goal-heading font-fredoka font-bold text-xl lg:text-2xl">🌰 Acorns Portfolio</h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPurchaseTracker(true)}
+                className="text-goal-text/90 hover:text-goal-text font-fredoka font-semibold"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Track Purchase
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAcornsSettings(true)}
+                className="text-goal-text/90 hover:text-goal-text font-fredoka font-semibold"
+              >
+                <Settings className="w-4 h-4 mr-1" />
+                Settings
+              </Button>
+            </div>
+          </div>
+
+          {/* Acorns Registration or Stats */}
+          {!userAccount?.isRegistered ? (
+            <Card className="bg-gradient-to-r from-purple-500/60 to-pink-500/60 backdrop-blur-sm border-purple-300/30 p-4 lg:p-6 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-white font-fredoka font-bold text-lg lg:text-xl mb-2">
+                    Start Micro-Investing with Acorns
+                  </h3>
+                  <p className="text-purple-100 text-sm lg:text-base font-inter mb-4">
+                    Automatically invest your spare change from everyday purchases
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => registerUser(PortfolioType.CONSERVATIVE)}
+                      disabled={acornsLoading}
+                      className="bg-white text-purple-600 hover:bg-gray-100"
+                    >
+                      Conservative (4%)
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => registerUser(PortfolioType.MODERATE)}
+                      disabled={acornsLoading}
+                      className="bg-white text-purple-600 hover:bg-gray-100"
+                    >
+                      Moderate (6%)
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => registerUser(PortfolioType.AGGRESSIVE)}
+                      disabled={acornsLoading}
+                      className="bg-white text-purple-600 hover:bg-gray-100"
+                    >
+                      Aggressive (8%)
+                    </Button>
+                  </div>
+                </div>
+                <PiggyBank className="w-12 h-12 lg:w-16 lg:h-16 text-white/80" />
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Portfolio Value */}
+              <Card className="bg-gradient-to-br from-blue-50/80 to-blue-100/80 backdrop-blur-sm border-blue-200/30 p-4 lg:p-6 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-600 text-sm font-medium">Portfolio Value</p>
+                    <p className="text-blue-900 text-2xl font-bold">
+                      ${(acornsStats?.portfolioValue || 0).toFixed(2)}
+                    </p>
+                    <p className="text-blue-600 text-xs mt-1">
+                      {acornsStats?.portfolioType || 'Portfolio'}
+                    </p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-blue-600" />
+                </div>
+              </Card>
+
+              {/* Pending Round-ups */}
+              <Card className="bg-gradient-to-br from-orange-50/80 to-orange-100/80 backdrop-blur-sm border-orange-200/30 p-4 lg:p-6 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-600 text-sm font-medium">Pending Round-ups</p>
+                    <p className="text-orange-900 text-2xl font-bold">
+                      ${(acornsStats?.pendingRoundUps || 0).toFixed(2)}
+                    </p>
+                    <Link
+                      to="/app/roundups"
+                      className="text-orange-600 text-xs mt-1 hover:underline"
+                    >
+                      {transactionStats?.roundableTransactions || 0} transactions →
+                    </Link>
+                  </div>
+                  <Coins className="w-8 h-8 text-orange-600" />
+                </div>
+              </Card>
+
+              {/* Total Invested */}
+              <Card className="bg-gradient-to-br from-green-50/80 to-green-100/80 backdrop-blur-sm border-green-200/30 p-4 lg:p-6 rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-600 text-sm font-medium">Total Invested</p>
+                    <p className="text-green-900 text-2xl font-bold">
+                      ${(acornsStats?.totalInvested || 0).toFixed(2)}
+                    </p>
+                    <p className="text-green-600 text-xs mt-1">
+                      ${(acornsStats?.totalRoundUps || 0).toFixed(2)} from round-ups
+                    </p>
+                  </div>
+                  <Target className="w-8 h-8 text-green-600" />
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+
         {/* Goal Circles Section */}
         <GoalCirclesSection />
 
       </Container>
 
       <BottomNavigation />
+
+      {/* Acorns Modals */}
+      {showPurchaseTracker && (
+        <PurchaseTracker onClose={() => setShowPurchaseTracker(false)} />
+      )}
+
+      {showAcornsSettings && (
+        <AcornsSettings onClose={() => setShowAcornsSettings(false)} />
+      )}
     </div>
   );
 };

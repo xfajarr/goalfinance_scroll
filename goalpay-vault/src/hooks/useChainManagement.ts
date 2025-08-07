@@ -1,6 +1,6 @@
 import { useChainId, useSwitchChain, useAccount } from 'wagmi';
 import { useCallback, useMemo } from 'react';
-import { mantleSepolia } from '@/config/wagmi';
+import { scrollSepolia } from '@/config/wagmi';
 import { 
   isChainSupported, 
   getChainDisplayInfo, 
@@ -79,19 +79,19 @@ export function useChainManagement(): UseChainManagementReturn {
 }
 
 /**
- * Hook specifically for checking if the current chain is the required Mantle Sepolia
- * Useful for components that need to enforce Mantle Sepolia usage
+ * Hook specifically for checking if the current chain is the required Scroll Sepolia
+ * Useful for components that need to enforce Scroll Sepolia usage
  */
 export function useRequiredChain() {
   const { currentChainId, isConnected, switchToChain, isSwitching } = useChainManagement();
-  
-  const isCorrectChain = useMemo(() => 
-    currentChainId === mantleSepolia.id, 
+
+  const isCorrectChain = useMemo(() =>
+    currentChainId === scrollSepolia.id,
     [currentChainId]
   );
 
-  const switchToRequiredChain = useCallback(() => 
-    switchToChain(mantleSepolia.id), 
+  const switchToRequiredChain = useCallback(() =>
+    switchToChain(scrollSepolia.id),
     [switchToChain]
   );
 
@@ -100,6 +100,6 @@ export function useRequiredChain() {
     isConnected,
     switchToRequiredChain,
     isSwitching,
-    requiredChainId: mantleSepolia.id,
+    requiredChainId: scrollSepolia.id,
   };
 }

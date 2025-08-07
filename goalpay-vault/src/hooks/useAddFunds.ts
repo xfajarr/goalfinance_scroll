@@ -5,7 +5,7 @@ import { GOAL_FINANCE_CONTRACT } from '../config/contracts';
 import { AddNativeFundsParams, AddTokenFundsParams } from '../contracts/types';
 import { useToast } from '@/hooks/use-toast';
 import { useUSDCApproval } from './useUSDCApproval';
-import { mantleSepolia } from '../config/wagmi';
+import { scrollSepolia } from '../config/wagmi';
 import GoalFinanceABI from '../contracts/abis/GoalFinance.json';
 
 export interface UseAddFundsReturn {
@@ -108,7 +108,7 @@ export const useAddFunds = (): UseAddFundsReturn => {
         functionName: 'addNativeFunds',
         args: [vaultId],
         value: value,
-        chain: mantleSepolia,
+        chain: scrollSepolia,
         account: address,
       });
 
@@ -184,7 +184,7 @@ export const useAddFunds = (): UseAddFundsReturn => {
         abi: GoalFinanceABI,
         functionName: 'addTokenFunds',
         args: [vaultId, amountWei],
-        chain: mantleSepolia,
+        chain: scrollSepolia,
         account: address,
       });
 

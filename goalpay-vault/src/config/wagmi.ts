@@ -1,6 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { defineChain } from 'viem';
-import { baseSepolia, liskSepolia } from 'viem/chains';
+import { baseSepolia, liskSepolia, scrollSepolia } from 'viem/chains';
 
 // Define Mantle Sepolia testnet with multiple RPC endpoints
 export const mantleSepolia = defineChain({
@@ -32,8 +32,8 @@ export const mantleSepolia = defineChain({
   testnet: true,
 });
 
-// Define the chains we want to support - Mantle Sepolia, Base Sepolia, and Lisk Sepolia
-const chains = [mantleSepolia, baseSepolia, liskSepolia] as const;
+// Define the chains we want to support - Mantle Sepolia, Base Sepolia, Lisk Sepolia, and Scroll Sepolia
+const chains = [mantleSepolia, baseSepolia, liskSepolia, scrollSepolia] as const;
 
 // Get the Wagmi configuration for Privy with enhanced RPC handling
 export const config = createConfig({
@@ -50,13 +50,18 @@ export const config = createConfig({
       retryDelay: 2000,
       timeout: 15000,
     }),
+    [scrollSepolia.id]: http(undefined, {
+      retryCount: 3,
+      retryDelay: 2000,
+      timeout: 15000,
+    }),
   },
 });
 
 // Export type for supported chains
 export type SupportedChain = typeof chains[number];
 
-// Contract addresses - Support for Mantle Sepolia, Base Sepolia, and Lisk Sepolia
+// Contract addresses - Support for Mantle Sepolia, Base Sepolia, Lisk Sepolia, and Scroll Sepolia
 export const CONTRACT_ADDRESSES = {
   [mantleSepolia.id]: {
     GOAL_FINANCE: '0xaCCB3947D19266D257Afc253D0DA9B4FB5810CAf', // GoalFinance V2 contract on Mantle Sepolia
@@ -71,10 +76,17 @@ export const CONTRACT_ADDRESSES = {
     USDC: '0x8cCff0834e94BE6C68E30d2949d2f526195cB444', // MockUSDC on Lisk Sepolia
     USDC_FAUCET: '0x0000000000000000000000000000000000000000', // TODO: Deploy USDCFaucet contract
   },
+  [scrollSepolia.id]: {
+    GOAL_FINANCE: '0x9Dd1664238359e8d808c41Af735aa67dD91F5b7F', // GoalFinance contract on Scroll Sepolia
+    ACORNS_VAULT: '0x62F86d88960F77D32c0a0a33b3f7c29cbEE384C6', // AcornsVault contract on Scroll Sepolia
+    MOCK_MORPHO: '0x4fFa2a2bA2A66A5091483990a558B084B49452c2', // MockMorpho contract on Scroll Sepolia
+    USDC: '0x4522b80fC6cccc35af1985982CC678CF8c466941', // MockUSDC on Scroll Sepolia
+    USDC_FAUCET: '0x0000000000000000000000000000000000000000', // TODO: Deploy USDCFaucet contract
+  },
 } as const;
 
-// Default chain for development - using Lisk Sepolia for the new contracts
-export const DEFAULT_CHAIN = liskSepolia;
+// Default chain for development - using Scroll Sepolia for the new contracts
+export const DEFAULT_CHAIN = scrollSepolia;
 
 // Export chains for use in other files
-export { baseSepolia, liskSepolia };
+export { baseSepolia, liskSepolia, scrollSepolia };

@@ -32,9 +32,16 @@ import AllGoals from "./pages/AllGoals";
 import FlashcardDemo from "./components/flashcard/FlashcardDemo";
 import GoalCreationV2 from "./pages/VaultCreationV2";
 import IntegrationTestPage from "./pages/IntegrationTest";
+import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
+
+// Test components
+import DialogPositionTest from "./components/test/DialogPositionTest";
 
 // Demo pages
 import DashboardDemo from "./pages/DashboardDemo";
+import AcornsDemo from "./pages/AcornsDemo";
+import Showcase from "./pages/Showcase";
+import RoundableTransactionsPage from "./pages/RoundableTransactionsPage";
 
 // Utility pages
 import Faucet from "./pages/Faucet";
@@ -85,6 +92,15 @@ const App = () => (
           {/* Demo page for responsive dashboard */}
           <Route path="/dashboard-demo" element={<DashboardDemo />} />
 
+          {/* Acorns demo page */}
+          <Route path="/acorns-demo" element={<AcornsDemo />} />
+
+          {/* Dialog position test page */}
+          <Route path="/dialog-test" element={<DialogPositionTest />} />
+
+          {/* Showcase page */}
+          <Route path="/showcase" element={<Showcase />} />
+
           {/* Faucet page for getting test USDC */}
           <Route path="/faucet" element={
             <LandingLayout>
@@ -112,11 +128,13 @@ const App = () => (
                   <Route path="join/tx/:txHash" element={<JoinGoal />} />
                   <Route path="learn" element={<Learn />} />
                   <Route path="debts" element={<Debts />} />
+                  <Route path="roundups" element={<RoundableTransactionsPage />} />
                   <Route path="flashcard-demo" element={<FlashcardDemo />} />
                   <Route path="goals-history" element={<GoalsHistory />} />
                   <Route path="all-goals" element={<AllGoals />} />
                   <Route path="goal-creation-v2" element={<GoalCreationV2 />} />
                   <Route path="integration-test" element={<IntegrationTestPage />} />
+                  <Route path="acorns" element={<UnifiedDashboard />} />
                   {/* Catch-all for app routes */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

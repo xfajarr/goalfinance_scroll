@@ -18,10 +18,14 @@ remappings = [
 mantle_testnet = "${MANTLE_TESTNET_RPC_URL}"
 mantle = "${MANTLE_MAINNET_RPC_URL}"
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+scroll_sepolia = "${SCROLL_SEPOLIA_RPC_URL}"
+scroll = "${SCROLL_MAINNET_RPC_URL}"
 
 [etherscan]
 mantle_testnet = { key = "${MANTLESCAN_API_KEY}", url = "https://explorer.testnet.mantle.xyz/api" }
 mantle = { key = "${MANTLESCAN_API_KEY}", url = "https://explorer.mantle.xyz/api" }
 base_sepolia = { key = "${BASESCAN_API_KEY}", url = "https://api-sepolia.basescan.org/api" }
+scroll_sepolia = { key = "${SCROLLSCAN_API_KEY}", url = "https://api-sepolia.scrollscan.com/api" }
+scroll = { key = "${SCROLLSCAN_API_KEY}", url = "https://api.scrollscan.com/api" }
 
 

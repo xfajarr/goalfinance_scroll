@@ -1,0 +1,256 @@
+type AcornsVault_FundsDeposited {
+  id: ID!
+  user: String!
+  token: String!
+  amount: BigInt!
+}
+
+type AcornsVault_FundsWithdrawn {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type AcornsVault_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type AcornsVault_Paused {
+  id: ID!
+  account: String!
+}
+
+type AcornsVault_PortfolioChanged {
+  id: ID!
+  user: String!
+  oldPortfolio: BigInt!
+  newPortfolio: BigInt!
+}
+
+type AcornsVault_PurchaseRecorded {
+  id: ID!
+  user: String!
+  amount: BigInt!
+  roundUp: BigInt!
+  merchant: String!
+}
+
+type AcornsVault_RecurringInvestmentExecuted {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type AcornsVault_RecurringInvestmentSet {
+  id: ID!
+  user: String!
+  amount: BigInt!
+  interval: BigInt!
+}
+
+type AcornsVault_RoundUpsInvested {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type AcornsVault_TokenSupported {
+  id: ID!
+  token: String!
+  supported: Boolean!
+  exchangeRate: BigInt!
+}
+
+type AcornsVault_Unpaused {
+  id: ID!
+  account: String!
+}
+
+type AcornsVault_UserRegistered {
+  id: ID!
+  user: String!
+  portfolio: BigInt!
+}
+
+type AcornsVault_YieldClaimed {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type GoalFinance_EarlyWithdrawal {
+  id: ID!
+  vaultId: BigInt!
+  member: String!
+  token: String!
+  amount: BigInt!
+  penalty: BigInt!
+}
+
+type GoalFinance_FundsDeposited {
+  id: ID!
+  vaultId: BigInt!
+  member: String!
+  token: String!
+  amount: BigInt!
+  totalDeposited: BigInt!
+}
+
+type GoalFinance_GoalReached {
+  id: ID!
+  vaultId: BigInt!
+  token: String!
+  totalAmount: BigInt!
+}
+
+type GoalFinance_MemberJoined {
+  id: ID!
+  vaultId: BigInt!
+  member: String!
+  token: String!
+  depositAmount: BigInt!
+  memberCount: BigInt!
+}
+
+type GoalFinance_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type GoalFinance_Paused {
+  id: ID!
+  account: String!
+}
+
+type GoalFinance_PenaltyReleased {
+  id: ID!
+  user: String!
+  token: String!
+  amount: BigInt!
+}
+
+type GoalFinance_TokenSupported {
+  id: ID!
+  token: String!
+  supported: Boolean!
+}
+
+type GoalFinance_Unpaused {
+  id: ID!
+  account: String!
+}
+
+type GoalFinance_VaultCreated {
+  id: ID!
+  vaultId: BigInt!
+  creator: String!
+  token: String!
+  config_0: String!
+  config_1: String!
+  config_2: String!
+  config_3: BigInt!
+  config_4: BigInt!
+  config_5: BigInt!
+  config_6: BigInt!
+  config_7: BigInt!
+  inviteCode: String!
+}
+
+type GoalFinance_VaultExpired {
+  id: ID!
+  vaultId: BigInt!
+  token: String!
+  totalDeposited: BigInt!
+}
+
+type GoalFinance_VaultFailed {
+  id: ID!
+  vaultId: BigInt!
+  token: String!
+  totalAmount: BigInt!
+}
+
+type GoalFinance_VaultStatusUpdated {
+  id: ID!
+  vaultId: BigInt!
+  newStatus: BigInt!
+  totalDeposited: BigInt!
+}
+
+type GoalFinance_Withdrawal {
+  id: ID!
+  vaultId: BigInt!
+  member: String!
+  token: String!
+  amount: BigInt!
+}
+
+type MockMorpho_ContractAuthorized {
+  id: ID!
+  contractAddr: String!
+  authorized: Boolean!
+}
+
+type MockMorpho_InterestAccrued {
+  id: ID!
+  user: String!
+  token: String!
+  interest: BigInt!
+}
+
+type MockMorpho_MarketCreated {
+  id: ID!
+  token: String!
+  supplyAPY: BigInt!
+}
+
+type MockMorpho_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type MockMorpho_Supplied {
+  id: ID!
+  user: String!
+  token: String!
+  amount: BigInt!
+}
+
+type MockMorpho_Withdrawn {
+  id: ID!
+  user: String!
+  token: String!
+  amount: BigInt!
+  interest: BigInt!
+}
+
+type MockUSDT_Approval {
+  id: ID!
+  owner: String!
+  spender: String!
+  value: BigInt!
+}
+
+type MockUSDT_FaucetClaimed {
+  id: ID!
+  user: String!
+  amount: BigInt!
+}
+
+type MockUSDT_OwnershipTransferred {
+  id: ID!
+  previousOwner: String!
+  newOwner: String!
+}
+
+type MockUSDT_Transfer {
+  id: ID!
+  from: String!
+  to: String!
+  value: BigInt!
+}
+

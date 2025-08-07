@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: envio-indexer
+networks:
+- id: 534351
+  rpc: https://sepolia-rpc.scroll.io/
+  start_block: 11371375
+  contracts:
+  - name: GoalFinance
+    address:
+    - 0x9Dd1664238359e8d808c41Af735aa67dD91F5b7F
+    handler: src/EventHandlers.ts
+    events:
+    - event: EarlyWithdrawal(uint256 indexed vaultId, address indexed member, address indexed token, uint256 amount, uint256 penalty)
+    - event: FundsDeposited(uint256 indexed vaultId, address indexed member, address indexed token, uint256 amount, uint256 totalDeposited)
+    - event: GoalReached(uint256 indexed vaultId, address indexed token, uint256 totalAmount)
+    - event: MemberJoined(uint256 indexed vaultId, address indexed member, address indexed token, uint256 depositAmount, uint256 memberCount)
+    - event: OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+    - event: Paused(address account)
+    - event: PenaltyReleased(address indexed user, address indexed token, uint256 amount)
+    - event: TokenSupported(address indexed token, bool supported)
+    - event: Unpaused(address account)
+    - event: VaultCreated(uint256 indexed vaultId, address indexed creator, address indexed token, (string,string,address,uint8,uint8,uint256,uint256,uint256) config, bytes32 inviteCode)
+    - event: VaultExpired(uint256 indexed vaultId, address indexed token, uint256 totalDeposited)
+    - event: VaultFailed(uint256 indexed vaultId, address indexed token, uint256 totalAmount)
+    - event: VaultStatusUpdated(uint256 indexed vaultId, uint8 indexed newStatus, uint256 totalDeposited)
+    - event: Withdrawal(uint256 indexed vaultId, address indexed member, address indexed token, uint256 amount)
+  - name: AcornsVault
+    address:
+    - 0x62F86d88960F77D32c0a0a33b3f7c29cbEE384C6
+    handler: src/EventHandlers.ts
+    events:
+    - event: FundsDeposited(address indexed user, address token, uint256 amount)
+    - event: FundsWithdrawn(address indexed user, uint256 amount)
+    - event: OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+    - event: Paused(address account)
+    - event: PortfolioChanged(address indexed user, uint8 oldPortfolio, uint8 newPortfolio)
+    - event: PurchaseRecorded(address indexed user, uint256 amount, uint256 roundUp, string merchant)
+    - event: RecurringInvestmentExecuted(address indexed user, uint256 amount)
+    - event: RecurringInvestmentSet(address indexed user, uint256 amount, uint256 interval)
+    - event: RoundUpsInvested(address indexed user, uint256 amount)
+    - event: TokenSupported(address indexed token, bool supported, uint256 exchangeRate)
+    - event: Unpaused(address account)
+    - event: UserRegistered(address indexed user, uint8 portfolio)
+    - event: YieldClaimed(address indexed user, uint256 amount)
+  - name: MockMorpho
+    address:
+    - 0x4fFa2a2bA2A66A5091483990a558B084B49452c2
+    handler: src/EventHandlers.ts
+    events:
+    - event: ContractAuthorized(address indexed contractAddr, bool authorized)
+    - event: InterestAccrued(address indexed user, address indexed token, uint256 interest)
+    - event: MarketCreated(address indexed token, uint256 supplyAPY)
+    - event: OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+    - event: Supplied(address indexed user, address indexed token, uint256 amount)
+    - event: Withdrawn(address indexed user, address indexed token, uint256 amount, uint256 interest)
+  - name: MockUSDT
+    address:
+    - 0x6C193AFC5446baCC315deF72bd6456126279cCE9
+    handler: src/EventHandlers.ts
+    events:
+    - event: Approval(address indexed owner, address indexed spender, uint256 value)
+    - event: FaucetClaimed(address indexed user, uint256 amount)
+    - event: OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
+    - event: Transfer(address indexed from, address indexed to, uint256 value)
+unordered_multichain_mode: true

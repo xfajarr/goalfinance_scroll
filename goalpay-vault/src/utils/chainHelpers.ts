@@ -1,4 +1,4 @@
-import { mantleSepolia, baseSepolia, liskSepolia } from '../config/wagmi';
+import { mantleSepolia, baseSepolia, liskSepolia, scrollSepolia } from '../config/wagmi';
 import type { Chain } from 'viem';
 
 // Types for chain display information
@@ -17,6 +17,14 @@ export interface ChainDisplayInfo {
 
 // Supported chains with display information
 export const SUPPORTED_CHAINS: readonly ChainDisplayInfo[] = [
+  {
+    id: scrollSepolia.id,
+    name: scrollSepolia.name,
+    displayName: 'Scroll Sepolia',
+    isTestnet: true,
+    logoUrl: '/scroll-logo.svg',
+    nativeCurrency: scrollSepolia.nativeCurrency,
+  },
   {
     id: liskSepolia.id,
     name: liskSepolia.name,
@@ -38,6 +46,7 @@ export const SUPPORTED_CHAINS: readonly ChainDisplayInfo[] = [
 // Chain utilities
 export const getChainById = (chainId: number): Chain => {
   const chains = {
+    [scrollSepolia.id]: scrollSepolia,
     [liskSepolia.id]: liskSepolia,
     [mantleSepolia.id]: mantleSepolia,
   };

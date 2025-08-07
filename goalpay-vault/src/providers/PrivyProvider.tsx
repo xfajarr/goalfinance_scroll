@@ -2,7 +2,7 @@ import React from 'react';
 import { PrivyProvider as PrivyProviderCore } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { config, mantleSepolia, baseSepolia, liskSepolia } from '@/config/wagmi';
+import { config, mantleSepolia, baseSepolia, liskSepolia, scrollSepolia } from '@/config/wagmi';
 
 // Create a single QueryClient instance to avoid duplicate initialization
 let queryClientInstance: QueryClient | null = null;
@@ -53,8 +53,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
           createOnLogin: 'users-without-wallets',
           requireUserPasswordOnCreate: false,
         },
-        supportedChains: [mantleSepolia, baseSepolia, liskSepolia],
-        defaultChain: liskSepolia,
+        supportedChains: [mantleSepolia, baseSepolia, liskSepolia, scrollSepolia],
+        defaultChain: scrollSepolia,
 
         // Only include WalletConnect config if project ID is provided
         // This prevents duplicate initialization warnings
