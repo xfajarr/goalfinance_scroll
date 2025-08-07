@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd goalpay-vault && pnpm run build",
+  "buildCommand": "cd goalpay-vault && npm run build",
   "outputDirectory": "goalpay-vault/dist",
-  "installCommand": "cd goalpay-vault && rm -f pnpm-lock.yaml && pnpm install",
+  "installCommand": "cd goalpay-vault && npm install",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -10,7 +10,7 @@
   ],
   "headers": [
     {
-      "source": "/service-worker.js",
+      "source": "/service-worker.js", 
       "headers": [
         {
           "key": "Cache-Control",
@@ -26,7 +26,7 @@
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options",
+          "key": "X-Frame-Options", 
           "value": "DENY"
         },
         {
