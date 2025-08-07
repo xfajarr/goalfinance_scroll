@@ -1,8 +1,7 @@
 {
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "dist",
-  "installCommand": "pnpm install",
-  "rootDirectory": "goalpay-vault",
+  "buildCommand": "cd goalpay-vault && pnpm run build",
+  "outputDirectory": "goalpay-vault/dist",
+  "installCommand": "pnpm install --prefix goalpay-vault",
   "rewrites": [
     {
       "source": "/(.*)",
